@@ -11,11 +11,27 @@
   --border:#252a3d;--accent:#6366f1;--accent2:#818cf8;
   --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#38bdf8;--purple:#a855f7;
   --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;--r:12px;--r-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+html[data-theme="light"]{
+  --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f6fb;--surface3:#e8ecf6;
+  --border:#dde2f0;--accent:#5254e0;--accent2:#5254e0;
+  --green:#16a34a;--red:#dc2626;--yellow:#d97706;--blue:#0369a1;--purple:#7c3aed;
+  --text:#1a1d2e;--muted:#8891a8;--muted2:#525c7a;
+  --shadow:0 1px 4px rgba(100,120,180,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;transition:background .2s,color .2s}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 svg{display:inline-block;vertical-align:middle;flex-shrink:0}
+/* smooth theme transitions on key elements */
+.sidebar,.topbar,.card,.stat-card,.modal,.auth-box,.nav-item,.btn,.form-input,.form-select,.form-textarea,.auth-input,.badge,.sec-card,.analysis-stat,.analysis-section,.risk-row{transition:background .2s,border-color .2s,color .2s,box-shadow .2s}
+
+/* ── Theme toggle ── */
+.theme-toggle{width:36px;height:36px;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted2);transition:all .15s}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent);background:var(--surface3)}
+/* light mode chart grid lines */
+html[data-theme="light"] canvas{filter:none}
 
 /* ── Auth ── */
 .auth-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:500;align-items:center;justify-content:center}
@@ -247,6 +263,12 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="auth-btn" id="auth-submit-btn" onclick="handleAuth()">Sign In</button>
     </div>
     <div class="auth-footer">Your trades are private and encrypted. Only you can see them.</div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="theme-toggle" id="auth-theme-btn" style="margin:0 auto" title="Toggle light / dark mode">
+        <svg id="auth-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="auth-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -312,6 +334,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <button class="btn btn-primary" id="open-trade-btn">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           New Trade
+        </button>
+        <button class="theme-toggle" id="theme-toggle-btn" title="Toggle light / dark mode">
+          <svg id="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         </button>
         <button class="btn btn-logout" onclick="signOut()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -531,6 +557,41 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 <script>
+// ── Theme ─────────────────────────────────────────────────────────
+(function(){
+  const saved = localStorage.getItem('tj_theme') || 'dark';
+  if(saved === 'light') document.documentElement.setAttribute('data-theme','light');
+})();
+
+function applyTheme(theme){
+  if(theme==='light'){
+    document.documentElement.setAttribute('data-theme','light');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+  }
+  localStorage.setItem('tj_theme', theme);
+  // update all toggle icons
+  const isLight = theme==='light';
+  ['theme-icon-moon','auth-icon-moon'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=isLight?'none':'block'; });
+  ['theme-icon-sun','auth-icon-sun'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=isLight?'block':'none'; });
+}
+
+function toggleTheme(){
+  const isLight = document.documentElement.getAttribute('data-theme')==='light';
+  applyTheme(isLight?'dark':'light');
+  // Redraw charts with new theme colors
+  if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+// Apply icons immediately on load
+(function(){
+  const isLight = document.documentElement.getAttribute('data-theme')==='light';
+  if(isLight){
+    ['theme-icon-moon','auth-icon-moon'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+    ['theme-icon-sun','auth-icon-sun'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+  }
+})();
+
 // ── SVG icon helper ────────────────────────────────────────────────
 const IC = {
   zap:`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
@@ -594,6 +655,8 @@ async function handleAuth(){
 function showAuthMsg(text,type){ const el=document.getElementById('auth-msg'); el.textContent=text; el.className='auth-msg '+type; }
 document.getElementById('auth-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
 document.getElementById('auth-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('auth-password').focus();});
+document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+document.getElementById('auth-theme-btn').addEventListener('click', toggleTheme);
 async function signOut(){ await sb.auth.signOut(); }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
@@ -730,8 +793,13 @@ function renderDashboard(){
   document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);const c=getColor(t.symbol);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="symbol-icon" style="background:${c}22;color:${c};width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${t.symbol.slice(0,3)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:700">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
 }
 
-function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle='#64748b';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);ctx.strokeStyle='#1c2030';ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=pad+(i/4)*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'rgba(99,102,241,.35)');grad.addColorStop(1,'rgba(99,102,241,0)');ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.strokeStyle='#6366f1';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),5,0,Math.PI*2);ctx.fillStyle='#6366f1';ctx.fill(); }
-function drawDailyChart(closed){ const canvas=document.getElementById('daily-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const byDay={};closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const days=Object.keys(byDay).sort().slice(-30);if(!days.length){ctx.fillStyle='#64748b';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No data yet',W/2,H/2);return;}const vals=days.map(d=>byDay[d]);const maxAbs=Math.max(...vals.map(Math.abs),1);const pad=20;const barW=Math.max(3,Math.floor((W-pad*2)/days.length)-2);const baseline=H/2;ctx.strokeStyle='#1c2030';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();days.forEach((d,i)=>{const x=pad+i*((W-pad*2)/days.length);const v=vals[i];const barH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad));ctx.fillStyle=v>=0?'rgba(34,197,94,.75)':'rgba(239,68,68,.75)';if(v>=0)ctx.fillRect(x,baseline-barH,barW,barH);else ctx.fillRect(x,baseline,barW,barH);}); }
+function themeVal(darkVal, lightVal){ return document.documentElement.getAttribute('data-theme')==='light' ? lightVal : darkVal; }
+function chartGrid(ctx, W, H, pad){
+  ctx.strokeStyle=themeVal('#1c2030','#e2e8f2'); ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad+(i/4)*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
+}
+function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);chartGrid(ctx,W,H,pad);const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,themeVal('rgba(99,102,241,.35)','rgba(82,84,224,.2)'));grad.addColorStop(1,themeVal('rgba(99,102,241,0)','rgba(82,84,224,0)'));ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.strokeStyle=themeVal('#6366f1','#5254e0');ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),5,0,Math.PI*2);ctx.fillStyle=themeVal('#6366f1','#5254e0');ctx.fill(); }
+function drawDailyChart(closed){ const canvas=document.getElementById('daily-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const byDay={};closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const days=Object.keys(byDay).sort().slice(-30);if(!days.length){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No data yet',W/2,H/2);return;}const vals=days.map(d=>byDay[d]);const maxAbs=Math.max(...vals.map(Math.abs),1);const pad=20;const barW=Math.max(3,Math.floor((W-pad*2)/days.length)-2);const baseline=H/2;ctx.strokeStyle=themeVal('#1c2030','#dde2f0');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();days.forEach((d,i)=>{const x=pad+i*((W-pad*2)/days.length);const v=vals[i];const barH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad));ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.75)','rgba(22,163,74,.75)'):themeVal('rgba(239,68,68,.75)','rgba(220,38,38,.75)');if(v>=0)ctx.fillRect(x,baseline-barH,barW,barH);else ctx.fillRect(x,baseline,barW,barH);}); }
 
 // ── Analytics ──────────────────────────────────────────────────────
 function renderAnalytics(){ const closed=trades.filter(t=>t.status==='closed');const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const byMarket={},byExchange={},byStrategy={},byDir={},byDow={};closed.forEach(t=>{const p=calcPnL(t)||0;(byMarket[t.market]=byMarket[t.market]||{pnl:0,count:0,wins:0}).pnl+=p;byMarket[t.market].count++;if(p>0)byMarket[t.market].wins++;if(t.exchange){(byExchange[t.exchange]=byExchange[t.exchange]||{pnl:0,count:0,wins:0}).pnl+=p;byExchange[t.exchange].count++;if(p>0)byExchange[t.exchange].wins++;}const s=t.strategy||'No Strategy';(byStrategy[s]=byStrategy[s]||{pnl:0,count:0,wins:0}).pnl+=p;byStrategy[s].count++;if(p>0)byStrategy[s].wins++;(byDir[t.direction]=byDir[t.direction]||{pnl:0,count:0,wins:0}).pnl+=p;byDir[t.direction].count++;if(p>0)byDir[t.direction].wins++;const dow=DAYS[new Date(t.entryDate||Date.now()).getDay()];(byDow[dow]=byDow[dow]||{pnl:0,count:0,wins:0}).pnl+=p;byDow[dow].count++;if(p>0)byDow[dow].wins++;});function perfCard(title,entries){const rows=entries.length?entries.map(([k,v])=>`<div class="perf-row"><span class="perf-key">${k}</span><div style="text-align:right"><div class="perf-val ${pnlClass(v.pnl)}">${pnlStr(v.pnl)}</div><div style="font-size:11px;color:var(--muted)">${v.count} trades · ${v.count?((v.wins/v.count)*100).toFixed(0):0}% WR</div></div></div>`).join(''):'<div style="color:var(--muted);padding:16px;font-size:13px">No data</div>';return `<div class="card"><div class="card-header"><div class="card-title">${title}</div></div>${rows}</div>`;}const allPnL=closed.map(t=>calcPnL(t)||0);const wins2=allPnL.filter(v=>v>0),losses2=allPnL.filter(v=>v<0);const grossP=wins2.reduce((s,v)=>s+v,0),grossL=Math.abs(losses2.reduce((s,v)=>s+v,0)),pf=grossL?grossP/grossL:null;const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();document.getElementById('analytics-grid').innerHTML=perfCard('By Market',Object.entries(byMarket).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('By Exchange',Object.entries(byExchange).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('By Strategy',Object.entries(byStrategy).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('Long vs Short',Object.entries(byDir))+perfCard('By Day of Week',DAYS.map(d=>[d,byDow[d]||{pnl:0,count:0,wins:0}]).filter(([,v])=>v.count>0))+`<div class="card"><div class="card-header"><div class="card-title">Summary Statistics</div></div>${[['Total Closed',closed.length],['Win Rate',closed.length?((wins2.length/closed.length)*100).toFixed(1)+'%':'—'],['Profit Factor',pf!=null?pf.toFixed(2):'—'],['Gross Profit','+'+fmtNum(grossP)],['Gross Loss','−'+fmtNum(grossL)],['Max Drawdown','−'+fmtNum(maxDD)],['Best Trade',wins2.length?'+'+fmtNum(Math.max(...wins2)):'—'],['Worst Trade',losses2.length?fmtNum(Math.min(...losses2)):'—']].map(([k,v])=>`<div class="perf-row"><span class="perf-key">${k}</span><span class="perf-val">${v}</span></div>`).join('')}</div>`; }
@@ -972,7 +1040,7 @@ function openSecModal(symbol){
         ctx.fillStyle=grad; ctx.fill();
         ctx.beginPath(); ctx.moveTo(sx(0),sy(pts[0])); pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
         ctx.strokeStyle=lineColor; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
-      } else { ctx.fillStyle='#64748b'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
+      } else { ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
     }
     // P&L per trade bars
     const pc=document.getElementById('sec-pnl-canvas');
@@ -983,9 +1051,9 @@ function openSecModal(symbol){
       if(pnls.length){
         const maxAbs=Math.max(...pnls.map(Math.abs),1);
         const pad=16; const barW=Math.max(3,Math.floor((W-pad*2)/pnls.length)-2); const baseline=H/2;
-        ctx.strokeStyle='#1c2030'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,baseline); ctx.lineTo(W-pad,baseline); ctx.stroke();
-        pnls.forEach((v,i)=>{ const x=pad+i*((W-pad*2)/pnls.length); const bH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad)); ctx.fillStyle=v>=0?'rgba(34,197,94,.8)':'rgba(239,68,68,.8)'; if(v>=0)ctx.fillRect(x,baseline-bH,barW,bH); else ctx.fillRect(x,baseline,barW,bH); });
-      } else { ctx.fillStyle='#64748b'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
+        ctx.strokeStyle=themeVal('#1c2030','#dde2f0'); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,baseline); ctx.lineTo(W-pad,baseline); ctx.stroke();
+        pnls.forEach((v,i)=>{ const x=pad+i*((W-pad*2)/pnls.length); const bH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad)); ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.8)','rgba(22,163,74,.8)'):themeVal('rgba(239,68,68,.8)','rgba(220,38,38,.8)'); if(v>=0)ctx.fillRect(x,baseline-bH,barW,bH); else ctx.fillRect(x,baseline,barW,bH); });
+      } else { ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
     }
   });
 }

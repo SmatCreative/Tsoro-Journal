@@ -179,6 +179,34 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .empty-state .empty-icon{margin-bottom:14px;opacity:.5;display:flex;justify-content:center}
 .empty-state h3{font-size:15px;font-weight:700;color:var(--muted2);margin-bottom:6px}
 
+/* ── Securities ── */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:border-color .15s,transform .1s}
+.sec-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.sec-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sec-avatar{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.sec-card-meta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap}
+.sec-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.sec-metric{text-align:center}
+.sec-metric-val{font-size:16px;font-weight:800;line-height:1}
+.sec-metric-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.sec-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+/* Modal analysis */
+.analysis-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.analysis-stat{background:var(--surface2);border-radius:var(--r-sm);padding:14px;text-align:center}
+.analysis-stat-val{font-size:20px;font-weight:800;line-height:1;margin-bottom:4px}
+.analysis-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.analysis-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.analysis-section{background:var(--surface2);border-radius:var(--r-sm);padding:16px}
+.analysis-section-title{font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.risk-row{display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface);border-radius:6px;font-size:13px}
+.risk-key{color:var(--muted2)}.risk-val{font-weight:700}
+.score-bar{display:flex;align-items:center;gap:10px;margin-top:10px}
+.score-track{flex:1;height:8px;background:var(--surface);border-radius:4px;overflow:hidden}
+.score-fill{height:100%;border-radius:4px;transition:width .5s}
+.grade-badge{font-size:22px;font-weight:900;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+
 @media(max-width:768px){
   .sidebar{width:56px}
   .brand-name,.nav-item span:not(.nav-icon),.user-info{display:none}
@@ -256,6 +284,11 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     <button class="nav-item" data-page="long-trades">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></span>
       <span>Long-Term</span>
+    </button>
+    <div class="nav-section">Analysis</div>
+    <button class="nav-item" data-page="securities">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+      <span>Securities</span>
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -379,6 +412,20 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="long-table"></div></div></div>
       </div>
 
+      <!-- Securities Analysis -->
+      <div class="page" id="page-securities">
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="search-wrap">
+            <span class="search-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input class="search-input" id="sec-search" placeholder="Filter symbol…">
+          </div>
+          <select class="filter" id="sec-market"><option value="">All Markets</option></select>
+          <select class="filter" id="sec-exchange"><option value="">All Exchanges</option></select>
+          <span id="sec-count" style="margin-left:auto;font-size:12px;color:var(--muted)"></span>
+        </div>
+        <div id="securities-grid"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -465,6 +512,23 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Securities Analysis Modal -->
+<div class="overlay" id="sec-modal">
+  <div class="modal" style="width:860px;max-width:98vw">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="sec-modal-icon" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0"></div>
+        <div>
+          <div class="modal-title" id="sec-modal-title">—</div>
+          <div id="sec-modal-sub" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('sec-modal').classList.remove('open')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="sec-modal-body"></div>
+  </div>
+</div>
+
 <script>
 // ── SVG icon helper ────────────────────────────────────────────────
 const IC = {
@@ -519,7 +583,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade permanently?'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){alert('Delete failed: '+error.message);return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -648,9 +712,252 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); }
 function renderAll(){ renderPage(document.querySelector('.page.active')?.id?.replace('page-','')||'dashboard'); }
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();});
+
+// ═══════════════════════════════════════════════════════════════════
+// SECURITIES ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════════════════════
+function analyzeSymbol(symbol){
+  const all=trades.filter(t=>t.symbol===symbol);
+  const closed=all.filter(t=>t.status==='closed');
+  const open=all.filter(t=>t.status==='open');
+  const pnls=closed.map(t=>calcPnL(t)||0);
+  const wins=pnls.filter(v=>v>0), losses=pnls.filter(v=>v<0);
+  const grossP=wins.reduce((s,v)=>s+v,0);
+  const grossL=Math.abs(losses.reduce((s,v)=>s+v,0));
+  const totalPnL=grossP-grossL;
+  const winRate=closed.length?wins.length/closed.length*100:0;
+  const avgWin=wins.length?grossP/wins.length:0;
+  const avgLoss=losses.length?grossL/losses.length:0;
+  const profitFactor=grossL>0?grossP/grossL:null;
+  const expectancy=closed.length?(winRate/100*avgWin)-((1-winRate/100)*avgLoss):null;
+  // Hold time (hours)
+  const holdTimes=closed.filter(t=>t.entryDate&&t.exitDate).map(t=>(new Date(t.exitDate)-new Date(t.entryDate))/3600000);
+  const avgHoldHrs=holdTimes.length?holdTimes.reduce((s,v)=>s+v,0)/holdTimes.length:null;
+  // Std deviation of P&L
+  const mean=pnls.length?pnls.reduce((s,v)=>s+v,0)/pnls.length:0;
+  const variance=pnls.length?pnls.reduce((s,v)=>s+(v-mean)**2,0)/pnls.length:0;
+  const stdDev=Math.sqrt(variance);
+  const sharpe=stdDev>0?mean/stdDev:null;
+  // Max drawdown
+  let peak=0,mdd=0,cum=0;
+  [...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});
+  // Consecutive wins/losses
+  let maxCW=0,maxCL=0,cw=0,cl=0;
+  pnls.forEach(p=>{if(p>0){cw++;cl=0;maxCW=Math.max(maxCW,cw);}else{cl++;cw=0;maxCL=Math.max(maxCL,cl);}});
+  // Avg R:R from SL/TP
+  const rrList=all.filter(t=>t.sl&&t.tp&&t.entry).map(t=>Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl));
+  const avgRR=rrList.length?rrList.reduce((s,v)=>s+v,0)/rrList.length:null;
+  // Grade score (0-100)
+  let score=50;
+  if(winRate>60)score+=15;else if(winRate>50)score+=8;else if(winRate<40)score-=15;else if(winRate<50)score-=8;
+  if(profitFactor>2)score+=15;else if(profitFactor>1.5)score+=8;else if(profitFactor&&profitFactor<1)score-=15;else if(profitFactor&&profitFactor<1.2)score-=5;
+  if(expectancy&&expectancy>0)score+=10;else if(expectancy&&expectancy<0)score-=10;
+  if(sharpe&&sharpe>1)score+=10;else if(sharpe&&sharpe<0)score-=10;
+  if(maxCW>maxCL)score+=5;else score-=5;
+  score=Math.max(0,Math.min(100,score));
+  let grade='F',gColor='var(--red)';
+  if(score>=85){grade='A+';gColor='#22c55e';}else if(score>=75){grade='A';gColor='#22c55e';}else if(score>=65){grade='B';gColor='#86efac';}else if(score>=55){grade='C';gColor='var(--yellow)';}else if(score>=45){grade='D';gColor='#f97316';}
+  const market=all[0]?.market||'';
+  const exchange=all[0]?.exchange||'';
+  return {symbol,market,exchange,all,closed,open,pnls,totalPnL,winRate,avgWin,avgLoss,grossP,grossL,profitFactor,expectancy,stdDev,sharpe,mdd,maxCW,maxCL,avgRR,avgHoldHrs,holdTimes,score,grade,gColor,bestTrade:wins.length?Math.max(...wins):null,worstTrade:losses.length?Math.min(...losses):null};
+}
+
+function fmtHoldTime(hrs){
+  if(hrs===null)return '—';
+  if(hrs<1)return Math.round(hrs*60)+'m';
+  if(hrs<24)return hrs.toFixed(1)+'h';
+  return (hrs/24).toFixed(1)+'d';
+}
+
+function populateSecFilters(){
+  const markets=[...new Set(trades.map(t=>t.market).filter(Boolean))].sort();
+  const exchanges=[...new Set(trades.map(t=>t.exchange).filter(Boolean))].sort();
+  const sm=document.getElementById('sec-market'),se=document.getElementById('sec-exchange');
+  if(!sm||!se)return;
+  const mv=sm.value,ev=se.value;
+  sm.innerHTML='<option value="">All Markets</option>'+markets.map(m=>`<option value="${m}">${m}</option>`).join('');
+  se.innerHTML='<option value="">All Exchanges</option>'+exchanges.map(e=>`<option value="${e}">${e}</option>`).join('');
+  sm.value=mv; se.value=ev;
+}
+['sec-search','sec-market','sec-exchange'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.addEventListener('input',renderSecurities);
+});
+
+function renderSecurities(){
+  const search=(document.getElementById('sec-search')?.value||'').toLowerCase();
+  const mf=document.getElementById('sec-market')?.value||'';
+  const ef=document.getElementById('sec-exchange')?.value||'';
+  const symbols=[...new Set(trades.map(t=>t.symbol))].filter(s=>{
+    if(search&&!s.toLowerCase().includes(search))return false;
+    const t=trades.find(x=>x.symbol===s);
+    if(mf&&t?.market!==mf)return false;
+    if(ef&&t?.exchange!==ef)return false;
+    return true;
+  }).sort();
+  const countEl=document.getElementById('sec-count');
+  if(countEl)countEl.textContent=symbols.length+' securit'+(symbols.length!==1?'ies':'y');
+  const grid=document.getElementById('securities-grid');
+  if(!symbols.length){grid.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No securities found</h3><p>Log trades to see analysis here.</p></div>';return;}
+  grid.innerHTML='<div class="sec-grid">'+symbols.map(s=>{
+    const a=analyzeSymbol(s); const c=getColor(s);
+    const pnlCls=a.totalPnL>0?'pnl-pos':a.totalPnL<0?'pnl-neg':'pnl-zero';
+    return `<div class="sec-card" onclick="openSecModal('${s}')">
+      <div class="sec-card-header">
+        <div class="sec-avatar" style="background:${c}22;color:${c}">${s.slice(0,4)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:15px">${s}</div>
+          <div class="sec-card-meta">
+            ${a.market?`<span class="badge badge-market" style="font-size:10px">${a.market}</span>`:''}
+            ${a.exchange?`<span class="badge badge-market" style="font-size:10px;color:var(--accent2)">${a.exchange}</span>`:''}
+            <span style="color:var(--muted)">${a.closed.length} trade${a.closed.length!==1?'s':''}</span>
+            ${a.open.length?`<span class="badge badge-open" style="font-size:10px">${a.open.length} open</span>`:''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="grade-badge" style="background:${a.gColor}22;color:${a.gColor};font-size:16px;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900">${a.grade}</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total P&L</div>
+          <div class="${pnlCls}" style="font-size:22px;font-weight:900;letter-spacing:-.5px">${pnlStr(a.totalPnL)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Expectancy</div>
+          <div class="${pnlClass(a.expectancy)}" style="font-size:16px;font-weight:700">${a.expectancy!=null?pnlStr(a.expectancy):'—'}</div>
+        </div>
+      </div>
+      <div class="sec-metrics">
+        <div class="sec-metric"><div class="sec-metric-val">${a.winRate.toFixed(0)}%</div><div class="sec-metric-lbl">Win Rate</div></div>
+        <div class="sec-metric"><div class="sec-metric-val ${a.profitFactor>1?'pnl-pos':a.profitFactor&&a.profitFactor<1?'pnl-neg':''}">${a.profitFactor!=null?a.profitFactor.toFixed(2):'—'}</div><div class="sec-metric-lbl">Prof. Factor</div></div>
+        <div class="sec-metric"><div class="sec-metric-val">${fmtHoldTime(a.avgHoldHrs)}</div><div class="sec-metric-lbl">Avg Hold</div></div>
+      </div>
+      <div class="sec-footer">
+        <span>Best: <strong class="pnl-pos">${a.bestTrade!=null?'+'+fmtNum(a.bestTrade):'—'}</strong></span>
+        <span>Worst: <strong class="pnl-neg">${a.worstTrade!=null?fmtNum(a.worstTrade):'—'}</strong></span>
+        <span>Max DD: <strong class="pnl-neg">${a.mdd>0?'-'+fmtNum(a.mdd):'—'}</strong></span>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function openSecModal(symbol){
+  const a=analyzeSymbol(symbol); const c=getColor(symbol);
+  document.getElementById('sec-modal-icon').style.cssText=`background:${c}22;color:${c};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800`;
+  document.getElementById('sec-modal-icon').textContent=symbol.slice(0,4);
+  document.getElementById('sec-modal-title').textContent=symbol;
+  document.getElementById('sec-modal-sub').innerHTML=[a.market,a.exchange].filter(Boolean).map(x=>`<span class="badge badge-market" style="font-size:10px;margin-right:4px">${x}</span>`).join('')+` &nbsp; ${a.closed.length} closed trade${a.closed.length!==1?'s':''}${a.open.length?' · '+a.open.length+' open':''}`;
+
+  const stats=[
+    {lbl:'Total P&L',val:pnlStr(a.totalPnL),cls:pnlClass(a.totalPnL)},
+    {lbl:'Win Rate',val:a.closed.length?a.winRate.toFixed(1)+'%':'—',cls:''},
+    {lbl:'Profit Factor',val:a.profitFactor!=null?a.profitFactor.toFixed(2):'—',cls:a.profitFactor>1?'pnl-pos':a.profitFactor&&a.profitFactor<1?'pnl-neg':''},
+    {lbl:'Expectancy / Trade',val:a.expectancy!=null?pnlStr(a.expectancy):'—',cls:pnlClass(a.expectancy)},
+    {lbl:'Avg Win',val:a.avgWin?'+'+fmtNum(a.avgWin):'—',cls:'pnl-pos'},
+    {lbl:'Avg Loss',val:a.avgLoss?'-'+fmtNum(a.avgLoss):'—',cls:'pnl-neg'},
+    {lbl:'Best Trade',val:a.bestTrade!=null?'+'+fmtNum(a.bestTrade):'—',cls:'pnl-pos'},
+    {lbl:'Worst Trade',val:a.worstTrade!=null?fmtNum(a.worstTrade):'—',cls:'pnl-neg'},
+  ];
+
+  const riskRows=[
+    ['Max Drawdown', a.mdd>0?'-'+fmtNum(a.mdd):'—'],
+    ['Sharpe Ratio', a.sharpe!=null?a.sharpe.toFixed(2):'—'],
+    ['Avg R:R', a.avgRR!=null?a.avgRR.toFixed(2)+'R':'—'],
+    ['Std Dev (P&L)', a.stdDev>0?fmtNum(a.stdDev):'—'],
+    ['Avg Hold Time', fmtHoldTime(a.avgHoldHrs)],
+    ['Max Consec. Wins', a.maxCW||'—'],
+    ['Max Consec. Losses', a.maxCL||'—'],
+    ['Gross Profit', '+'+fmtNum(a.grossP)],
+    ['Gross Loss', '-'+fmtNum(a.grossL)],
+    ['Total Trades', a.closed.length],
+  ];
+
+  // Score bar color
+  const scoreColor=a.score>=75?'var(--green)':a.score>=55?'var(--yellow)':a.score>=45?'#f97316':'var(--red)';
+
+  const sortedClosed=[...a.closed].sort((x,y)=>new Date(x.entryDate)-new Date(y.entryDate));
+  const recentTrades=a.all.slice(0,8);
+
+  document.getElementById('sec-modal-body').innerHTML=`
+    <!-- Score -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;background:var(--surface2);border-radius:var(--r-sm);padding:14px 18px">
+      <div class="grade-badge" style="background:${a.gColor}22;color:${a.gColor};width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;flex-shrink:0">${a.grade}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px">Performance Score: <span style="color:${scoreColor}">${a.score}/100</span></div>
+        <div class="score-bar"><div class="score-track"><div class="score-fill" style="width:${a.score}%;background:${scoreColor}"></div></div><span style="font-size:11px;color:var(--muted);white-space:nowrap">${a.score>=85?'Excellent':a.score>=75?'Very Good':a.score>=65?'Good':a.score>=55?'Average':a.score>=45?'Below Average':'Poor'}</span></div>
+      </div>
+    </div>
+    <!-- Stats grid -->
+    <div class="analysis-stats">${stats.map(s=>`<div class="analysis-stat"><div class="analysis-stat-val ${s.cls}">${s.val}</div><div class="analysis-stat-lbl">${s.lbl}</div></div>`).join('')}</div>
+    <!-- Charts -->
+    <div class="analysis-charts">
+      <div class="analysis-section">
+        <div class="analysis-section-title">Equity Curve</div>
+        <canvas id="sec-equity-canvas" height="130"></canvas>
+      </div>
+      <div class="analysis-section">
+        <div class="analysis-section-title">P&L per Trade</div>
+        <canvas id="sec-pnl-canvas" height="130"></canvas>
+      </div>
+    </div>
+    <!-- Risk metrics -->
+    <div style="margin-bottom:20px">
+      <div class="analysis-section-title" style="font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Risk &amp; Performance Metrics</div>
+      <div class="risk-grid">${riskRows.map(([k,v])=>`<div class="risk-row"><span class="risk-key">${k}</span><span class="risk-val">${v}</span></div>`).join('')}</div>
+    </div>
+    <!-- Recent trades -->
+    <div class="analysis-section-title" style="font-size:12px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Trade History</div>
+    <div style="overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--border)">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="background:var(--surface2)"><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Date</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Dir</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Entry</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Exit</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">P&L</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Hold</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Status</th></tr></thead>
+        <tbody>${recentTrades.map((t,i)=>{const pnl=calcPnL(t);const holdHrs=t.entryDate&&t.exitDate?(new Date(t.exitDate)-new Date(t.entryDate))/3600000:null;return `<tr style="${i===recentTrades.length-1?'':'border-bottom:1px solid var(--border)'}"><td style="padding:9px 12px;color:var(--muted2)">${fmtDateShort(t.entryDate)}</td><td style="padding:9px 12px"><span class="badge ${t.direction==='Long'?'badge-long':'badge-short'}" style="font-size:10px">${t.direction}</span></td><td style="padding:9px 12px;text-align:right">${fmtNum(t.entry)}</td><td style="padding:9px 12px;text-align:right">${t.exit!=null?fmtNum(t.exit):'<span style="color:var(--muted)">Open</span>'}</td><td style="padding:9px 12px;text-align:right" class="${pnlClass(pnl)}">${pnlStr(pnl)}</td><td style="padding:9px 12px;text-align:right;color:var(--muted)">${fmtHoldTime(holdHrs)}</td><td style="padding:9px 12px"><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></td></tr>`;}).join('')}</tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('sec-modal').classList.add('open');
+
+  // Draw charts after modal renders
+  requestAnimationFrame(()=>{
+    // Equity curve
+    const ec=document.getElementById('sec-equity-canvas');
+    if(ec){
+      const W=ec.parentElement.clientWidth-32,H=130; ec.width=W; ec.height=H;
+      const ctx=ec.getContext('2d'); ctx.clearRect(0,0,W,H);
+      const pts=[0]; let cum=0; sortedClosed.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});
+      if(pts.length>=2){
+        const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=16;
+        const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);
+        const isPos=pts[pts.length-1]>=0;
+        const lineColor=isPos?'#22c55e':'#ef4444';
+        const grad=ctx.createLinearGradient(0,0,0,H);
+        grad.addColorStop(0,isPos?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)');
+        grad.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
+        ctx.beginPath(); ctx.moveTo(sx(0),sy(pts[0])); pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
+        ctx.lineTo(sx(pts.length-1),H); ctx.lineTo(sx(0),H); ctx.closePath();
+        ctx.fillStyle=grad; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(sx(0),sy(pts[0])); pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
+        ctx.strokeStyle=lineColor; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+      } else { ctx.fillStyle='#64748b'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
+    }
+    // P&L per trade bars
+    const pc=document.getElementById('sec-pnl-canvas');
+    if(pc){
+      const W=pc.parentElement.clientWidth-32,H=130; pc.width=W; pc.height=H;
+      const ctx=pc.getContext('2d'); ctx.clearRect(0,0,W,H);
+      const pnls=sortedClosed.map(t=>calcPnL(t)||0);
+      if(pnls.length){
+        const maxAbs=Math.max(...pnls.map(Math.abs),1);
+        const pad=16; const barW=Math.max(3,Math.floor((W-pad*2)/pnls.length)-2); const baseline=H/2;
+        ctx.strokeStyle='#1c2030'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad,baseline); ctx.lineTo(W-pad,baseline); ctx.stroke();
+        pnls.forEach((v,i)=>{ const x=pad+i*((W-pad*2)/pnls.length); const bH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad)); ctx.fillStyle=v>=0?'rgba(34,197,94,.8)':'rgba(239,68,68,.8)'; if(v>=0)ctx.fillRect(x,baseline-bH,barW,bH); else ctx.fillRect(x,baseline,barW,bH); });
+      } else { ctx.fillStyle='#64748b'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Not enough data',W/2,H/2); }
+    }
+  });
+}
+document.getElementById('sec-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('sec-modal').classList.remove('open');});
 </script>
 </body>
 </html>

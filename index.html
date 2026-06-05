@@ -454,6 +454,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div class="form-group"><label class="form-label">Symbol / Asset</label><input class="form-input" id="f-symbol" placeholder="BTC, AAPL, EUR/USD…" list="sym-list" required autocomplete="off"><datalist id="sym-list"><option value="BTC/USD"><option value="ETH/USD"><option value="BNB/USD"><option value="SOL/USD"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="XAU/USD"><option value="XAG/USD"><option value="WTI/USD"><option value="AAPL"><option value="TSLA"><option value="NVDA"><option value="AMZN"><option value="MSFT"><option value="GOOGL"><option value="META"><option value="SPY"><option value="QQQ"><option value="GLD"></datalist></div>
         <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Crypto">Crypto</option><option value="Forex">Forex</option><option value="Stocks">Stocks</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="ETF">ETF</option><option value="Bonds">Bonds</option></select></div>
         <div class="form-group"><label class="form-label">Exchange <span class="opt">(optional)</span></label><input class="form-input" id="f-exchange" placeholder="ZSE, NYSE, NASDAQ…" list="exch-list" autocomplete="off"><datalist id="exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="LSE"><option value="NSE"><option value="BSE"><option value="ASX"><option value="TSX"><option value="HKEX"><option value="SSE"><option value="Euronext"><option value="XETRA"><option value="SGX"><option value="KSE"><option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX"><option value="CME"><option value="CBOE"><option value="ICE"><option value="OTC"></datalist></div>
+        <div class="form-group"><label class="form-label">Currency</label><select class="form-select" id="f-currency"><option value="USD">USD — US Dollar ($)</option><option value="ZiG">ZiG — Zimbabwe Gold</option><option value="ZAR">ZAR — South African Rand (R)</option><option value="GBP">GBP — British Pound (£)</option><option value="EUR">EUR — Euro (€)</option><option value="NGN">NGN — Nigerian Naira (₦)</option><option value="INR">INR — Indian Rupee (₹)</option><option value="KES">KES — Kenyan Shilling</option><option value="AUD">AUD — Australian Dollar</option><option value="CAD">CAD — Canadian Dollar</option><option value="HKD">HKD — Hong Kong Dollar</option><option value="CNY">CNY — Chinese Yuan (¥)</option><option value="SGD">SGD — Singapore Dollar</option><option value="JPY">JPY — Japanese Yen (¥)</option><option value="USDT">USDT — Tether</option><option value="PKR">PKR — Pakistani Rupee (₨)</option><option value="GHS">GHS — Ghanaian Cedi (₵)</option><option value="BRL">BRL — Brazilian Real</option><option value="EGP">EGP — Egyptian Pound</option><option value="BTC">BTC — Bitcoin (₿)</option><option value="ETH">ETH — Ethereum (Ξ)</option></select></div>
         <div class="form-group"><label class="form-label">Direction</label><select class="form-select" id="f-dir"><option value="Long">Long (Buy)</option><option value="Short">Short (Sell)</option></select></div>
         <div class="form-group"><label class="form-label">Quantity / Size</label><input class="form-input" id="f-qty" type="number" step="any" min="0" placeholder="0.00" required></div>
         <div class="form-group"><label class="form-label">Entry Price</label><input class="form-input" id="f-entry" type="number" step="any" min="0" placeholder="0.00" required></div>
@@ -549,8 +550,31 @@ let trades = [], closingId = null;
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
-function fromDb(r){ return {id:r.id,type:r.type,symbol:r.symbol,market:r.market,exchange:r.exchange||'',direction:r.direction,qty:Number(r.qty),entry:Number(r.entry),entryDate:r.entry_date,exit:r.exit!=null?Number(r.exit):null,exitDate:r.exit_date,sl:r.sl!=null?Number(r.sl):null,tp:r.tp!=null?Number(r.tp):null,fee:Number(r.fee)||0,strategy:r.strategy||'',notes:r.notes||'',status:r.status,createdAt:r.created_at}; }
-function toDb(t){ return {type:t.type,symbol:t.symbol,market:t.market,exchange:t.exchange||null,direction:t.direction,qty:t.qty,entry:t.entry,entry_date:t.entryDate||null,exit:t.exit??null,exit_date:t.exitDate||null,sl:t.sl??null,tp:t.tp??null,fee:t.fee||0,strategy:t.strategy||null,notes:t.notes||null,status:t.status}; }
+function fromDb(r){ return {id:r.id,type:r.type,symbol:r.symbol,market:r.market,exchange:r.exchange||'',currency:r.currency||'USD',direction:r.direction,qty:Number(r.qty),entry:Number(r.entry),entryDate:r.entry_date,exit:r.exit!=null?Number(r.exit):null,exitDate:r.exit_date,sl:r.sl!=null?Number(r.sl):null,tp:r.tp!=null?Number(r.tp):null,fee:Number(r.fee)||0,strategy:r.strategy||'',notes:r.notes||'',status:r.status,createdAt:r.created_at}; }
+function toDb(t){ return {type:t.type,symbol:t.symbol,market:t.market,exchange:t.exchange||null,currency:t.currency||'USD',direction:t.direction,qty:t.qty,entry:t.entry,entry_date:t.entryDate||null,exit:t.exit??null,exit_date:t.exitDate||null,sl:t.sl??null,tp:t.tp??null,fee:t.fee||0,strategy:t.strategy||null,notes:t.notes||null,status:t.status}; }
+
+// ── Currency maps ──────────────────────────────────────────────────
+const EXCHANGE_CURRENCY={
+  'ZSE':'ZiG','VFSE':'USD','JSE':'ZAR','NYSE':'USD','NASDAQ':'USD',
+  'LSE':'GBP','NSE':'NGN','BSE':'INR','ASX':'AUD','TSX':'CAD',
+  'HKEX':'HKD','SSE':'CNY','SGX':'SGD','Euronext':'EUR','XETRA':'EUR',
+  'Binance':'USDT','Coinbase':'USD','Kraken':'USD','Bybit':'USDT','OKX':'USDT',
+  'CME':'USD','CBOE':'USD','ICE':'USD','OTC':'USD','KSE':'PKR',
+};
+const CURRENCY_SYM={
+  'USD':'$','ZiG':'ZiG ','ZAR':'R','GBP':'£','EUR':'€','INR':'₹',
+  'NGN':'₦','KES':'KSh ','AUD':'A$','CAD':'C$','HKD':'HK$','CNY':'¥',
+  'SGD':'S$','JPY':'¥','USDT':'USDT ','PKR':'₨','GHS':'₵','BRL':'R$',
+  'EGP':'E£','MXN':'$','BTC':'₿','ETH':'Ξ',
+};
+const CURRENCIES=['USD','ZiG','ZAR','GBP','EUR','INR','NGN','KES','AUD','CAD','HKD','CNY','SGD','JPY','USDT','PKR','GHS','BRL','EGP','MXN','BTC','ETH'];
+function ccySym(c){ return CURRENCY_SYM[c]||c+' '; }
+function fmtPnL(n,ccy){
+  if(n==null)return '—';
+  const sym=ccySym(ccy||'USD');
+  const abs=Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
+  return (n>=0?'+':'-')+sym+abs;
+}
 
 // ── Auth ───────────────────────────────────────────────────────────
 let authMode = 'login';
@@ -590,7 +614,13 @@ document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventL
 
 // ── Trade Modal ────────────────────────────────────────────────────
 function nowLocal(){ const d=new Date(); d.setSeconds(0,0); return d.toISOString().slice(0,16); }
-document.getElementById('open-trade-btn').addEventListener('click',()=>{ document.getElementById('f-id').value=''; document.getElementById('modal-title').textContent='Log New Trade'; document.getElementById('form-submit-btn').textContent='Log Trade'; document.getElementById('trade-form').reset(); document.getElementById('f-entry-date').value=nowLocal(); setType('day'); document.getElementById('trade-modal').classList.add('open'); });
+// Auto-fill currency from exchange
+document.getElementById('f-exchange').addEventListener('input',()=>{
+  const exch=document.getElementById('f-exchange').value.trim();
+  const ccy=EXCHANGE_CURRENCY[exch];
+  if(ccy){ document.getElementById('f-currency').value=ccy; }
+});
+document.getElementById('open-trade-btn').addEventListener('click',()=>{ document.getElementById('f-id').value=''; document.getElementById('modal-title').textContent='Log New Trade'; document.getElementById('form-submit-btn').textContent='Log Trade'; document.getElementById('trade-form').reset(); document.getElementById('f-entry-date').value=nowLocal(); document.getElementById('f-currency').value='USD'; setType('day'); document.getElementById('trade-modal').classList.add('open'); });
 function closeTradeModal(){ document.getElementById('trade-modal').classList.remove('open'); }
 document.getElementById('trade-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTradeModal();});
 document.querySelectorAll('.type-btn').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.type)));
@@ -599,12 +629,12 @@ document.getElementById('trade-form').addEventListener('submit',async e=>{
   e.preventDefault();
   const id=document.getElementById('f-id').value, exitVal=document.getElementById('f-exit').value;
   const btn=document.getElementById('form-submit-btn'); btn.disabled=true; btn.textContent='…';
-  const t={id:id||null,type:document.getElementById('f-type').value,symbol:document.getElementById('f-symbol').value.trim().toUpperCase(),market:document.getElementById('f-market').value,exchange:document.getElementById('f-exchange').value.trim().toUpperCase()||null,direction:document.getElementById('f-dir').value,qty:parseFloat(document.getElementById('f-qty').value),entry:parseFloat(document.getElementById('f-entry').value),entryDate:document.getElementById('f-entry-date').value||null,exit:exitVal?parseFloat(exitVal):null,exitDate:document.getElementById('f-exit-date').value||null,sl:document.getElementById('f-sl').value?parseFloat(document.getElementById('f-sl').value):null,tp:document.getElementById('f-tp').value?parseFloat(document.getElementById('f-tp').value):null,fee:parseFloat(document.getElementById('f-fee').value)||0,strategy:document.getElementById('f-strategy').value.trim(),notes:document.getElementById('f-notes').value.trim(),status:exitVal?'closed':'open'};
+  const t={id:id||null,type:document.getElementById('f-type').value,symbol:document.getElementById('f-symbol').value.trim().toUpperCase(),market:document.getElementById('f-market').value,exchange:document.getElementById('f-exchange').value.trim().toUpperCase()||null,currency:document.getElementById('f-currency').value||'USD',direction:document.getElementById('f-dir').value,qty:parseFloat(document.getElementById('f-qty').value),entry:parseFloat(document.getElementById('f-entry').value),entryDate:document.getElementById('f-entry-date').value||null,exit:exitVal?parseFloat(exitVal):null,exitDate:document.getElementById('f-exit-date').value||null,sl:document.getElementById('f-sl').value?parseFloat(document.getElementById('f-sl').value):null,tp:document.getElementById('f-tp').value?parseFloat(document.getElementById('f-tp').value):null,fee:parseFloat(document.getElementById('f-fee').value)||0,strategy:document.getElementById('f-strategy').value.trim(),notes:document.getElementById('f-notes').value.trim(),status:exitVal?'closed':'open'};
   try { if(id){await updateTrade(id,t);}else{await insertTrade(t);} closeTradeModal(); renderAll(); }
   catch(err){ alert('Save failed: '+err.message); }
   finally { btn.disabled=false; btn.textContent=id?'Save Changes':'Log Trade'; }
 });
-function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; document.getElementById('f-id').value=t.id; document.getElementById('modal-title').textContent='Edit Trade'; document.getElementById('form-submit-btn').textContent='Save Changes'; setType(t.type); const m={symbol:t.symbol,market:t.market,exchange:t.exchange||'',dir:t.direction,qty:t.qty,entry:t.entry,'entry-date':t.entryDate||'',exit:t.exit??'','exit-date':t.exitDate||'',sl:t.sl??'',tp:t.tp??'',fee:t.fee||0,strategy:t.strategy||'',notes:t.notes||''}; Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;}); document.getElementById('trade-modal').classList.add('open'); }
+function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; document.getElementById('f-id').value=t.id; document.getElementById('modal-title').textContent='Edit Trade'; document.getElementById('form-submit-btn').textContent='Save Changes'; setType(t.type); const m={symbol:t.symbol,market:t.market,exchange:t.exchange||'',currency:t.currency||'USD',dir:t.direction,qty:t.qty,entry:t.entry,'entry-date':t.entryDate||'',exit:t.exit??'','exit-date':t.exitDate||'',sl:t.sl??'',tp:t.tp??'',fee:t.fee||0,strategy:t.strategy||'',notes:t.notes||''}; Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;}); document.getElementById('trade-modal').classList.add('open'); }
 
 // ── Close Modal ────────────────────────────────────────────────────
 function openCloseModal(id){ closingId=id; document.getElementById('c-exit').value=''; document.getElementById('c-date').value=nowLocal(); document.getElementById('c-fee').value='0'; document.getElementById('c-notes').value=''; document.getElementById('close-modal').classList.add('open'); }
@@ -644,7 +674,7 @@ function renderTable(containerId,list){
       <td>${t.exit!=null?fmtNum(t.exit):'<span style="color:var(--muted)">—</span>'}</td>
       <td style="font-size:12px;color:var(--muted2)">${fmtDateShort(t.entryDate)}</td>
       <td style="font-size:12px;color:var(--muted2)">${t.exitDate?fmtDateShort(t.exitDate):'—'}</td>
-      <td class="${pnlClass(pnl)}">${pnlStr(pnl)}</td>
+      <td class="${pnlClass(pnl)}">${fmtPnL(pnl,t.currency)}</td>
       <td style="color:var(--muted2);font-size:12px">${rr}</td>
       <td><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}">${t.status}</span></td>
       <td><div style="display:flex;gap:5px">
@@ -682,14 +712,14 @@ function renderDashboard(){
   const pf=grossL?grossP/grossL:null;
   const open=trades.filter(t=>t.status==='open').length;
   document.getElementById('db-stats').innerHTML=[
-    {label:'Net P&L',val:closed.length?pnlStr(totalPnL):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
+    {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
     {label:'Profit Factor',val:pf!=null?pf.toFixed(2):'—',cls:pf>1?'green':pf!=null&&pf<1?'red':'',card:''},
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
-    {label:'Avg Win',val:avgWin!=null?'+'+fmtNum(avgWin):'—',cls:'green',card:''},
-    {label:'Avg Loss',val:avgLoss!=null?fmtNum(avgLoss):'—',cls:'red',card:''},
-    {label:'Best Trade',val:wins.length?'+'+fmtNum(Math.max(...wins)):'—',cls:'green',card:''},
+    {label:'Avg Win',val:avgWin!=null?fmtPnL(avgWin,[...new Set(closed.filter(t=>calcPnL(t)>0).map(t=>t.currency))][0]||'USD'):'—',cls:'green',card:''},
+    {label:'Avg Loss',val:avgLoss!=null?fmtPnL(-avgLoss,[...new Set(closed.filter(t=>calcPnL(t)<0).map(t=>t.currency))][0]||'USD'):'—',cls:'red',card:''},
+    {label:'Best Trade',val:wins.length?fmtPnL(Math.max(...wins),[...new Set(closed.map(t=>t.currency))][0]||'USD'):'—',cls:'green',card:''},
   ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`).join('');
   drawEquityChart(closed); drawDailyChart(closed);
   const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(calcPnL(t)||0);});
@@ -697,7 +727,7 @@ function renderDashboard(){
   const maxAbs=Math.max(...entries.map(([,v])=>Math.abs(v)),1);
   document.getElementById('asset-bars').innerHTML=entries.length?entries.map(([sym,pnl])=>`<div class="bar-row"><div class="bar-label">${sym}</div><div class="bar-track"><div class="bar-fill ${pnl>=0?'pos':'neg'}" style="width:${(Math.abs(pnl)/maxAbs*100).toFixed(1)}%">${Math.abs(pnl)>maxAbs*.18?pnlStr(pnl):''}</div></div><div class="bar-val ${pnlClass(pnl)}">${pnlStr(pnl)}</div></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:28px;font-size:13px">No closed trades yet</div>';
   const recent=trades.slice(0,6);
-  document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);const c=getColor(t.symbol);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="symbol-icon" style="background:${c}22;color:${c};width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${t.symbol.slice(0,3)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:700">${pnlStr(pnl)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
+  document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);const c=getColor(t.symbol);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="symbol-icon" style="background:${c}22;color:${c};width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">${t.symbol.slice(0,3)}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:700">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
 }
 
 function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle='#64748b';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);ctx.strokeStyle='#1c2030';ctx.lineWidth=1;for(let i=0;i<=4;i++){const y=pad+(i/4)*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'rgba(99,102,241,.35)');grad.addColorStop(1,'rgba(99,102,241,0)');ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.strokeStyle='#6366f1';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),5,0,Math.PI*2);ctx.fillStyle='#6366f1';ctx.fill(); }
@@ -762,7 +792,8 @@ function analyzeSymbol(symbol){
   if(score>=85){grade='A+';gColor='#22c55e';}else if(score>=75){grade='A';gColor='#22c55e';}else if(score>=65){grade='B';gColor='#86efac';}else if(score>=55){grade='C';gColor='var(--yellow)';}else if(score>=45){grade='D';gColor='#f97316';}
   const market=all[0]?.market||'';
   const exchange=all[0]?.exchange||'';
-  return {symbol,market,exchange,all,closed,open,pnls,totalPnL,winRate,avgWin,avgLoss,grossP,grossL,profitFactor,expectancy,stdDev,sharpe,mdd,maxCW,maxCL,avgRR,avgHoldHrs,holdTimes,score,grade,gColor,bestTrade:wins.length?Math.max(...wins):null,worstTrade:losses.length?Math.min(...losses):null};
+  const currency=[...new Set(all.map(t=>t.currency).filter(Boolean))][0]||'USD';
+  return {symbol,market,exchange,currency,all,closed,open,pnls,totalPnL,winRate,avgWin,avgLoss,grossP,grossL,profitFactor,expectancy,stdDev,sharpe,mdd,maxCW,maxCL,avgRR,avgHoldHrs,holdTimes,score,grade,gColor,bestTrade:wins.length?Math.max(...wins):null,worstTrade:losses.length?Math.min(...losses):null};
 }
 
 function fmtHoldTime(hrs){
@@ -812,6 +843,7 @@ function renderSecurities(){
           <div class="sec-card-meta">
             ${a.market?`<span class="badge badge-market" style="font-size:10px">${a.market}</span>`:''}
             ${a.exchange?`<span class="badge badge-market" style="font-size:10px;color:var(--accent2)">${a.exchange}</span>`:''}
+            <span class="badge" style="font-size:10px;background:rgba(99,102,241,.12);color:var(--accent2)">${a.currency}</span>
             <span style="color:var(--muted)">${a.closed.length} trade${a.closed.length!==1?'s':''}</span>
             ${a.open.length?`<span class="badge badge-open" style="font-size:10px">${a.open.length} open</span>`:''}
           </div>
@@ -823,11 +855,11 @@ function renderSecurities(){
       <div style="display:flex;justify-content:space-between;align-items:baseline">
         <div>
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total P&L</div>
-          <div class="${pnlCls}" style="font-size:22px;font-weight:900;letter-spacing:-.5px">${pnlStr(a.totalPnL)}</div>
+          <div class="${pnlCls}" style="font-size:22px;font-weight:900;letter-spacing:-.5px">${fmtPnL(a.totalPnL,a.currency)}</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Expectancy</div>
-          <div class="${pnlClass(a.expectancy)}" style="font-size:16px;font-weight:700">${a.expectancy!=null?pnlStr(a.expectancy):'—'}</div>
+          <div class="${pnlClass(a.expectancy)}" style="font-size:16px;font-weight:700">${a.expectancy!=null?fmtPnL(a.expectancy,a.currency):'—'}</div>
         </div>
       </div>
       <div class="sec-metrics">
@@ -836,9 +868,9 @@ function renderSecurities(){
         <div class="sec-metric"><div class="sec-metric-val">${fmtHoldTime(a.avgHoldHrs)}</div><div class="sec-metric-lbl">Avg Hold</div></div>
       </div>
       <div class="sec-footer">
-        <span>Best: <strong class="pnl-pos">${a.bestTrade!=null?'+'+fmtNum(a.bestTrade):'—'}</strong></span>
-        <span>Worst: <strong class="pnl-neg">${a.worstTrade!=null?fmtNum(a.worstTrade):'—'}</strong></span>
-        <span>Max DD: <strong class="pnl-neg">${a.mdd>0?'-'+fmtNum(a.mdd):'—'}</strong></span>
+        <span>Best: <strong class="pnl-pos">${a.bestTrade!=null?fmtPnL(a.bestTrade,a.currency):'—'}</strong></span>
+        <span>Worst: <strong class="pnl-neg">${a.worstTrade!=null?fmtPnL(a.worstTrade,a.currency):'—'}</strong></span>
+        <span>Max DD: <strong class="pnl-neg">${a.mdd>0?fmtPnL(-a.mdd,a.currency):'—'}</strong></span>
       </div>
     </div>`;
   }).join('')+'</div>';
@@ -849,29 +881,29 @@ function openSecModal(symbol){
   document.getElementById('sec-modal-icon').style.cssText=`background:${c}22;color:${c};width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800`;
   document.getElementById('sec-modal-icon').textContent=symbol.slice(0,4);
   document.getElementById('sec-modal-title').textContent=symbol;
-  document.getElementById('sec-modal-sub').innerHTML=[a.market,a.exchange].filter(Boolean).map(x=>`<span class="badge badge-market" style="font-size:10px;margin-right:4px">${x}</span>`).join('')+` &nbsp; ${a.closed.length} closed trade${a.closed.length!==1?'s':''}${a.open.length?' · '+a.open.length+' open':''}`;
+  document.getElementById('sec-modal-sub').innerHTML=[a.market,a.exchange].filter(Boolean).map(x=>`<span class="badge badge-market" style="font-size:10px;margin-right:4px">${x}</span>`).join('')+`<span class="badge" style="font-size:10px;background:rgba(99,102,241,.15);color:var(--accent2);margin-right:4px">${a.currency} ${ccySym(a.currency).trim()}</span> &nbsp; ${a.closed.length} closed trade${a.closed.length!==1?'s':''}${a.open.length?' · '+a.open.length+' open':''}`;
 
   const stats=[
-    {lbl:'Total P&L',val:pnlStr(a.totalPnL),cls:pnlClass(a.totalPnL)},
+    {lbl:'Total P&L ('+a.currency+')',val:fmtPnL(a.totalPnL,a.currency),cls:pnlClass(a.totalPnL)},
     {lbl:'Win Rate',val:a.closed.length?a.winRate.toFixed(1)+'%':'—',cls:''},
     {lbl:'Profit Factor',val:a.profitFactor!=null?a.profitFactor.toFixed(2):'—',cls:a.profitFactor>1?'pnl-pos':a.profitFactor&&a.profitFactor<1?'pnl-neg':''},
-    {lbl:'Expectancy / Trade',val:a.expectancy!=null?pnlStr(a.expectancy):'—',cls:pnlClass(a.expectancy)},
-    {lbl:'Avg Win',val:a.avgWin?'+'+fmtNum(a.avgWin):'—',cls:'pnl-pos'},
-    {lbl:'Avg Loss',val:a.avgLoss?'-'+fmtNum(a.avgLoss):'—',cls:'pnl-neg'},
-    {lbl:'Best Trade',val:a.bestTrade!=null?'+'+fmtNum(a.bestTrade):'—',cls:'pnl-pos'},
-    {lbl:'Worst Trade',val:a.worstTrade!=null?fmtNum(a.worstTrade):'—',cls:'pnl-neg'},
+    {lbl:'Expectancy / Trade',val:a.expectancy!=null?fmtPnL(a.expectancy,a.currency):'—',cls:pnlClass(a.expectancy)},
+    {lbl:'Avg Win',val:a.avgWin?fmtPnL(a.avgWin,a.currency):'—',cls:'pnl-pos'},
+    {lbl:'Avg Loss',val:a.avgLoss?fmtPnL(-a.avgLoss,a.currency):'—',cls:'pnl-neg'},
+    {lbl:'Best Trade',val:a.bestTrade!=null?fmtPnL(a.bestTrade,a.currency):'—',cls:'pnl-pos'},
+    {lbl:'Worst Trade',val:a.worstTrade!=null?fmtPnL(a.worstTrade,a.currency):'—',cls:'pnl-neg'},
   ];
 
   const riskRows=[
-    ['Max Drawdown', a.mdd>0?'-'+fmtNum(a.mdd):'—'],
+    ['Max Drawdown', a.mdd>0?fmtPnL(-a.mdd,a.currency):'—'],
     ['Sharpe Ratio', a.sharpe!=null?a.sharpe.toFixed(2):'—'],
     ['Avg R:R', a.avgRR!=null?a.avgRR.toFixed(2)+'R':'—'],
-    ['Std Dev (P&L)', a.stdDev>0?fmtNum(a.stdDev):'—'],
+    ['Std Dev (P&L)', a.stdDev>0?ccySym(a.currency)+fmtNum(a.stdDev):'—'],
     ['Avg Hold Time', fmtHoldTime(a.avgHoldHrs)],
     ['Max Consec. Wins', a.maxCW||'—'],
     ['Max Consec. Losses', a.maxCL||'—'],
-    ['Gross Profit', '+'+fmtNum(a.grossP)],
-    ['Gross Loss', '-'+fmtNum(a.grossL)],
+    ['Gross Profit', fmtPnL(a.grossP,a.currency)],
+    ['Gross Loss', fmtPnL(-a.grossL,a.currency)],
     ['Total Trades', a.closed.length],
   ];
 
@@ -913,7 +945,7 @@ function openSecModal(symbol){
     <div style="overflow-x:auto;border-radius:var(--r-sm);border:1px solid var(--border)">
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr style="background:var(--surface2)"><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Date</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Dir</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Entry</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Exit</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">P&L</th><th style="padding:8px 12px;text-align:right;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Hold</th><th style="padding:8px 12px;text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)">Status</th></tr></thead>
-        <tbody>${recentTrades.map((t,i)=>{const pnl=calcPnL(t);const holdHrs=t.entryDate&&t.exitDate?(new Date(t.exitDate)-new Date(t.entryDate))/3600000:null;return `<tr style="${i===recentTrades.length-1?'':'border-bottom:1px solid var(--border)'}"><td style="padding:9px 12px;color:var(--muted2)">${fmtDateShort(t.entryDate)}</td><td style="padding:9px 12px"><span class="badge ${t.direction==='Long'?'badge-long':'badge-short'}" style="font-size:10px">${t.direction}</span></td><td style="padding:9px 12px;text-align:right">${fmtNum(t.entry)}</td><td style="padding:9px 12px;text-align:right">${t.exit!=null?fmtNum(t.exit):'<span style="color:var(--muted)">Open</span>'}</td><td style="padding:9px 12px;text-align:right" class="${pnlClass(pnl)}">${pnlStr(pnl)}</td><td style="padding:9px 12px;text-align:right;color:var(--muted)">${fmtHoldTime(holdHrs)}</td><td style="padding:9px 12px"><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></td></tr>`;}).join('')}</tbody>
+        <tbody>${recentTrades.map((t,i)=>{const pnl=calcPnL(t);const holdHrs=t.entryDate&&t.exitDate?(new Date(t.exitDate)-new Date(t.entryDate))/3600000:null;return `<tr style="${i===recentTrades.length-1?'':'border-bottom:1px solid var(--border)'}"><td style="padding:9px 12px;color:var(--muted2)">${fmtDateShort(t.entryDate)}</td><td style="padding:9px 12px"><span class="badge ${t.direction==='Long'?'badge-long':'badge-short'}" style="font-size:10px">${t.direction}</span></td><td style="padding:9px 12px;text-align:right">${fmtNum(t.entry)}</td><td style="padding:9px 12px;text-align:right">${t.exit!=null?fmtNum(t.exit):'<span style="color:var(--muted)">Open</span>'}</td><td style="padding:9px 12px;text-align:right" class="${pnlClass(pnl)}">${fmtPnL(pnl,t.currency)}</td><td style="padding:9px 12px;text-align:right;color:var(--muted)">${fmtHoldTime(holdHrs)}</td><td style="padding:9px 12px"><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></td></tr>`;}).join('')}</tbody>
       </table>
     </div>`;
 

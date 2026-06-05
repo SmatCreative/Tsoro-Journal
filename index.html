@@ -195,6 +195,16 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .empty-state .empty-icon{margin-bottom:14px;opacity:.5;display:flex;justify-content:center}
 .empty-state h3{font-size:15px;font-weight:700;color:var(--muted2);margin-bottom:6px}
 
+/* ── Rates ── */
+.rate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
+.rate-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rate-currency-badge{font-size:16px;font-weight:900;color:var(--accent)}
+.rate-big{font-size:26px;font-weight:900;letter-spacing:-.5px;line-height:1}
+.rate-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.rate-inflation{display:inline-flex;align-items:center;gap:5px;background:var(--red-bg,rgba(239,68,68,.1));color:var(--red);border-radius:4px;padding:3px 8px;font-size:12px;font-weight:700;margin-top:8px}
+.rate-updated{font-size:11px;color:var(--muted);margin-top:8px}
+.usd-equiv{font-size:12px;color:var(--muted2);font-weight:600}
+
 /* ── Securities ── */
 .sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
 .sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:border-color .15s,transform .1s}
@@ -311,6 +321,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     <button class="nav-item" data-page="securities">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
       <span>Securities</span>
+    </button>
+    <button class="nav-item" data-page="rates">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+      <span>Rates</span>
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -535,6 +549,83 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="importCSV()">Import</button>
       <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
       <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
+      <!-- Rates -->
+      <div class="page" id="page-rates">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="rates-current"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Rate History</div>
+          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Rate
+          </button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Add Rate Modal -->
+<div class="overlay" id="rate-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="rate-modal-title">Add Exchange Rate</div>
+      <button class="modal-close" onclick="closeRateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="rate-edit-id">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="rate-currency">
+          <option value="ZiG">ZiG — Zimbabwe Gold</option>
+          <option value="ZAR">ZAR — South African Rand</option>
+          <option value="USD" selected>USD — US Dollar</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="INR">INR — Indian Rupee</option>
+          <option value="NGN">NGN — Nigerian Naira</option>
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="HKD">HKD — Hong Kong Dollar</option>
+          <option value="CNY">CNY — Chinese Yuan</option>
+          <option value="SGD">SGD — Singapore Dollar</option>
+          <option value="USDT">USDT — Tether</option>
+          <option value="PKR">PKR — Pakistani Rupee</option>
+          <option value="GHS">GHS — Ghanaian Cedi</option>
+          <option value="BRL">BRL — Brazilian Real</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="rate-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Units per USD</label>
+        <input class="form-input" type="number" step="any" min="0" id="rate-units" placeholder="e.g. 352 for ZiG">
+      </div>
+      <div class="form-group">
+        <label class="form-label">1 USD equivalent</label>
+        <div class="form-input" id="rate-equiv" style="color:var(--muted);cursor:default">—</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Annual Inflation Rate %</label>
+        <input class="form-input" type="number" step="any" min="0" id="rate-inflation" placeholder="e.g. 140 for 140%">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="rate-notes" placeholder="Source, reason for change…">
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--r-sm);padding:12px;margin:14px 0;font-size:12px;color:var(--muted2)">
+      <strong style="color:var(--text)">How to use:</strong> Enter how many units of this currency equal 1 USD.<br>
+      Examples: ZiG 352 means 1 USD = 352 ZiG &nbsp;·&nbsp; ZAR 18.5 means 1 USD = R18.50 &nbsp;·&nbsp; GBP 0.79 means 1 USD = £0.79
+    </div>
+    <div class="form-row" style="margin-top:4px">
+      <button class="btn btn-primary" onclick="saveRate()">Save Rate</button>
+      <button class="btn btn-ghost" onclick="closeRateModal()">Cancel</button>
+      <span id="rate-msg" style="font-size:12px;color:var(--green);margin-left:auto"></span>
     </div>
   </div>
 </div>
@@ -607,7 +698,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null;
+let trades = [], closingId = null, rates = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -661,16 +752,17 @@ async function signOut(){ await sb.auth.signOut(); }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
-sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await loadTrades();renderAll();}else{showAuthScreen();} });
+sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
 async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){console.error(error);return;} trades=data.map(fromDb); }
-async function insertTrade(t){ const{data,error}=await sb.from('trades').insert([toDb(t)]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
+async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){console.error(error);return;} rates=data||[]; }
+async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade permanently?'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){alert('Delete failed: '+error.message);return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',rates:'Exchange Rates & Inflation'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -707,7 +799,7 @@ async function confirmClose(){ const exit=parseFloat(document.getElementById('c-
 
 // ── Import CSV ─────────────────────────────────────────────────────
 document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-modal').classList.add('open'));
-async function importCSV(){ const file=document.getElementById('csv-file').files[0]; if(!file){alert('Select a file.');return;} const btn=document.querySelector('#import-modal .btn-primary'); btn.disabled=true; btn.textContent='…'; const reader=new FileReader(); reader.onload=async e=>{const lines=e.target.result.split('\n').filter(l=>l.trim()); const headers=lines[0].split(',').map(h=>h.trim().toLowerCase()); const rows=[]; for(let i=1;i<lines.length;i++){const cols=lines[i].split(',');const row={};headers.forEach((h,j)=>row[h]=(cols[j]||'').trim());if(!row.symbol)continue;const exitVal=row.exit?parseFloat(row.exit):null;rows.push({type:row.type||'day',symbol:row.symbol.toUpperCase(),market:row.market||'',exchange:row.exchange?row.exchange.toUpperCase():null,direction:row.direction||'Long',qty:parseFloat(row.qty)||0,entry:parseFloat(row.entry)||0,entry_date:row.entrydate||row.entryDate||null,exit:exitVal,exit_date:row.exitdate||row.exitDate||null,sl:row.sl?parseFloat(row.sl):null,tp:row.tp?parseFloat(row.tp):null,fee:parseFloat(row.fee)||0,strategy:row.strategy||null,notes:row.notes||null,status:exitVal?'closed':'open'});} try{const{error}=await sb.from('trades').insert(rows);if(error)throw error;await loadTrades();renderAll();document.getElementById('import-msg').textContent='Imported '+rows.length+' trades';setTimeout(()=>{document.getElementById('import-msg').textContent='';document.getElementById('import-modal').classList.remove('open');},2000);}catch(err){alert('Import failed: '+err.message);}finally{btn.disabled=false;btn.textContent='Import';}}; reader.readAsText(file); }
+async function importCSV(){ const file=document.getElementById('csv-file').files[0]; if(!file){alert('Select a file.');return;} const btn=document.querySelector('#import-modal .btn-primary'); btn.disabled=true; btn.textContent='…'; const reader=new FileReader(); reader.onload=async e=>{const lines=e.target.result.split('\n').filter(l=>l.trim()); const headers=lines[0].split(',').map(h=>h.trim().toLowerCase()); const rows=[]; for(let i=1;i<lines.length;i++){const cols=lines[i].split(',');const row={};headers.forEach((h,j)=>row[h]=(cols[j]||'').trim());if(!row.symbol)continue;const exitVal=row.exit?parseFloat(row.exit):null;rows.push({user_id:currentUser.id,type:row.type||'day',symbol:row.symbol.toUpperCase(),market:row.market||'',exchange:row.exchange?row.exchange.toUpperCase():null,currency:row.currency||'USD',direction:row.direction||'Long',qty:parseFloat(row.qty)||0,entry:parseFloat(row.entry)||0,entry_date:row.entrydate||row.entryDate||null,exit:exitVal,exit_date:row.exitdate||row.exitDate||null,sl:row.sl?parseFloat(row.sl):null,tp:row.tp?parseFloat(row.tp):null,fee:parseFloat(row.fee)||0,strategy:row.strategy||null,notes:row.notes||null,status:exitVal?'closed':'open'});} try{const{error}=await sb.from('trades').insert(rows);if(error)throw error;await loadTrades();renderAll();document.getElementById('import-msg').textContent='Imported '+rows.length+' trades';setTimeout(()=>{document.getElementById('import-msg').textContent='';document.getElementById('import-modal').classList.remove('open');},2000);}catch(err){alert('Import failed: '+err.message);}finally{btn.disabled=false;btn.textContent='Import';}}; reader.readAsText(file); }
 
 // ── Helpers ────────────────────────────────────────────────────────
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
@@ -810,7 +902,179 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='rates')renderRates(); }
+// ═══════════════════════════════════════════════════════════════════
+// EXCHANGE RATES & INFLATION
+// ═══════════════════════════════════════════════════════════════════
+
+// Live update the "1 USD =" display as user types
+document.getElementById('rate-units').addEventListener('input', ()=>{
+  const v = parseFloat(document.getElementById('rate-units').value);
+  const ccy = document.getElementById('rate-currency').value;
+  document.getElementById('rate-equiv').textContent = v>0 ? `${ccySym(ccy)}${(1/v).toFixed(6)} per unit` : '—';
+});
+
+function openRateModal(id){
+  document.getElementById('rate-edit-id').value = id||'';
+  document.getElementById('rate-modal-title').textContent = id ? 'Edit Rate' : 'Add Exchange Rate';
+  if(id){
+    const r=rates.find(x=>x.id===id); if(!r) return;
+    document.getElementById('rate-currency').value = r.currency;
+    document.getElementById('rate-date').value = r.effective_date;
+    document.getElementById('rate-units').value = r.units_per_usd;
+    document.getElementById('rate-inflation').value = r.inflation_rate||'';
+    document.getElementById('rate-notes').value = r.notes||'';
+    document.getElementById('rate-equiv').textContent = r.units_per_usd>0 ? `${ccySym(r.currency)}${(1/r.units_per_usd).toFixed(6)} per unit` : '—';
+  } else {
+    document.getElementById('rate-currency').value = 'ZiG';
+    document.getElementById('rate-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('rate-units').value = '';
+    document.getElementById('rate-inflation').value = '';
+    document.getElementById('rate-notes').value = '';
+    document.getElementById('rate-equiv').textContent = '—';
+  }
+  document.getElementById('rate-modal').classList.add('open');
+}
+function closeRateModal(){ document.getElementById('rate-modal').classList.remove('open'); }
+document.getElementById('rate-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRateModal();});
+
+async function saveRate(){
+  const id = document.getElementById('rate-edit-id').value;
+  const units = parseFloat(document.getElementById('rate-units').value);
+  if(!units||isNaN(units)||units<=0){ alert('Enter a valid rate (units per USD).'); return; }
+  const row = {
+    currency: document.getElementById('rate-currency').value,
+    units_per_usd: units,
+    inflation_rate: parseFloat(document.getElementById('rate-inflation').value)||0,
+    effective_date: document.getElementById('rate-date').value,
+    notes: document.getElementById('rate-notes').value.trim()||null,
+  };
+  try {
+    if(id){
+      const{error}=await sb.from('exchange_rates').update(row).eq('id',id);
+      if(error) throw error;
+      const idx=rates.findIndex(x=>x.id===id); if(idx>=0) rates[idx]={...rates[idx],...row};
+    } else {
+      const{data,error}=await sb.from('exchange_rates').insert([{...row,user_id:currentUser.id}]).select().single();
+      if(error) throw error;
+      rates.unshift(data);
+    }
+    closeRateModal(); renderRates(); renderAll();
+  } catch(err){ alert('Save failed: '+err.message); }
+}
+
+async function deleteRate(id){
+  if(!confirm('Delete this rate entry?')) return;
+  const{error}=await sb.from('exchange_rates').delete().eq('id',id);
+  if(error){ alert('Delete failed: '+error.message); return; }
+  rates=rates.filter(x=>x.id!==id); renderRates();
+}
+
+// Get latest rate for a currency (returns units_per_usd, 1 for USD)
+function getLatestRate(currency){
+  if(!currency||currency==='USD') return {units_per_usd:1, inflation_rate:0};
+  const r=[...rates].filter(x=>x.currency===currency).sort((a,b)=>new Date(b.effective_date)-new Date(a.effective_date));
+  return r[0]||null;
+}
+
+// Convert amount in given currency to USD
+function toUSD(amount, currency){
+  if(!amount||amount===0) return 0;
+  if(!currency||currency==='USD') return amount;
+  const r=getLatestRate(currency);
+  if(!r) return null; // no rate available
+  return amount/r.units_per_usd;
+}
+
+// Format with USD equivalent if different currency
+function fmtWithUSD(pnl, currency){
+  if(pnl==null) return '—';
+  const ccy=currency||'USD';
+  const main=fmtPnL(pnl,ccy);
+  if(ccy==='USD') return main;
+  const usdVal=toUSD(pnl,ccy);
+  if(usdVal==null) return main;
+  const usdStr=(usdVal>=0?'+':'')+'$'+Math.abs(usdVal).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return `${main} <span style="font-size:11px;color:var(--muted);font-weight:400">(${usdStr})</span>`;
+}
+
+function renderRates(){
+  // Current rates cards (latest per currency)
+  const currencyMap={};
+  [...rates].sort((a,b)=>new Date(b.effective_date)-new Date(a.effective_date)).forEach(r=>{
+    if(!currencyMap[r.currency]) currencyMap[r.currency]=r;
+  });
+  const entries=Object.values(currencyMap);
+  const currentEl=document.getElementById('rates-current');
+  if(!currentEl) return;
+
+  if(!entries.length){
+    currentEl.innerHTML='<div class="card" style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted)">No rates added yet. Click <strong>Add Rate</strong> to track your first currency.</div>';
+  } else {
+    currentEl.innerHTML=entries.map(r=>{
+      const usdPerUnit=(1/r.units_per_usd);
+      const prevRates=[...rates].filter(x=>x.currency===r.currency).sort((a,b)=>new Date(b.effective_date)-new Date(a.effective_date));
+      const prev=prevRates[1];
+      const change=prev?((r.units_per_usd-prev.units_per_usd)/prev.units_per_usd*100):null;
+      const changeStr=change!=null?(change>=0?`<span style="color:var(--red)">+${change.toFixed(1)}% weaker</span>`:`<span style="color:var(--green)">${change.toFixed(1)}% stronger</span>`):'';
+      return `<div class="rate-card">
+        <div class="rate-card-header">
+          <div>
+            <div class="rate-currency-badge">${r.currency}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${CURRENCIES_FULL[r.currency]||r.currency}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="openRateModal('${r.id}')">Update</button>
+        </div>
+        <div class="rate-big">${r.units_per_usd.toLocaleString()} <span style="font-size:14px;color:var(--muted);font-weight:500">per USD</span></div>
+        <div class="rate-sub">1 ${r.currency} = $${usdPerUnit.toFixed(usdPerUnit<0.01?6:4)} USD &nbsp;${changeStr}</div>
+        ${r.inflation_rate>0?`<div class="rate-inflation"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>${r.inflation_rate}% annual inflation</div>`:''}
+        <div class="rate-updated">Updated ${new Date(r.effective_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // History table
+  const tableEl=document.getElementById('rates-table');
+  if(!rates.length){
+    tableEl.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No rate history</h3><p>Add exchange rates to track changes over time.</p></div>';
+    return;
+  }
+  tableEl.innerHTML=`<table>
+    <thead><tr>
+      <th>Date</th><th>Currency</th><th>Units per USD</th><th>USD per Unit</th><th>Annual Inflation</th><th>Change vs Previous</th><th>Notes</th><th></th>
+    </tr></thead>
+    <tbody>${rates.map((r,i)=>{
+      const prev=rates.filter(x=>x.currency===r.currency&&new Date(x.effective_date)<new Date(r.effective_date)).sort((a,b)=>new Date(b.effective_date)-new Date(a.effective_date))[0];
+      const change=prev?((r.units_per_usd-prev.units_per_usd)/prev.units_per_usd*100):null;
+      const changeHtml=change!=null
+        ? `<span class="${change>0?'pnl-neg':'pnl-pos'}">${change>0?'+':''}${change.toFixed(2)}% ${change>0?'weaker':'stronger'}</span>`
+        : '<span style="color:var(--muted)">First entry</span>';
+      return `<tr>
+        <td style="color:var(--muted2);font-size:12px">${new Date(r.effective_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+        <td><span class="badge badge-market" style="font-weight:800;color:var(--accent)">${r.currency}</span></td>
+        <td style="font-weight:700">${r.units_per_usd.toLocaleString()}</td>
+        <td style="color:var(--muted2)">$${(1/r.units_per_usd).toFixed(6)}</td>
+        <td>${r.inflation_rate>0?`<span class="rate-inflation" style="font-size:11px">${r.inflation_rate}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+        <td>${changeHtml}</td>
+        <td style="font-size:12px;color:var(--muted)">${r.notes||'—'}</td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-ghost" onclick="openRateModal('${r.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteRate('${r.id}')">${IC.trash}</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+const CURRENCIES_FULL={
+  'ZiG':'Zimbabwe Gold','ZAR':'South African Rand','USD':'US Dollar',
+  'GBP':'British Pound','EUR':'Euro','INR':'Indian Rupee','NGN':'Nigerian Naira',
+  'KES':'Kenyan Shilling','AUD':'Australian Dollar','CAD':'Canadian Dollar',
+  'HKD':'Hong Kong Dollar','CNY':'Chinese Yuan','SGD':'Singapore Dollar',
+  'USDT':'Tether','PKR':'Pakistani Rupee','GHS':'Ghanaian Cedi',
+  'BRL':'Brazilian Real','EGP':'Egyptian Pound','MXN':'Mexican Peso',
+};
+
 function renderAll(){ renderPage(document.querySelector('.page.active')?.id?.replace('page-','')||'dashboard'); }
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();});
 
@@ -861,7 +1125,16 @@ function analyzeSymbol(symbol){
   const market=all[0]?.market||'';
   const exchange=all[0]?.exchange||'';
   const currency=[...new Set(all.map(t=>t.currency).filter(Boolean))][0]||'USD';
-  return {symbol,market,exchange,currency,all,closed,open,pnls,totalPnL,winRate,avgWin,avgLoss,grossP,grossL,profitFactor,expectancy,stdDev,sharpe,mdd,maxCW,maxCL,avgRR,avgHoldHrs,holdTimes,score,grade,gColor,bestTrade:wins.length?Math.max(...wins):null,worstTrade:losses.length?Math.min(...losses):null};
+  // Inflation & real returns
+  const rateInfo=getLatestRate(currency);
+  const inflationRate=rateInfo?.inflation_rate||0;
+  const avgHoldYears=avgHoldHrs!=null?avgHoldHrs/8760:0;
+  const capitalInvested=closed.reduce((s,t)=>s+(t.entry*t.qty),0)/Math.max(closed.length,1);
+  const inflationCost=capitalInvested*(inflationRate/100)*avgHoldYears*closed.length;
+  const realPnL=totalPnL-inflationCost;
+  const usdPnL=toUSD(totalPnL,currency);
+  const usdRealPnL=toUSD(realPnL,currency);
+  return {symbol,market,exchange,currency,rateInfo,inflationRate,realPnL,usdPnL,usdRealPnL,inflationCost,all,closed,open,pnls,totalPnL,winRate,avgWin,avgLoss,grossP,grossL,profitFactor,expectancy,stdDev,sharpe,mdd,maxCW,maxCL,avgRR,avgHoldHrs,holdTimes,score,grade,gColor,bestTrade:wins.length?Math.max(...wins):null,worstTrade:losses.length?Math.min(...losses):null};
 }
 
 function fmtHoldTime(hrs){
@@ -977,9 +1250,42 @@ function openSecModal(symbol){
 
   // Score bar color
   const scoreColor=a.score>=75?'var(--green)':a.score>=55?'var(--yellow)':a.score>=45?'#f97316':'var(--red)';
-
   const sortedClosed=[...a.closed].sort((x,y)=>new Date(x.entryDate)-new Date(y.entryDate));
   const recentTrades=a.all.slice(0,8);
+
+  // Inflation & USD section HTML
+  const hasRate=!!a.rateInfo;
+  const inflationSection=`
+    <div style="background:var(--surface2);border-radius:var(--r-sm);padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="analysis-section-title" style="margin-bottom:0">Inflation &amp; Real Returns ${a.currency!=='USD'?`<span class="badge badge-market" style="font-size:10px;margin-left:6px">${a.currency}</span>`:''}
+        </div>
+        ${!hasRate?`<button class="btn btn-ghost btn-sm" onclick="navigate('rates')">Set Rate</button>`:''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div class="analysis-stat">
+          <div class="analysis-stat-val ${a.totalPnL>=0?'pnl-pos':'pnl-neg'}">${fmtPnL(a.totalPnL,a.currency)}</div>
+          <div class="analysis-stat-lbl">Nominal P&L</div>
+        </div>
+        <div class="analysis-stat">
+          <div class="analysis-stat-val ${a.inflationRate>0?'pnl-neg':'pnl-zero'}">${a.inflationRate>0?a.inflationRate+'%':'N/A'}</div>
+          <div class="analysis-stat-lbl">Annual Inflation</div>
+        </div>
+        <div class="analysis-stat">
+          <div class="analysis-stat-val ${a.realPnL>=0?'pnl-pos':'pnl-neg'}">${a.inflationRate>0?fmtPnL(a.realPnL,a.currency):'—'}</div>
+          <div class="analysis-stat-lbl">Real P&L</div>
+        </div>
+        <div class="analysis-stat">
+          <div class="analysis-stat-val ${a.usdPnL!=null?(a.usdPnL>=0?'pnl-pos':'pnl-neg'):'pnl-zero'}">${a.usdPnL!=null?fmtPnL(a.usdPnL,'USD'):(a.currency==='USD'?fmtPnL(a.totalPnL,'USD'):'Set Rate')}</div>
+          <div class="analysis-stat-lbl">USD Equivalent</div>
+        </div>
+      </div>
+      ${a.inflationRate>0?`<div style="margin-top:12px;padding:10px 12px;background:rgba(239,68,68,.08);border-radius:6px;border-left:3px solid var(--red);font-size:12px;color:var(--muted2)">
+        <strong style="color:var(--text)">Inflation cost:</strong> ${fmtPnL(a.inflationCost,a.currency)} eroded by ${a.inflationRate}% annual inflation over avg ${fmtHoldTime(a.avgHoldHrs)} holding period.
+        ${a.realPnL>=0?`<strong style="color:var(--green)"> Still profitable in real terms.</strong>`:`<strong style="color:var(--red)"> Loss in real terms even with nominal gains.</strong>`}
+      </div>`:''}
+      ${hasRate&&a.currency!=='USD'?`<div style="margin-top:10px;font-size:11px;color:var(--muted)">Rate used: 1 USD = ${a.rateInfo.units_per_usd.toLocaleString()} ${a.currency} &nbsp;·&nbsp; Updated ${new Date(a.rateInfo.effective_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>`:''}
+    </div>`;
 
   document.getElementById('sec-modal-body').innerHTML=`
     <!-- Score -->
@@ -990,6 +1296,8 @@ function openSecModal(symbol){
         <div class="score-bar"><div class="score-track"><div class="score-fill" style="width:${a.score}%;background:${scoreColor}"></div></div><span style="font-size:11px;color:var(--muted);white-space:nowrap">${a.score>=85?'Excellent':a.score>=75?'Very Good':a.score>=65?'Good':a.score>=55?'Average':a.score>=45?'Below Average':'Poor'}</span></div>
       </div>
     </div>
+    <!-- Inflation & Real Returns -->
+    ${inflationSection}
     <!-- Stats grid -->
     <div class="analysis-stats">${stats.map(s=>`<div class="analysis-stat"><div class="analysis-stat-val ${s.cls}">${s.val}</div><div class="analysis-stat-lbl">${s.lbl}</div></div>`).join('')}</div>
     <!-- Charts -->

@@ -1,0 +1,2 @@
+# Tsoro-Journal
+Trading Journal

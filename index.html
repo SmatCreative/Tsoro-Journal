@@ -221,6 +221,27 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .execute-btn.ready{background:var(--green);color:#fff;border-color:var(--green);cursor:pointer;opacity:1}
 .execute-btn.ready:hover{background:#16a34a}
 
+/* ── Wallet ── */
+.wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.wallet-sum-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.wallet-sum-val{font-size:20px;font-weight:800;letter-spacing:-.4px;line-height:1}
+.wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:10px;position:relative;overflow:hidden;transition:border-color .15s,transform .1s}
+.wallet-card:hover{transform:translateY(-1px)}
+.wallet-card-accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.wallet-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.wallet-platform{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.wallet-exchange{font-size:11px;color:var(--muted);margin-top:3px}
+.wallet-balance{font-size:28px;font-weight:900;letter-spacing:-.8px;line-height:1;margin:8px 0 4px}
+.wallet-usd{font-size:13px;color:var(--muted2);font-weight:600}
+.wallet-updated{font-size:11px;color:var(--muted);margin-top:6px}
+.wallet-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.wallet-legend-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;justify-content:space-between}
+.wallet-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* deployed bar */
+.deploy-track{height:24px;background:var(--surface2);border-radius:6px;overflow:hidden;display:flex;margin-top:8px}
+.deploy-seg{height:100%;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:700;color:#fff;transition:width .5s ease;min-width:0;overflow:hidden;white-space:nowrap}
+
 /* ── Portfolio ── */
 .port-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
 .port-stat-card::before{content:'';position:absolute;inset:0;opacity:.05;pointer-events:none}
@@ -362,6 +383,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     <button class="nav-item" data-page="portfolio">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
       <span>Portfolio</span>
+    </button>
+    <button class="nav-item" data-page="wallet">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>
+      <span>Wallet</span>
     </button>
     <button class="nav-item" data-page="rates">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
@@ -711,6 +736,35 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="importCSV()">Import</button>
       <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
       <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
+      <!-- Wallet -->
+      <div class="page" id="page-wallet">
+        <!-- Summary bar -->
+        <div id="wallet-summary" style="margin-bottom:20px"></div>
+        <!-- Allocation donut + wallet cards -->
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
+          <div class="card" id="wallet-donut-card">
+            <div class="card-header"><div class="card-title">Allocation</div></div>
+            <canvas id="wallet-donut" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+            <div id="wallet-legend" style="margin-top:14px"></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">My Wallets</div>
+              <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Wallet
+              </button>
+            </div>
+            <div id="wallet-cards"></div>
+          </div>
+        </div>
+        <!-- Open positions vs cash -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Open Positions vs Available Cash</div><div id="wallet-deployed-meta" style="font-size:12px;color:var(--muted)"></div></div>
+          <canvas id="wallet-bar-chart" height="100"></canvas>
+        </div>
+      </div>
+
       <!-- Portfolio -->
       <div class="page" id="page-portfolio">
         <div class="stats-row" id="port-stats"></div>
@@ -760,6 +814,67 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Wallet Modal -->
+<div class="overlay" id="wallet-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="wallet-modal-title">Add Wallet</div>
+      <button class="modal-close" onclick="closeWalletModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="w-edit-id">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Platform / Broker Name</label>
+        <input class="form-input" id="w-platform" placeholder="e.g. Binance, ZSE Broker…" list="platform-list" autocomplete="off">
+        <datalist id="platform-list">
+          <option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit">
+          <option value="OKX"><option value="ZSE Broker"><option value="VFSE Broker">
+          <option value="Standard Bank"><option value="FNB"><option value="Stanbic">
+          <option value="MetaTrader 4"><option value="MetaTrader 5"><option value="cTrader">
+          <option value="Interactive Brokers"><option value="eToro"><option value="XM">
+          <option value="EasyEquities"><option value="FXPesa"><option value="Exness">
+        </datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Exchange <span class="opt">(optional)</span></label>
+        <input class="form-input" id="w-exchange" placeholder="ZSE, NYSE, Binance…" list="w-exch-list" autocomplete="off">
+        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Available Balance</label>
+        <input class="form-input" type="number" step="any" min="0" id="w-balance" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="w-currency">
+          <option value="USD">USD</option><option value="ZiG">ZiG</option>
+          <option value="ZAR">ZAR</option><option value="GBP">GBP</option>
+          <option value="EUR">EUR</option><option value="USDT">USDT</option>
+          <option value="NGN">NGN</option><option value="KES">KES</option>
+          <option value="INR">INR</option><option value="AUD">AUD</option>
+          <option value="CAD">CAD</option><option value="GHS">GHS</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Last Updated</label>
+        <input class="form-input" type="date" id="w-updated">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Accent Colour</label>
+        <input class="form-input" type="color" id="w-color" value="#6366f1" style="height:40px;padding:4px 8px;cursor:pointer">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="w-notes" placeholder="Account type, purpose…">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveWallet()">Save Wallet</button>
+      <button class="btn btn-ghost" onclick="closeWalletModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -945,7 +1060,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [], capital = [];
+let trades = [], closingId = null, rates = [], capital = [], wallets = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -999,18 +1114,19 @@ async function signOut(){ await sb.auth.signOut(); }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
-sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital()]);renderAll();}else{showAuthScreen();} });
+sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
 async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){console.error(error);return;} trades=data.map(fromDb); }
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){console.error(error);return;} rates=data||[]; }
 async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){console.error(error);return;} capital=data||[]; }
+async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){console.error(error);return;} wallets=data||[]; }
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade permanently?'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){alert('Delete failed: '+error.message);return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',rates:'Exchange Rates & Inflation'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',wallet:'Wallet',rates:'Exchange Rates & Inflation'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -1230,7 +1346,228 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='rates')renderRates(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); }
+// ═══════════════════════════════════════════════════════════════════
+// WALLET
+// ═══════════════════════════════════════════════════════════════════
+
+function openWalletModal(id){
+  document.getElementById('w-edit-id').value = id||'';
+  document.getElementById('wallet-modal-title').textContent = id ? 'Edit Wallet' : 'Add Wallet';
+  if(id){
+    const w=wallets.find(x=>x.id===id); if(!w) return;
+    document.getElementById('w-platform').value=w.platform;
+    document.getElementById('w-exchange').value=w.exchange||'';
+    document.getElementById('w-balance').value=w.balance;
+    document.getElementById('w-currency').value=w.currency;
+    document.getElementById('w-updated').value=w.updated_at;
+    document.getElementById('w-color').value=w.color||'#6366f1';
+    document.getElementById('w-notes').value=w.notes||'';
+  } else {
+    document.getElementById('w-platform').value='';
+    document.getElementById('w-exchange').value='';
+    document.getElementById('w-balance').value='';
+    document.getElementById('w-currency').value='USD';
+    document.getElementById('w-updated').value=new Date().toISOString().slice(0,10);
+    document.getElementById('w-color').value='#6366f1';
+    document.getElementById('w-notes').value='';
+  }
+  document.getElementById('wallet-modal').classList.add('open');
+}
+function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); }
+document.getElementById('wallet-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeWalletModal(); });
+
+async function saveWallet(){
+  const id=document.getElementById('w-edit-id').value;
+  const platform=document.getElementById('w-platform').value.trim();
+  const balance=parseFloat(document.getElementById('w-balance').value);
+  if(!platform){ alert('Enter a platform name.'); return; }
+  if(isNaN(balance)||balance<0){ alert('Enter a valid balance.'); return; }
+  const row={
+    platform, exchange:document.getElementById('w-exchange').value.trim()||null,
+    balance, currency:document.getElementById('w-currency').value,
+    updated_at:document.getElementById('w-updated').value,
+    color:document.getElementById('w-color').value,
+    notes:document.getElementById('w-notes').value.trim()||null,
+  };
+  try {
+    if(id){
+      const{error}=await sb.from('wallets').update(row).eq('id',id);
+      if(error) throw error;
+      const idx=wallets.findIndex(x=>x.id===id); if(idx>=0) wallets[idx]={...wallets[idx],...row};
+    } else {
+      const{data,error}=await sb.from('wallets').insert([{...row,user_id:currentUser.id}]).select().single();
+      if(error) throw error;
+      wallets.push(data);
+    }
+    closeWalletModal(); renderWallet();
+  } catch(err){ alert('Save failed: '+err.message); }
+}
+
+async function deleteWallet(id){
+  if(!confirm('Remove this wallet?')) return;
+  const{error}=await sb.from('wallets').delete().eq('id',id);
+  if(error){ alert('Delete failed: '+error.message); return; }
+  wallets=wallets.filter(x=>x.id!==id); renderWallet();
+}
+
+function walletToUSD(w){ return capToUSD(w.balance, w.currency); }
+
+function renderWallet(){
+  // ── Totals ──
+  const totalCashUSD = wallets.reduce((s,w)=>s+walletToUSD(w),0);
+  const openTrades = trades.filter(t=>t.status==='open');
+  const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty, t.currency)??t.entry*t.qty),0);
+  const grandTotal = totalCashUSD + deployedUSD;
+  const cashPct = grandTotal>0 ? totalCashUSD/grandTotal*100 : 0;
+  const deployPct = grandTotal>0 ? deployedUSD/grandTotal*100 : 0;
+
+  // Summary bar
+  document.getElementById('wallet-summary').innerHTML=`
+    <div class="wallet-summary-grid">
+      <div class="wallet-sum-card" style="border-left:4px solid var(--green)">
+        <div class="wallet-sum-lbl">Total Available Cash</div>
+        <div class="wallet-sum-val pnl-pos">$${fmtNum(totalCashUSD)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${wallets.length} wallet${wallets.length!==1?'s':''} · USD equiv.</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--yellow)">
+        <div class="wallet-sum-lbl">Deployed in Trades</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)">$${fmtNum(deployedUSD)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${openTrades.length} open position${openTrades.length!==1?'s':''}</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--accent)">
+        <div class="wallet-sum-lbl">Total Tracked Funds</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtNum(grandTotal)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Cash + open positions</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--muted)">
+        <div class="wallet-sum-lbl">Cash Utilisation</div>
+        <div class="wallet-sum-val" style="color:var(--text)">${grandTotal>0?deployPct.toFixed(1):'0'}%</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">in active trades</div>
+      </div>
+    </div>`;
+
+  // Wallet cards
+  const cardsEl=document.getElementById('wallet-cards');
+  if(!wallets.length){
+    cardsEl.innerHTML=`<div class="empty-state" style="padding:32px"><div class="empty-icon">${IC.inbox}</div><h3>No wallets yet</h3><p>Add your trading platform balances to track available cash.</p></div>`;
+  } else {
+    cardsEl.innerHTML=wallets.map(w=>{
+      const usd=walletToUSD(w);
+      const pct=grandTotal>0?(usd/grandTotal*100).toFixed(1):0;
+      const color=w.color||'#6366f1';
+      return `<div class="wallet-card" style="border-color:${color}30">
+        <div class="wallet-card-accent" style="background:${color}"></div>
+        <div class="wallet-card-header">
+          <div>
+            <div class="wallet-platform">${w.platform}</div>
+            <div class="wallet-exchange">${[w.exchange, CURRENCIES_FULL[w.currency]||w.currency].filter(Boolean).join(' · ')}</div>
+          </div>
+          <span class="badge badge-market" style="color:${color};background:${color}18;font-size:11px">${pct}% of funds</span>
+        </div>
+        <div class="wallet-balance" style="color:${color}">${ccySym(w.currency)}${fmtNum(w.balance)}</div>
+        <div class="wallet-usd">${w.currency==='USD'||w.currency==='USDT'?'':'≈ $'+fmtNum(usd)+' USD'}</div>
+        <div class="wallet-updated">Updated ${new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        ${w.notes?`<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">${w.notes}</div>`:''}
+        <div class="wallet-actions">
+          <button class="btn btn-sm btn-ghost" onclick="openWalletModal('${w.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet('${w.id}')">
+            ${IC.trash} Remove
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Donut chart
+  drawWalletDonut(totalCashUSD, deployedUSD);
+
+  // Deployed bar chart
+  document.getElementById('wallet-deployed-meta').textContent=
+    grandTotal>0 ? `${cashPct.toFixed(1)}% idle · ${deployPct.toFixed(1)}% deployed` : '';
+  drawDeployedBar(totalCashUSD, deployedUSD, openTrades);
+}
+
+function drawWalletDonut(cashUSD, deployedUSD){
+  const canvas=document.getElementById('wallet-donut'); if(!canvas) return;
+  const W=220, H=220, cx=110, cy=100, R=80, r=50;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+
+  const segments=[];
+  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:w.platform,val:usd,color:w.color||getColor(w.platform)}); });
+  if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,color:themeVal('#f59e0b','#d97706')});
+
+  const total=segments.reduce((s,sg)=>s+sg.val,0);
+  if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('No data',cx,cy); return; }
+
+  let angle=-Math.PI/2;
+  segments.forEach(sg=>{
+    const slice=sg.val/total*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle=sg.color; ctx.fill();
+    ctx.strokeStyle=themeVal('#141720','#ffffff'); ctx.lineWidth=2; ctx.stroke();
+    angle+=slice;
+  });
+
+  // Hole
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle=themeVal('#141720','#ffffff'); ctx.fill();
+
+  // Center text
+  ctx.textAlign='center';
+  ctx.fillStyle=themeVal('#e2e8f0','#1a1d2e'); ctx.font='bold 14px system-ui';
+  ctx.fillText('$'+Math.round(total).toLocaleString(),cx,cy-4);
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px system-ui';
+  ctx.fillText('total tracked',cx,cy+12);
+
+  // Legend
+  const legendEl=document.getElementById('wallet-legend');
+  legendEl.innerHTML=segments.map(sg=>`
+    <div class="wallet-legend-row">
+      <div style="display:flex;align-items:center;gap:7px">
+        <div class="wallet-legend-dot" style="background:${sg.color}"></div>
+        <span style="color:var(--muted2)">${sg.label}</span>
+      </div>
+      <span style="font-weight:700">$${fmtNum(sg.val)}</span>
+    </div>`).join('');
+}
+
+function drawDeployedBar(cashUSD, deployedUSD, openTrades){
+  const canvas=document.getElementById('wallet-bar-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=100;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  const total=cashUSD+deployedUSD;
+  if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px system-ui'; ctx.textAlign='center'; ctx.fillText('Add wallets and open trades to see allocation',W/2,H/2); return; }
+
+  const pad=0, barH=36, y=(H-barH)/2;
+  const cashW=cashUSD/total*(W-pad*2);
+  const deployW=deployedUSD/total*(W-pad*2);
+
+  // Cash segment
+  if(cashW>0){
+    ctx.fillStyle=themeVal('rgba(34,197,94,.8)','rgba(22,163,74,.85)');
+    ctx.beginPath(); ctx.roundRect(pad, y, cashW, barH, [6,0,0,6]); ctx.fill();
+    if(cashW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`Cash ${(cashUSD/total*100).toFixed(1)}%`, pad+cashW/2, y+barH/2+4); }
+  }
+  // Deployed segment
+  if(deployW>0){
+    ctx.fillStyle=themeVal('rgba(245,158,11,.85)','rgba(217,119,6,.85)');
+    const rx=pad+cashW;
+    ctx.beginPath(); ctx.roundRect(rx, y, deployW, barH, [0,6,6,0]); ctx.fill();
+    if(deployW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`${openTrades.length} Trade${openTrades.length!==1?'s':''} ${(deployedUSD/total*100).toFixed(1)}%`, rx+deployW/2, y+barH/2+4); }
+  }
+
+  // Labels below bar
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='11px system-ui';
+  ctx.textAlign='left'; ctx.fillText(`Available: $${fmtNum(cashUSD)}`, pad, y+barH+16);
+  ctx.textAlign='right'; ctx.fillText(`Deployed: $${fmtNum(deployedUSD)}`, W-pad, y+barH+16);
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // PORTFOLIO GROWTH
 // ═══════════════════════════════════════════════════════════════════

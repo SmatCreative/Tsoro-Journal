@@ -195,6 +195,32 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .empty-state .empty-icon{margin-bottom:14px;opacity:.5;display:flex;justify-content:center}
 .empty-state h3{font-size:15px;font-weight:700;color:var(--muted2);margin-bottom:6px}
 
+/* ── Pre-trade Checklist ── */
+.checklist-modal{width:680px}
+.checklist-progress{height:6px;background:var(--surface3);border-radius:3px;margin-bottom:20px;overflow:hidden}
+.checklist-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .3s ease}
+.checklist-section{margin-bottom:18px}
+.checklist-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.checklist-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.checklist-item{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:var(--r-sm);border:1px solid transparent;cursor:pointer;transition:all .15s;user-select:none;margin-bottom:4px}
+.checklist-item:hover{background:var(--surface2)}
+.checklist-item.checked{background:rgba(34,197,94,.06);border-color:rgba(34,197,94,.15)}
+.checklist-item.error{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.35);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.checklist-box{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;background:var(--surface2)}
+.checklist-item.checked .checklist-box{background:var(--green);border-color:var(--green)}
+.checklist-item.error .checklist-box{border-color:var(--red);background:var(--red-bg,rgba(239,68,68,.1))}
+.checklist-box svg{opacity:0;transition:opacity .15s}
+.checklist-item.checked .checklist-box svg{opacity:1}
+.checklist-text{font-size:13px;line-height:1.5;color:var(--muted2);transition:color .15s}
+.checklist-item.checked .checklist-text{color:var(--muted);text-decoration:line-through}
+.checklist-item.error .checklist-text{color:var(--red)}
+.checklist-counter{font-size:13px;font-weight:700;color:var(--muted2)}
+.checklist-counter span{color:var(--green)}
+.execute-btn{background:var(--surface3);color:var(--muted);border:1px solid var(--border);cursor:not-allowed;opacity:.7}
+.execute-btn.ready{background:var(--green);color:#fff;border-color:var(--green);cursor:pointer;opacity:1}
+.execute-btn.ready:hover{background:#16a34a}
+
 /* ── Rates ── */
 .rate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
 .rate-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -466,6 +492,127 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="securities-grid"></div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Pre-Trade Checklist Modal -->
+<div class="overlay" id="checklist-modal">
+  <div class="modal checklist-modal">
+    <div class="modal-header" style="margin-bottom:14px">
+      <div>
+        <div class="modal-title">Pre-Trade Checklist</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Complete all items before executing your trade</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="checklist-counter"><span id="cl-done">0</span> / <span id="cl-total">15</span></div>
+        <button class="modal-close" onclick="closeChecklist()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="checklist-progress"><div class="checklist-progress-fill" id="cl-progress" style="width:0%"></div></div>
+
+    <div id="checklist-body">
+
+      <div class="checklist-section">
+        <div class="checklist-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Risk Management
+        </div>
+        <div class="checklist-item" data-id="cl1" onclick="toggleCheck('cl1')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">My <strong>stop loss is set</strong> for this trade</div>
+        </div>
+        <div class="checklist-item" data-id="cl2" onclick="toggleCheck('cl2')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">My risk is <strong>under 2% of my account balance</strong> on this trade</div>
+        </div>
+        <div class="checklist-item" data-id="cl3" onclick="toggleCheck('cl3')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">My <strong>Risk/Reward ratio is at least 1:2</strong> — potential reward is double the risk</div>
+        </div>
+        <div class="checklist-item" data-id="cl4" onclick="toggleCheck('cl4')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I have <strong>not lost more than 3–5% of my account</strong> today</div>
+        </div>
+        <div class="checklist-item" data-id="cl5" onclick="toggleCheck('cl5')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I have <strong>not had 3 consecutive losses</strong> today</div>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Trade Setup
+        </div>
+        <div class="checklist-item" data-id="cl6" onclick="toggleCheck('cl6')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I am trading <strong>in the direction of the higher timeframe trend</strong></div>
+        </div>
+        <div class="checklist-item" data-id="cl7" onclick="toggleCheck('cl7')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">Price is at a <strong>key support or resistance level</strong></div>
+        </div>
+        <div class="checklist-item" data-id="cl8" onclick="toggleCheck('cl8')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">At least <strong>2–3 signals/indicators confirm</strong> this trade setup</div>
+        </div>
+        <div class="checklist-item" data-id="cl9" onclick="toggleCheck('cl9')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">There are <strong>no major news events in the next 30 minutes</strong></div>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Psychology
+        </div>
+        <div class="checklist-item" data-id="cl10" onclick="toggleCheck('cl10')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I am <strong>not revenge trading</strong> after a loss — my mindset is clear</div>
+        </div>
+        <div class="checklist-item" data-id="cl11" onclick="toggleCheck('cl11')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I am <strong>not entering out of FOMO</strong> — I have been patient and waited for my setup</div>
+        </div>
+        <div class="checklist-item" data-id="cl12" onclick="toggleCheck('cl12')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I am <strong>following my trading strategy</strong>, not acting on impulse</div>
+        </div>
+      </div>
+
+      <div class="checklist-section">
+        <div class="checklist-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Execution
+        </div>
+        <div class="checklist-item" data-id="cl13" onclick="toggleCheck('cl13')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">My <strong>stop loss is placed on the chart</strong> at the correct level</div>
+        </div>
+        <div class="checklist-item" data-id="cl14" onclick="toggleCheck('cl14')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">My <strong>take profit is placed on the chart</strong> at the correct target</div>
+        </div>
+        <div class="checklist-item" data-id="cl15" onclick="toggleCheck('cl15')">
+          <div class="checklist-box"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="checklist-text">I am <strong>only managing one trade at a time</strong> — I am not overexposed</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid var(--border)">
+      <button class="btn execute-btn" id="cl-execute-btn" onclick="proceedFromChecklist()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Proceed to Log Trade
+      </button>
+      <button class="btn btn-ghost" onclick="resetChecklist()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        Reset
+      </button>
+      <button class="btn btn-ghost" onclick="closeChecklist()" style="margin-left:auto">Cancel</button>
     </div>
   </div>
 </div>
@@ -775,7 +922,87 @@ document.getElementById('f-exchange').addEventListener('input',()=>{
   const ccy=EXCHANGE_CURRENCY[exch];
   if(ccy){ document.getElementById('f-currency').value=ccy; }
 });
-document.getElementById('open-trade-btn').addEventListener('click',()=>{ document.getElementById('f-id').value=''; document.getElementById('modal-title').textContent='Log New Trade'; document.getElementById('form-submit-btn').textContent='Log Trade'; document.getElementById('trade-form').reset(); document.getElementById('f-entry-date').value=nowLocal(); document.getElementById('f-currency').value='USD'; setType('day'); document.getElementById('trade-modal').classList.add('open'); });
+// ── Pre-Trade Checklist ───────────────────────────────────────────
+const CL_ITEMS = ['cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl15'];
+const clChecked = new Set();
+
+function toggleCheck(id){
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if(!el) return;
+  if(clChecked.has(id)){
+    clChecked.delete(id);
+    el.classList.remove('checked','error');
+  } else {
+    clChecked.add(id);
+    el.classList.add('checked');
+    el.classList.remove('error');
+  }
+  updateChecklistUI();
+}
+
+function updateChecklistUI(){
+  const done = clChecked.size;
+  const total = CL_ITEMS.length;
+  const pct = (done/total*100).toFixed(1);
+  document.getElementById('cl-done').textContent = done;
+  document.getElementById('cl-progress').style.width = pct+'%';
+  const btn = document.getElementById('cl-execute-btn');
+  if(done === total){
+    btn.classList.add('ready');
+  } else {
+    btn.classList.remove('ready');
+  }
+}
+
+function resetChecklist(){
+  clChecked.clear();
+  CL_ITEMS.forEach(id=>{
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if(el) el.classList.remove('checked','error');
+  });
+  updateChecklistUI();
+}
+
+function closeChecklist(){
+  document.getElementById('checklist-modal').classList.remove('open');
+}
+
+function proceedFromChecklist(){
+  const unchecked = CL_ITEMS.filter(id => !clChecked.has(id));
+  if(unchecked.length > 0){
+    // Flash red on all unchecked items
+    unchecked.forEach(id=>{
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if(!el) return;
+      el.classList.remove('error');
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add('error');
+    });
+    // Scroll to first unchecked
+    const first = document.querySelector(`[data-id="${unchecked[0]}"]`);
+    if(first) first.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  // All checked — open trade form
+  closeChecklist();
+  openNewTradeForm();
+}
+
+function openNewTradeForm(){
+  document.getElementById('f-id').value='';
+  document.getElementById('modal-title').textContent='Log New Trade';
+  document.getElementById('form-submit-btn').textContent='Log Trade';
+  document.getElementById('trade-form').reset();
+  document.getElementById('f-entry-date').value=nowLocal();
+  if(document.getElementById('f-currency')) document.getElementById('f-currency').value='USD';
+  setType('day');
+  document.getElementById('trade-modal').classList.add('open');
+}
+
+document.getElementById('open-trade-btn').addEventListener('click',()=>{
+  document.getElementById('checklist-modal').classList.add('open');
+  updateChecklistUI();
+});
 function closeTradeModal(){ document.getElementById('trade-modal').classList.remove('open'); }
 document.getElementById('trade-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTradeModal();});
 document.querySelectorAll('.type-btn').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.type)));
@@ -785,7 +1012,7 @@ document.getElementById('trade-form').addEventListener('submit',async e=>{
   const id=document.getElementById('f-id').value, exitVal=document.getElementById('f-exit').value;
   const btn=document.getElementById('form-submit-btn'); btn.disabled=true; btn.textContent='…';
   const t={id:id||null,type:document.getElementById('f-type').value,symbol:document.getElementById('f-symbol').value.trim().toUpperCase(),market:document.getElementById('f-market').value,exchange:document.getElementById('f-exchange').value.trim().toUpperCase()||null,currency:document.getElementById('f-currency').value||'USD',direction:document.getElementById('f-dir').value,qty:parseFloat(document.getElementById('f-qty').value),entry:parseFloat(document.getElementById('f-entry').value),entryDate:document.getElementById('f-entry-date').value||null,exit:exitVal?parseFloat(exitVal):null,exitDate:document.getElementById('f-exit-date').value||null,sl:document.getElementById('f-sl').value?parseFloat(document.getElementById('f-sl').value):null,tp:document.getElementById('f-tp').value?parseFloat(document.getElementById('f-tp').value):null,fee:parseFloat(document.getElementById('f-fee').value)||0,strategy:document.getElementById('f-strategy').value.trim(),notes:document.getElementById('f-notes').value.trim(),status:exitVal?'closed':'open'};
-  try { if(id){await updateTrade(id,t);}else{await insertTrade(t);} closeTradeModal(); renderAll(); }
+  try { if(id){await updateTrade(id,t);}else{await insertTrade(t); resetChecklist();} closeTradeModal(); renderAll(); }
   catch(err){ alert('Save failed: '+err.message); }
   finally { btn.disabled=false; btn.textContent=id?'Save Changes':'Log Trade'; }
 });

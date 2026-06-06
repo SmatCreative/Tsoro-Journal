@@ -221,6 +221,17 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .execute-btn.ready{background:var(--green);color:#fff;border-color:var(--green);cursor:pointer;opacity:1}
 .execute-btn.ready:hover{background:#16a34a}
 
+/* ── Portfolio ── */
+.port-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
+.port-stat-card::before{content:'';position:absolute;inset:0;opacity:.05;pointer-events:none}
+.port-stat-card.green::before{background:var(--green)}.port-stat-card.red::before{background:var(--red)}.port-stat-card.blue::before{background:var(--blue)}
+.port-stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.port-stat-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.port-stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.cap-type-initial{background:rgba(99,102,241,.12);color:var(--accent2)}
+.cap-type-deposit{background:rgba(34,197,94,.12);color:var(--green)}
+.cap-type-withdrawal{background:rgba(239,68,68,.12);color:var(--red)}
+
 /* ── Rates ── */
 .rate-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
 .rate-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -347,6 +358,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     <button class="nav-item" data-page="securities">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
       <span>Securities</span>
+    </button>
+    <button class="nav-item" data-page="portfolio">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
+      <span>Portfolio</span>
     </button>
     <button class="nav-item" data-page="rates">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
@@ -696,6 +711,42 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="importCSV()">Import</button>
       <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
       <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
+      <!-- Portfolio -->
+      <div class="page" id="page-portfolio">
+        <div class="stats-row" id="port-stats"></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Portfolio Value Over Time</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Invested capital vs actual portfolio value</div>
+            </div>
+            <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center">
+              <span><span style="display:inline-block;width:24px;height:2px;background:var(--accent);border-radius:2px;margin-right:5px;vertical-align:middle"></span>Portfolio Value</span>
+              <span><span style="display:inline-block;width:24px;height:2px;background:var(--muted);border-radius:2px;margin-right:5px;border-top:2px dashed var(--muted);vertical-align:middle"></span>Invested Capital</span>
+            </div>
+          </div>
+          <canvas id="port-main-chart" height="260"></canvas>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Monthly Returns</div></div>
+            <canvas id="port-monthly-chart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Cumulative Growth %</div></div>
+            <canvas id="port-growth-chart" height="160"></canvas>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Capital Entries</div>
+          <button class="btn btn-primary btn-sm" onclick="openCapitalModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Capital Entry
+          </button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
+      </div>
+
       <!-- Rates -->
       <div class="page" id="page-rates">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="rates-current"></div>
@@ -709,6 +760,55 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Add Capital Modal -->
+<div class="overlay" id="capital-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title" id="cap-modal-title">Add Capital Entry</div>
+      <button class="modal-close" onclick="closeCapitalModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="cap-edit-id">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Entry Type</label>
+        <select class="form-select" id="cap-type">
+          <option value="initial">Initial Balance</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdrawal">Withdrawal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="cap-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input class="form-input" type="number" step="any" min="0" id="cap-amount" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="cap-currency">
+          <option value="USD">USD</option><option value="ZiG">ZiG</option>
+          <option value="ZAR">ZAR</option><option value="GBP">GBP</option>
+          <option value="EUR">EUR</option><option value="USDT">USDT</option>
+          <option value="NGN">NGN</option><option value="KES">KES</option>
+          <option value="INR">INR</option><option value="AUD">AUD</option>
+          <option value="CAD">CAD</option><option value="GHS">GHS</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="cap-notes" placeholder="e.g. Initial account funding, monthly top-up…">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveCapital()">Save</button>
+      <button class="btn btn-ghost" onclick="closeCapitalModal()">Cancel</button>
+      <span id="cap-msg" style="font-size:12px;color:var(--green);margin-left:auto"></span>
     </div>
   </div>
 </div>
@@ -845,7 +945,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [];
+let trades = [], closingId = null, rates = [], capital = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -899,17 +999,18 @@ async function signOut(){ await sb.auth.signOut(); }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
-sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates()]);renderAll();}else{showAuthScreen();} });
+sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
 async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){console.error(error);return;} trades=data.map(fromDb); }
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){console.error(error);return;} rates=data||[]; }
+async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){console.error(error);return;} capital=data||[]; }
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade permanently?'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){alert('Delete failed: '+error.message);return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',rates:'Exchange Rates & Inflation'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',rates:'Exchange Rates & Inflation'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -1129,7 +1230,312 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='rates')renderRates(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='rates')renderRates(); }
+// ═══════════════════════════════════════════════════════════════════
+// PORTFOLIO GROWTH
+// ═══════════════════════════════════════════════════════════════════
+
+function openCapitalModal(id){
+  document.getElementById('cap-edit-id').value = id||'';
+  document.getElementById('cap-modal-title').textContent = id ? 'Edit Capital Entry' : 'Add Capital Entry';
+  if(id){
+    const e=capital.find(x=>x.id===id); if(!e) return;
+    document.getElementById('cap-type').value = e.type;
+    document.getElementById('cap-date').value = e.entry_date;
+    document.getElementById('cap-amount').value = e.amount;
+    document.getElementById('cap-currency').value = e.currency;
+    document.getElementById('cap-notes').value = e.notes||'';
+  } else {
+    document.getElementById('cap-type').value = capital.length===0 ? 'initial' : 'deposit';
+    document.getElementById('cap-date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('cap-amount').value = '';
+    document.getElementById('cap-currency').value = 'USD';
+    document.getElementById('cap-notes').value = '';
+  }
+  document.getElementById('capital-modal').classList.add('open');
+}
+function closeCapitalModal(){ document.getElementById('capital-modal').classList.remove('open'); }
+document.getElementById('capital-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeCapitalModal(); });
+
+async function saveCapital(){
+  const id = document.getElementById('cap-edit-id').value;
+  const amount = parseFloat(document.getElementById('cap-amount').value);
+  if(!amount||isNaN(amount)||amount<=0){ alert('Enter a valid amount.'); return; }
+  const row = {
+    type: document.getElementById('cap-type').value,
+    amount, currency: document.getElementById('cap-currency').value,
+    entry_date: document.getElementById('cap-date').value,
+    notes: document.getElementById('cap-notes').value.trim()||null,
+  };
+  try {
+    if(id){
+      const{error}=await sb.from('capital_entries').update(row).eq('id',id);
+      if(error) throw error;
+      const idx=capital.findIndex(x=>x.id===id); if(idx>=0) capital[idx]={...capital[idx],...row};
+    } else {
+      const{data,error}=await sb.from('capital_entries').insert([{...row,user_id:currentUser.id}]).select().single();
+      if(error) throw error;
+      capital.push(data);
+      capital.sort((a,b)=>new Date(a.entry_date)-new Date(b.entry_date));
+    }
+    closeCapitalModal(); renderPortfolio();
+  } catch(err){ alert('Save failed: '+err.message); }
+}
+
+async function deleteCapital(id){
+  if(!confirm('Delete this capital entry?')) return;
+  const{error}=await sb.from('capital_entries').delete().eq('id',id);
+  if(error){ alert('Delete failed: '+error.message); return; }
+  capital=capital.filter(x=>x.id!==id); renderPortfolio();
+}
+
+// Convert capital to USD for unified chart
+function capToUSD(amount, currency){
+  if(!currency||currency==='USD') return amount;
+  const r=getLatestRate(currency);
+  return r ? amount/r.units_per_usd : amount;
+}
+
+// Build timeline: list of {date, invested, value} points
+function buildPortfolioTimeline(){
+  const events = [];
+  // Capital events
+  capital.forEach(e=>{
+    const sign = e.type==='withdrawal' ? -1 : 1;
+    events.push({ date:e.entry_date, kind:'capital', amount: capToUSD(e.amount*sign, e.currency) });
+  });
+  // Trade P&L events (at exit date)
+  trades.filter(t=>t.status==='closed'&&t.exitDate).forEach(t=>{
+    const pnl = calcPnL(t)||0;
+    const usd = toUSD(pnl, t.currency) ?? pnl;
+    events.push({ date:t.exitDate.slice(0,10), kind:'pnl', amount:usd });
+  });
+  events.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  let invested=0, pnlCum=0;
+  const pts = [];
+  // Seed with zero at first event date - 1 day
+  if(events.length){
+    const d0=new Date(events[0].date); d0.setDate(d0.getDate()-1);
+    pts.push({ date:d0.toISOString().slice(0,10), invested:0, value:0, pnl:0 });
+  }
+  events.forEach(e=>{
+    if(e.kind==='capital') invested+=e.amount;
+    else pnlCum+=e.amount;
+    pts.push({ date:e.date, invested, value:invested+pnlCum, pnl:pnlCum });
+  });
+  return pts;
+}
+
+// Build monthly returns [{month, pnl}]
+function buildMonthlyReturns(){
+  const map={};
+  trades.filter(t=>t.status==='closed'&&t.exitDate).forEach(t=>{
+    const m=t.exitDate.slice(0,7);
+    const usd=toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0;
+    map[m]=(map[m]||0)+usd;
+  });
+  return Object.entries(map).sort((a,b)=>a[0]<b[0]?-1:1).map(([m,pnl])=>({month:m,pnl}));
+}
+
+function renderPortfolio(){
+  const tl = buildPortfolioTimeline();
+  const monthly = buildMonthlyReturns();
+  const closed = trades.filter(t=>t.status==='closed');
+  const totalPnLusd = closed.reduce((s,t)=>s+(toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0),0);
+  const totalInvested = capital.reduce((s,e)=>s+(e.type==='withdrawal'?-capToUSD(e.amount,e.currency):capToUSD(e.amount,e.currency)),0);
+  const currentValue = totalInvested + totalPnLusd;
+  const roi = totalInvested>0 ? (totalPnLusd/totalInvested*100) : null;
+  const open = trades.filter(t=>t.status==='open').length;
+  const allPnLusd = closed.map(t=>toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0);
+  const bestDay = allPnLusd.length ? Math.max(...allPnLusd) : null;
+  const worstDay = allPnLusd.length ? Math.min(...allPnLusd) : null;
+
+  // Stat cards
+  const stats=[
+    {lbl:'Total Invested',val:'$'+fmtNum(totalInvested),sub:'Net deposited capital (USD)',card:'blue',cls:'blue'},
+    {lbl:'Portfolio Value',val:'$'+fmtNum(currentValue),sub:'Invested + all trade P&L',card:currentValue>=totalInvested?'green':'red',cls:currentValue>=totalInvested?'pnl-pos':'pnl-neg'},
+    {lbl:'Total Gain / Loss',val:(totalPnLusd>=0?'+':'')+'$'+fmtNum(totalPnLusd),sub:'Realised P&L (USD equiv.)',card:totalPnLusd>=0?'green':'red',cls:totalPnLusd>=0?'pnl-pos':'pnl-neg'},
+    {lbl:'ROI',val:roi!=null?(roi>=0?'+':'')+roi.toFixed(2)+'%':'—',sub:'Return on invested capital',card:roi>0?'green':roi<0?'red':'',cls:roi>0?'pnl-pos':roi<0?'pnl-neg':''},
+    {lbl:'Closed Trades',val:closed.length,sub:`${open} open position${open!==1?'s':''}`,card:'',cls:''},
+    {lbl:'Best Trade',val:bestDay!=null?'+$'+fmtNum(bestDay):'—',sub:'Single trade (USD)',card:'',cls:'pnl-pos'},
+    {lbl:'Worst Trade',val:worstDay!=null?'$'+fmtNum(worstDay):'—',sub:'Single trade (USD)',card:'',cls:'pnl-neg'},
+    {lbl:'Active Since',val:capital.length?new Date(capital[0].entry_date).toLocaleDateString('en-US',{month:'short',year:'numeric'}):'—',sub:'First capital entry',card:'',cls:''},
+  ];
+  document.getElementById('port-stats').innerHTML = stats.map(s=>`
+    <div class="port-stat-card ${s.card}">
+      <div class="port-stat-lbl">${s.lbl}</div>
+      <div class="port-stat-val ${s.cls}">${s.val}</div>
+      <div class="port-stat-sub">${s.sub}</div>
+    </div>`).join('');
+
+  // Main portfolio chart
+  requestAnimationFrame(()=>{
+    drawPortfolioMainChart(tl);
+    drawMonthlyChart(monthly);
+    drawGrowthChart(tl, totalInvested);
+    renderCapitalTable();
+  });
+}
+
+function drawPortfolioMainChart(tl){
+  const canvas=document.getElementById('port-main-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=260; canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+
+  if(tl.length<2){
+    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='14px system-ui'; ctx.textAlign='center';
+    ctx.fillText('Add capital entries and log trades to see your portfolio growth',W/2,H/2); return;
+  }
+
+  const allVals=[...tl.map(p=>p.value),...tl.map(p=>p.invested)];
+  const minV=Math.min(...allVals), maxV=Math.max(...allVals), range=maxV-minV||1;
+  const padL=60, padR=20, padT=20, padB=40;
+  const W2=W-padL-padR, H2=H-padT-padB;
+  const sx=i=>(i/(tl.length-1))*W2+padL;
+  const sy=v=>H2+padT-(v-minV)/range*H2;
+
+  // Grid lines
+  ctx.strokeStyle=themeVal('#1c2030','#e2e8f2'); ctx.lineWidth=1;
+  for(let i=0;i<=5;i++){
+    const y=padT+(i/5)*H2; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    const val=maxV-i/5*range;
+    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px system-ui'; ctx.textAlign='right';
+    ctx.fillText('$'+Math.round(val).toLocaleString(),padL-6,y+4);
+  }
+
+  // X axis labels
+  const step=Math.max(1,Math.floor(tl.length/6));
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px system-ui'; ctx.textAlign='center';
+  tl.forEach((p,i)=>{ if(i%step===0||i===tl.length-1){ ctx.fillText(new Date(p.date).toLocaleDateString('en-US',{month:'short',year:'2-digit'}),sx(i),H-10); }});
+
+  // Fill between invested and value lines
+  const isProfit=tl[tl.length-1].value>=tl[tl.length-1].invested;
+  ctx.beginPath();
+  tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.value)):ctx.lineTo(sx(i),sy(p.value)); });
+  [...tl].reverse().forEach((p,i)=>ctx.lineTo(sx(tl.length-1-i),sy(p.invested)));
+  ctx.closePath();
+  ctx.fillStyle=isProfit?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'; ctx.fill();
+
+  // Invested line (dashed)
+  ctx.setLineDash([6,4]); ctx.strokeStyle=themeVal('#64748b','#8891a8'); ctx.lineWidth=1.5;
+  ctx.beginPath(); tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.invested)):ctx.lineTo(sx(i),sy(p.invested)); }); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Portfolio value line (solid, gradient colour)
+  const lineColor=isProfit?themeVal('#22c55e','#16a34a'):themeVal('#ef4444','#dc2626');
+  const grad=ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,themeVal('#6366f1','#5254e0')); grad.addColorStop(1,lineColor);
+  ctx.beginPath(); tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.value)):ctx.lineTo(sx(i),sy(p.value)); });
+  ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+
+  // End dot
+  const last=tl[tl.length-1];
+  ctx.beginPath(); ctx.arc(sx(tl.length-1),sy(last.value),5,0,Math.PI*2);
+  ctx.fillStyle=lineColor; ctx.fill();
+
+  // End label
+  const labelY=sy(last.value);
+  const displayY=labelY<padT+14?labelY+18:labelY-8;
+  ctx.fillStyle=lineColor; ctx.font='bold 11px system-ui'; ctx.textAlign='left';
+  ctx.fillText('$'+Math.round(last.value).toLocaleString(), sx(tl.length-1)+8, displayY);
+}
+
+function drawMonthlyChart(monthly){
+  const canvas=document.getElementById('port-monthly-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=160; canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  if(!monthly.length){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px system-ui'; ctx.textAlign='center'; ctx.fillText('No closed trades yet',W/2,H/2); return; }
+  const vals=monthly.map(m=>m.pnl); const maxAbs=Math.max(...vals.map(Math.abs),1);
+  const pad=24, barW=Math.max(4,Math.floor((W-pad*2)/monthly.length)-3), baseline=H/2;
+  ctx.strokeStyle=themeVal('#1c2030','#dde2f0'); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,baseline); ctx.lineTo(W-pad,baseline); ctx.stroke();
+  monthly.forEach((m,i)=>{
+    const x=pad+i*((W-pad*2)/monthly.length); const v=m.pnl;
+    const barH=Math.max(3,Math.abs(v)/maxAbs*(H/2-pad));
+    ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.8)','rgba(22,163,74,.8)'):themeVal('rgba(239,68,68,.8)','rgba(220,38,38,.8)');
+    if(v>=0) ctx.fillRect(x,baseline-barH,barW,barH); else ctx.fillRect(x,baseline,barW,barH);
+    // Month label
+    if(monthly.length<=12||i%2===0){
+      ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='9px system-ui'; ctx.textAlign='center';
+      ctx.fillText(new Date(m.month+'-01').toLocaleDateString('en-US',{month:'short'}),x+barW/2,H-4);
+    }
+  });
+}
+
+function drawGrowthChart(tl, totalInvested){
+  const canvas=document.getElementById('port-growth-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=160; canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  if(tl.length<2||totalInvested<=0){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px system-ui'; ctx.textAlign='center'; ctx.fillText('Add capital to see growth %',W/2,H/2); return; }
+  const pcts=tl.map(p=>p.invested>0?((p.value-p.invested)/p.invested*100):0);
+  const minP=Math.min(...pcts,0), maxP=Math.max(...pcts,0.001), range=maxP-minP||1;
+  const pad=20, padL=42;
+  const sx=i=>(i/(tl.length-1))*(W-padL-pad)+padL, sy=v=>H-pad-(v-minP)/range*(H-pad*2);
+  // Grid
+  ctx.strokeStyle=themeVal('#1c2030','#e2e8f2'); ctx.lineWidth=1;
+  [0,25,50,75,100].forEach(pct=>{
+    if(pct<minP||pct>maxP) return;
+    const y=sy(pct); ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-pad,y); ctx.stroke();
+    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px system-ui'; ctx.textAlign='right';
+    ctx.fillText(pct+'%',padL-5,y+4);
+  });
+  // Zero line
+  if(minP<0&&maxP>0){ ctx.strokeStyle=themeVal('#374151','#cbd5e1'); ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(padL,sy(0)); ctx.lineTo(W-pad,sy(0)); ctx.stroke(); ctx.setLineDash([]); }
+  // Gradient fill
+  const lastPct=pcts[pcts.length-1]; const isPos=lastPct>=0;
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,isPos?'rgba(34,197,94,.3)':'rgba(239,68,68,.3)'); grd.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
+  ctx.beginPath(); ctx.moveTo(sx(0),sy(pcts[0]));
+  pcts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
+  ctx.lineTo(sx(pcts.length-1),H); ctx.lineTo(sx(0),H); ctx.closePath(); ctx.fillStyle=grd; ctx.fill();
+  // Line
+  ctx.beginPath(); ctx.moveTo(sx(0),sy(pcts[0]));
+  pcts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
+  ctx.strokeStyle=isPos?themeVal('#22c55e','#16a34a'):themeVal('#ef4444','#dc2626');
+  ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  // End dot + label
+  ctx.beginPath(); ctx.arc(sx(pcts.length-1),sy(lastPct),4,0,Math.PI*2);
+  ctx.fillStyle=isPos?themeVal('#22c55e','#16a34a'):themeVal('#ef4444','#dc2626'); ctx.fill();
+  ctx.font='bold 11px system-ui'; ctx.textAlign='left'; ctx.fillStyle=ctx.fillStyle;
+  ctx.fillText((lastPct>=0?'+':'')+lastPct.toFixed(1)+'%', sx(pcts.length-1)+7, sy(lastPct)+4);
+}
+
+function renderCapitalTable(){
+  const el=document.getElementById('capital-table'); if(!el) return;
+  if(!capital.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No capital entries</h3><p>Add your starting balance and any deposits or withdrawals.</p></div>'; return; }
+  const typeLabel={initial:'Initial Balance',deposit:'Deposit',withdrawal:'Withdrawal'};
+  const sorted=[...capital].sort((a,b)=>new Date(b.entry_date)-new Date(a.entry_date));
+  let running=0;
+  const withBalance=sorted.map(e=>{ const sign=e.type==='withdrawal'?-1:1; return {...e,_sign:sign}; });
+  // Calculate running balance forward
+  const byDate=[...capital].sort((a,b)=>new Date(a.entry_date)-new Date(b.entry_date));
+  const balanceMap={}; let cum=0;
+  byDate.forEach(e=>{ cum+= e.type==='withdrawal'?-capToUSD(e.amount,e.currency):capToUSD(e.amount,e.currency); balanceMap[e.id]=cum; });
+
+  el.innerHTML=`<table>
+    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Currency</th><th>USD Equiv.</th><th>Running Balance (USD)</th><th>Notes</th><th></th></tr></thead>
+    <tbody>${sorted.map(e=>{
+      const usd=capToUSD(e.amount,e.currency);
+      const sign=e.type==='withdrawal'?-1:1;
+      const bal=balanceMap[e.id];
+      return `<tr>
+        <td style="color:var(--muted2);font-size:12px">${new Date(e.entry_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+        <td><span class="badge cap-type-${e.type}">${typeLabel[e.type]}</span></td>
+        <td style="font-weight:700">${ccySym(e.currency)}${fmtNum(e.amount)}</td>
+        <td><span class="badge badge-market" style="color:var(--accent2)">${e.currency}</span></td>
+        <td style="color:var(--muted2)">${e.currency==='USD'?'—':'$'+fmtNum(usd)}</td>
+        <td class="${bal>=0?'pnl-pos':'pnl-neg'}" style="font-weight:700">$${fmtNum(bal)}</td>
+        <td style="font-size:12px;color:var(--muted)">${e.notes||'—'}</td>
+        <td><div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-ghost" onclick="openCapitalModal('${e.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCapital('${e.id}')">${IC.trash}</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // EXCHANGE RATES & INFLATION
 // ═══════════════════════════════════════════════════════════════════

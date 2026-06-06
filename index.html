@@ -820,60 +820,87 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
 <!-- Wallet Modal -->
 <div class="overlay" id="wallet-modal">
-  <div class="modal" style="max-width:480px">
+  <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <div class="modal-title" id="wallet-modal-title">Add Wallet</div>
       <button class="modal-close" onclick="closeWalletModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
+    <div id="w-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px"></div>
     <input type="hidden" id="w-edit-id">
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group full">
+        <label class="form-label">Account Label <span style="color:var(--accent2);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0">— give this wallet a unique name</span></label>
+        <input class="form-input" id="w-name" placeholder="e.g. MT5 Day Trading, ZSE Long Term, Binance Spot…" autocomplete="off">
+      </div>
       <div class="form-group">
-        <label class="form-label">Platform / Broker Name</label>
-        <input class="form-input" id="w-platform" placeholder="e.g. Binance, ZSE Broker…" list="platform-list" autocomplete="off">
+        <label class="form-label">Platform / Broker</label>
+        <input class="form-input" id="w-platform" placeholder="MetaTrader 5, Binance…" list="platform-list" autocomplete="off">
         <datalist id="platform-list">
-          <option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit">
-          <option value="OKX"><option value="ZSE Broker"><option value="VFSE Broker">
+          <option value="MetaTrader 5"><option value="MetaTrader 4"><option value="cTrader">
+          <option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX">
+          <option value="ZSE Broker"><option value="VFSE Broker"><option value="EasyEquities">
           <option value="Standard Bank"><option value="FNB"><option value="Stanbic">
-          <option value="MetaTrader 4"><option value="MetaTrader 5"><option value="cTrader">
-          <option value="Interactive Brokers"><option value="eToro"><option value="XM">
-          <option value="EasyEquities"><option value="FXPesa"><option value="Exness">
+          <option value="Interactive Brokers"><option value="eToro"><option value="XM"><option value="FXPesa"><option value="Exness">
         </datalist>
       </div>
       <div class="form-group">
         <label class="form-label">Exchange <span class="opt">(optional)</span></label>
         <input class="form-input" id="w-exchange" placeholder="ZSE, NYSE, Binance…" list="w-exch-list" autocomplete="off">
-        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"></datalist>
+        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"><option value="Forex"></datalist>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="w-currency">
+          <option value="USD">USD — US Dollar ($)</option>
+          <option value="ZiG">ZiG — Zimbabwe Gold</option>
+          <option value="ZAR">ZAR — South African Rand (R)</option>
+          <option value="GBP">GBP — British Pound (£)</option>
+          <option value="EUR">EUR — Euro (€)</option>
+          <option value="USDT">USDT — Tether</option>
+          <option value="NGN">NGN — Nigerian Naira (₦)</option>
+          <option value="KES">KES — Kenyan Shilling</option>
+          <option value="INR">INR — Indian Rupee (₹)</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="HKD">HKD — Hong Kong Dollar</option>
+          <option value="GHS">GHS — Ghanaian Cedi (₵)</option>
+          <option value="BRL">BRL — Brazilian Real</option>
+          <option value="BTC">BTC — Bitcoin (₿)</option>
+          <option value="ETH">ETH — Ethereum (Ξ)</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Available Balance</label>
         <input class="form-input" type="number" step="any" min="0" id="w-balance" placeholder="0.00">
       </div>
       <div class="form-group">
-        <label class="form-label">Currency</label>
-        <select class="form-select" id="w-currency">
-          <option value="USD">USD</option><option value="ZiG">ZiG</option>
-          <option value="ZAR">ZAR</option><option value="GBP">GBP</option>
-          <option value="EUR">EUR</option><option value="USDT">USDT</option>
-          <option value="NGN">NGN</option><option value="KES">KES</option>
-          <option value="INR">INR</option><option value="AUD">AUD</option>
-          <option value="CAD">CAD</option><option value="GHS">GHS</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Last Updated</label>
+        <label class="form-label">Balance Date</label>
         <input class="form-input" type="date" id="w-updated">
       </div>
       <div class="form-group">
         <label class="form-label">Accent Colour</label>
         <input class="form-input" type="color" id="w-color" value="#6366f1" style="height:40px;padding:4px 8px;cursor:pointer">
       </div>
+      <div class="form-group">
+        <label class="form-label">Account Type <span class="opt">(optional)</span></label>
+        <select class="form-select" id="w-type">
+          <option value="">—</option>
+          <option value="Live">Live Account</option>
+          <option value="Demo">Demo / Practice</option>
+          <option value="Savings">Savings</option>
+          <option value="Day Trading">Day Trading</option>
+          <option value="Long-Term">Long-Term / Investing</option>
+          <option value="Crypto">Crypto Spot</option>
+          <option value="Futures">Futures / Derivatives</option>
+        </select>
+      </div>
       <div class="form-group full">
         <label class="form-label">Notes <span class="opt">(optional)</span></label>
-        <input class="form-input" id="w-notes" placeholder="Account type, purpose…">
+        <input class="form-input" id="w-notes" placeholder="Any other details about this account…">
       </div>
     </div>
     <div class="form-row" style="margin-top:14px">
-      <button class="btn btn-primary" onclick="saveWallet()">Save Wallet</button>
+      <button class="btn btn-primary" id="w-save-btn" onclick="saveWallet()">Save Wallet</button>
       <button class="btn btn-ghost" onclick="closeWalletModal()">Cancel</button>
     </div>
   </div>
@@ -1010,6 +1037,23 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 <script>
+// ── Toast notifications ───────────────────────────────────────────
+(function(){
+  const el=document.createElement('div');
+  el.id='toast';
+  el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:360px';
+  document.body.appendChild(el);
+})();
+function showToast(msg, type='success'){
+  const t=document.createElement('div');
+  const bg=type==='error'?'rgba(239,68,68,.95)':type==='warn'?'rgba(245,158,11,.95)':'rgba(34,197,94,.95)';
+  t.style.cssText=`background:${bg};color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:auto`;
+  t.textContent=msg;
+  document.getElementById('toast').appendChild(t);
+  requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.transform='translateY(0)'; });
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(8px)'; setTimeout(()=>t.remove(),200); }, type==='error'?5000:3000);
+}
+
 // ── Theme ─────────────────────────────────────────────────────────
 (function(){
   const saved = localStorage.getItem('tj_theme') || 'dark';
@@ -1123,7 +1167,7 @@ async function loadCapital(){ const{data,error}=await sb.from('capital_entries')
 async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){console.error(error);return;} wallets=data||[]; }
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
-async function deleteTrade(id){ if(!confirm('Delete this trade permanently?'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){alert('Delete failed: '+error.message);return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
+async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
 const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',wallet:'Wallet',rates:'Exchange Rates & Inflation'};
@@ -1230,7 +1274,7 @@ document.getElementById('trade-form').addEventListener('submit',async e=>{
   const btn=document.getElementById('form-submit-btn'); btn.disabled=true; btn.textContent='…';
   const t={id:id||null,type:document.getElementById('f-type').value,symbol:document.getElementById('f-symbol').value.trim().toUpperCase(),market:document.getElementById('f-market').value,exchange:document.getElementById('f-exchange').value.trim().toUpperCase()||null,currency:document.getElementById('f-currency').value||'USD',direction:document.getElementById('f-dir').value,qty:parseFloat(document.getElementById('f-qty').value),entry:parseFloat(document.getElementById('f-entry').value),entryDate:document.getElementById('f-entry-date').value||null,exit:exitVal?parseFloat(exitVal):null,exitDate:document.getElementById('f-exit-date').value||null,sl:document.getElementById('f-sl').value?parseFloat(document.getElementById('f-sl').value):null,tp:document.getElementById('f-tp').value?parseFloat(document.getElementById('f-tp').value):null,fee:parseFloat(document.getElementById('f-fee').value)||0,strategy:document.getElementById('f-strategy').value.trim(),notes:document.getElementById('f-notes').value.trim(),status:exitVal?'closed':'open'};
   try { if(id){await updateTrade(id,t);}else{await insertTrade(t); resetChecklist();} closeTradeModal(); renderAll(); }
-  catch(err){ alert('Save failed: '+err.message); }
+  catch(err){ showToast('Save failed: '+err.message,'error'); }
   finally { btn.disabled=false; btn.textContent=id?'Save Changes':'Log Trade'; }
 });
 function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; document.getElementById('f-id').value=t.id; document.getElementById('modal-title').textContent='Edit Trade'; document.getElementById('form-submit-btn').textContent='Save Changes'; setType(t.type); const m={symbol:t.symbol,market:t.market,exchange:t.exchange||'',currency:t.currency||'USD',dir:t.direction,qty:t.qty,entry:t.entry,'entry-date':t.entryDate||'',exit:t.exit??'','exit-date':t.exitDate||'',sl:t.sl??'',tp:t.tp??'',fee:t.fee||0,strategy:t.strategy||'',notes:t.notes||''}; Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;}); document.getElementById('trade-modal').classList.add('open'); }
@@ -1239,11 +1283,11 @@ function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; documen
 function openCloseModal(id){ closingId=id; document.getElementById('c-exit').value=''; document.getElementById('c-date').value=nowLocal(); document.getElementById('c-fee').value='0'; document.getElementById('c-notes').value=''; document.getElementById('close-modal').classList.add('open'); }
 function closeCloseModal(){ document.getElementById('close-modal').classList.remove('open'); closingId=null; }
 document.getElementById('close-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCloseModal();});
-async function confirmClose(){ const exit=parseFloat(document.getElementById('c-exit').value); if(!exit||isNaN(exit)){alert('Enter a valid exit price.');return;} const t=trades.find(x=>x.id===closingId); if(!t)return; const updated={...t,exit,exitDate:document.getElementById('c-date').value||null,fee:(t.fee||0)+(parseFloat(document.getElementById('c-fee').value)||0),status:'closed'}; const n=document.getElementById('c-notes').value.trim(); if(n)updated.notes=(t.notes?t.notes+'\n':'')+'[Exit] '+n; try{await updateTrade(closingId,updated);closeCloseModal();renderAll();}catch(err){alert('Update failed: '+err.message);} }
+async function confirmClose(){ const exit=parseFloat(document.getElementById('c-exit').value); if(!exit||isNaN(exit)){showToast('Please enter a valid exit price.','error');return;} const t=trades.find(x=>x.id===closingId); if(!t)return; const updated={...t,exit,exitDate:document.getElementById('c-date').value||null,fee:(t.fee||0)+(parseFloat(document.getElementById('c-fee').value)||0),status:'closed'}; const n=document.getElementById('c-notes').value.trim(); if(n)updated.notes=(t.notes?t.notes+'\n':'')+'[Exit] '+n; try{await updateTrade(closingId,updated);closeCloseModal();renderAll();}catch(err){showToast('Update failed: '+err.message,'error');} }
 
 // ── Import CSV ─────────────────────────────────────────────────────
 document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-modal').classList.add('open'));
-async function importCSV(){ const file=document.getElementById('csv-file').files[0]; if(!file){alert('Select a file.');return;} const btn=document.querySelector('#import-modal .btn-primary'); btn.disabled=true; btn.textContent='…'; const reader=new FileReader(); reader.onload=async e=>{const lines=e.target.result.split('\n').filter(l=>l.trim()); const headers=lines[0].split(',').map(h=>h.trim().toLowerCase()); const rows=[]; for(let i=1;i<lines.length;i++){const cols=lines[i].split(',');const row={};headers.forEach((h,j)=>row[h]=(cols[j]||'').trim());if(!row.symbol)continue;const exitVal=row.exit?parseFloat(row.exit):null;rows.push({user_id:currentUser.id,type:row.type||'day',symbol:row.symbol.toUpperCase(),market:row.market||'',exchange:row.exchange?row.exchange.toUpperCase():null,currency:row.currency||'USD',direction:row.direction||'Long',qty:parseFloat(row.qty)||0,entry:parseFloat(row.entry)||0,entry_date:row.entrydate||row.entryDate||null,exit:exitVal,exit_date:row.exitdate||row.exitDate||null,sl:row.sl?parseFloat(row.sl):null,tp:row.tp?parseFloat(row.tp):null,fee:parseFloat(row.fee)||0,strategy:row.strategy||null,notes:row.notes||null,status:exitVal?'closed':'open'});} try{const{error}=await sb.from('trades').insert(rows);if(error)throw error;await loadTrades();renderAll();document.getElementById('import-msg').textContent='Imported '+rows.length+' trades';setTimeout(()=>{document.getElementById('import-msg').textContent='';document.getElementById('import-modal').classList.remove('open');},2000);}catch(err){alert('Import failed: '+err.message);}finally{btn.disabled=false;btn.textContent='Import';}}; reader.readAsText(file); }
+async function importCSV(){ const file=document.getElementById('csv-file').files[0]; if(!file){showToast('Please select a CSV file.','warn');return;} const btn=document.querySelector('#import-modal .btn-primary'); btn.disabled=true; btn.textContent='…'; const reader=new FileReader(); reader.onload=async e=>{const lines=e.target.result.split('\n').filter(l=>l.trim()); const headers=lines[0].split(',').map(h=>h.trim().toLowerCase()); const rows=[]; for(let i=1;i<lines.length;i++){const cols=lines[i].split(',');const row={};headers.forEach((h,j)=>row[h]=(cols[j]||'').trim());if(!row.symbol)continue;const exitVal=row.exit?parseFloat(row.exit):null;rows.push({user_id:currentUser.id,type:row.type||'day',symbol:row.symbol.toUpperCase(),market:row.market||'',exchange:row.exchange?row.exchange.toUpperCase():null,currency:row.currency||'USD',direction:row.direction||'Long',qty:parseFloat(row.qty)||0,entry:parseFloat(row.entry)||0,entry_date:row.entrydate||row.entryDate||null,exit:exitVal,exit_date:row.exitdate||row.exitDate||null,sl:row.sl?parseFloat(row.sl):null,tp:row.tp?parseFloat(row.tp):null,fee:parseFloat(row.fee)||0,strategy:row.strategy||null,notes:row.notes||null,status:exitVal?'closed':'open'});} try{const{error}=await sb.from('trades').insert(rows);if(error)throw error;await loadTrades();renderAll();document.getElementById('import-msg').textContent='Imported '+rows.length+' trades';setTimeout(()=>{document.getElementById('import-msg').textContent='';document.getElementById('import-modal').classList.remove('open');},2000);}catch(err){showToast('Import failed: '+err.message,'error');}finally{btn.disabled=false;btn.textContent='Import';}}; reader.readAsText(file); }
 
 // ── Helpers ────────────────────────────────────────────────────────
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
@@ -1351,44 +1395,82 @@ function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='d
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
 
+// ── roundRect polyfill (Safari <15.4, older Chrome) ──────────────
+function rrect(ctx, x, y, w, h, r){
+  if(typeof ctx.roundRect === 'function'){ ctx.roundRect(x,y,w,h,r); return; }
+  const [tl,tr,br,bl] = Array.isArray(r) ? [r[0]||0,r[1]||0,r[2]||0,r[3]||0] : [r,r,r,r];
+  ctx.moveTo(x+tl,y);
+  ctx.lineTo(x+w-tr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+tr);
+  ctx.lineTo(x+w,y+h-br); ctx.quadraticCurveTo(x+w,y+h,x+w-br,y+h);
+  ctx.lineTo(x+bl,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-bl);
+  ctx.lineTo(x,y+tl); ctx.quadraticCurveTo(x,y,x+tl,y);
+}
+
+function wErr(msg){ const el=document.getElementById('w-error'); el.textContent=msg; el.style.display=msg?'block':'none'; }
+
 function openWalletModal(id){
   document.getElementById('w-edit-id').value = id||'';
   document.getElementById('wallet-modal-title').textContent = id ? 'Edit Wallet' : 'Add Wallet';
+  wErr('');
   if(id){
     const w=wallets.find(x=>x.id===id); if(!w) return;
-    document.getElementById('w-platform').value=w.platform;
-    document.getElementById('w-exchange').value=w.exchange||'';
-    document.getElementById('w-balance').value=w.balance;
-    document.getElementById('w-currency').value=w.currency;
-    document.getElementById('w-updated').value=w.updated_at;
-    document.getElementById('w-color').value=w.color||'#6366f1';
-    document.getElementById('w-notes').value=w.notes||'';
+    document.getElementById('w-name').value    = w.wallet_name||'';
+    document.getElementById('w-platform').value= w.platform||'';
+    document.getElementById('w-exchange').value = w.exchange||'';
+    document.getElementById('w-balance').value  = w.balance;
+    document.getElementById('w-currency').value = w.currency||'USD';
+    document.getElementById('w-updated').value  = w.updated_at||new Date().toISOString().slice(0,10);
+    document.getElementById('w-color').value    = w.color||'#6366f1';
+    document.getElementById('w-type').value     = w.notes?.startsWith('type:')?w.notes.replace('type:',''):'' ;
+    document.getElementById('w-notes').value    = w.notes&&!w.notes.startsWith('type:')?w.notes:'';
   } else {
-    document.getElementById('w-platform').value='';
-    document.getElementById('w-exchange').value='';
-    document.getElementById('w-balance').value='';
-    document.getElementById('w-currency').value='USD';
-    document.getElementById('w-updated').value=new Date().toISOString().slice(0,10);
-    document.getElementById('w-color').value='#6366f1';
-    document.getElementById('w-notes').value='';
+    ['w-name','w-platform','w-exchange','w-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('w-balance').value = '';
+    document.getElementById('w-currency').value = 'USD';
+    document.getElementById('w-updated').value = new Date().toISOString().slice(0,10);
+    document.getElementById('w-color').value = '#6366f1';
+    document.getElementById('w-type').value = '';
   }
   document.getElementById('wallet-modal').classList.add('open');
 }
-function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); }
+function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); wErr(''); }
 document.getElementById('wallet-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeWalletModal(); });
 
+// Auto-fill currency from exchange selection
+document.getElementById('w-exchange').addEventListener('input',()=>{
+  const exch = document.getElementById('w-exchange').value.trim();
+  const ccy = EXCHANGE_CURRENCY[exch];
+  if(ccy) document.getElementById('w-currency').value = ccy;
+});
+
 async function saveWallet(){
-  const id=document.getElementById('w-edit-id').value;
-  const platform=document.getElementById('w-platform').value.trim();
-  const balance=parseFloat(document.getElementById('w-balance').value);
-  if(!platform){ alert('Enter a platform name.'); return; }
-  if(isNaN(balance)||balance<0){ alert('Enter a valid balance.'); return; }
-  const row={
-    platform, exchange:document.getElementById('w-exchange').value.trim()||null,
-    balance, currency:document.getElementById('w-currency').value,
-    updated_at:document.getElementById('w-updated').value,
-    color:document.getElementById('w-color').value,
-    notes:document.getElementById('w-notes').value.trim()||null,
+  wErr('');
+  const id       = document.getElementById('w-edit-id').value;
+  const name     = document.getElementById('w-name').value.trim();
+  const platform = document.getElementById('w-platform').value.trim();
+  const balStr   = document.getElementById('w-balance').value;
+  const balance  = parseFloat(balStr);
+
+  if(!name && !platform){ wErr('Please enter an account label or platform name.'); return; }
+  if(balStr===''){ wErr('Please enter a balance (enter 0 if the account is empty).'); return; }
+  if(isNaN(balance)||balance<0){ wErr('Balance must be a valid number (0 or greater).'); return; }
+
+  const accountType = document.getElementById('w-type').value;
+  const notes = document.getElementById('w-notes').value.trim();
+  const combinedNotes = accountType ? (notes ? `${accountType} · ${notes}` : accountType) : (notes||null);
+
+  const btn = document.getElementById('w-save-btn');
+  btn.disabled = true; btn.textContent = '…';
+
+  const row = {
+    wallet_name : name||null,
+    platform    : platform||name||'Unknown',
+    exchange    : document.getElementById('w-exchange').value.trim()||null,
+    balance,
+    currency    : document.getElementById('w-currency').value||'USD',
+    updated_at  : document.getElementById('w-updated').value||new Date().toISOString().slice(0,10),
+    color       : document.getElementById('w-color').value||'#6366f1',
+    notes       : combinedNotes,
   };
   try {
     if(id){
@@ -1401,13 +1483,14 @@ async function saveWallet(){
       wallets.push(data);
     }
     closeWalletModal(); renderWallet();
-  } catch(err){ alert('Save failed: '+err.message); }
+  } catch(err){ wErr('Save failed: '+err.message); }
+  finally { btn.disabled=false; btn.textContent='Save Wallet'; }
 }
 
 async function deleteWallet(id){
   if(!confirm('Remove this wallet?')) return;
   const{error}=await sb.from('wallets').delete().eq('id',id);
-  if(error){ alert('Delete failed: '+error.message); return; }
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
   wallets=wallets.filter(x=>x.id!==id); renderWallet();
 }
 
@@ -1456,19 +1539,23 @@ function renderWallet(){
       const usd=walletToUSD(w);
       const pct=grandTotal>0?(usd/grandTotal*100).toFixed(1):0;
       const color=w.color||'#6366f1';
+      const displayName = w.wallet_name||w.platform||'Unnamed Wallet';
+      const subLine=[w.platform&&w.wallet_name?w.platform:null, w.exchange, w.notes].filter(Boolean).join(' · ');
       return `<div class="wallet-card" style="border-color:${color}30">
         <div class="wallet-card-accent" style="background:${color}"></div>
         <div class="wallet-card-header">
-          <div>
-            <div class="wallet-platform">${w.platform}</div>
-            <div class="wallet-exchange">${[w.exchange, CURRENCIES_FULL[w.currency]||w.currency].filter(Boolean).join(' · ')}</div>
+          <div style="min-width:0">
+            <div class="wallet-platform">${displayName}</div>
+            <div class="wallet-exchange" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subLine||CURRENCIES_FULL[w.currency]||w.currency}</div>
           </div>
-          <span class="badge badge-market" style="color:${color};background:${color}18;font-size:11px">${pct}% of funds</span>
+          <div style="text-align:right;flex-shrink:0">
+            <span class="badge badge-market" style="color:${color};background:${color}18;font-size:11px;display:block;margin-bottom:4px">${pct}% of funds</span>
+            <span class="badge" style="background:var(--surface3);color:var(--muted2);font-size:10px">${w.currency}</span>
+          </div>
         </div>
         <div class="wallet-balance" style="color:${color}">${ccySym(w.currency)}${fmtNum(w.balance)}</div>
-        <div class="wallet-usd">${w.currency==='USD'||w.currency==='USDT'?'':'≈ $'+fmtNum(usd)+' USD'}</div>
-        <div class="wallet-updated">Updated ${new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
-        ${w.notes?`<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">${w.notes}</div>`:''}
+        <div class="wallet-usd">${w.currency==='USD'||w.currency==='USDT'?'':getLatestRate(w.currency)?'≈ $'+fmtNum(usd)+' USD':'<span style="color:var(--yellow);font-size:11px">Set rate to see USD equiv.</span>'}</div>
+        <div class="wallet-updated">Balance as of ${new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
         <div class="wallet-actions">
           <button class="btn btn-sm btn-ghost" onclick="openWalletModal('${w.id}')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1498,7 +1585,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
   const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
 
   const segments=[];
-  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:w.platform,val:usd,color:w.color||getColor(w.platform)}); });
+  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:w.wallet_name||w.platform||'Wallet',val:usd,color:w.color||getColor(w.wallet_name||w.platform||'x')}); });
   if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,color:themeVal('#f59e0b','#d97706')});
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
@@ -1549,16 +1636,16 @@ function drawDeployedBar(cashUSD, deployedUSD, openTrades){
   const deployW=deployedUSD/total*(W-pad*2);
 
   // Cash segment
-  if(cashW>0){
+  if(cashW>2){
     ctx.fillStyle=themeVal('rgba(34,197,94,.8)','rgba(22,163,74,.85)');
-    ctx.beginPath(); ctx.roundRect(pad, y, cashW, barH, [6,0,0,6]); ctx.fill();
+    ctx.beginPath(); rrect(ctx,pad,y,cashW,barH,[6,deployW>2?0:6,deployW>2?0:6,6]); ctx.fill();
     if(cashW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`Cash ${(cashUSD/total*100).toFixed(1)}%`, pad+cashW/2, y+barH/2+4); }
   }
   // Deployed segment
-  if(deployW>0){
+  if(deployW>2){
     ctx.fillStyle=themeVal('rgba(245,158,11,.85)','rgba(217,119,6,.85)');
     const rx=pad+cashW;
-    ctx.beginPath(); ctx.roundRect(rx, y, deployW, barH, [0,6,6,0]); ctx.fill();
+    ctx.beginPath(); rrect(ctx,rx,y,deployW,barH,[cashW>2?0:6,6,6,cashW>2?0:6]); ctx.fill();
     if(deployW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`${openTrades.length} Trade${openTrades.length!==1?'s':''} ${(deployedUSD/total*100).toFixed(1)}%`, rx+deployW/2, y+barH/2+4); }
   }
 
@@ -1597,7 +1684,7 @@ document.getElementById('capital-modal').addEventListener('click',e=>{ if(e.targ
 async function saveCapital(){
   const id = document.getElementById('cap-edit-id').value;
   const amount = parseFloat(document.getElementById('cap-amount').value);
-  if(!amount||isNaN(amount)||amount<=0){ alert('Enter a valid amount.'); return; }
+  if(!amount||isNaN(amount)||amount<=0){ showToast('Please enter a valid amount.','error'); return; }
   const row = {
     type: document.getElementById('cap-type').value,
     amount, currency: document.getElementById('cap-currency').value,
@@ -1616,13 +1703,13 @@ async function saveCapital(){
       capital.sort((a,b)=>new Date(a.entry_date)-new Date(b.entry_date));
     }
     closeCapitalModal(); renderPortfolio();
-  } catch(err){ alert('Save failed: '+err.message); }
+  } catch(err){ showToast('Save failed: '+err.message,'error'); }
 }
 
 async function deleteCapital(id){
   if(!confirm('Delete this capital entry?')) return;
   const{error}=await sb.from('capital_entries').delete().eq('id',id);
-  if(error){ alert('Delete failed: '+error.message); return; }
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
   capital=capital.filter(x=>x.id!==id); renderPortfolio();
 }
 
@@ -1911,7 +1998,7 @@ document.getElementById('rate-modal').addEventListener('click',e=>{if(e.target==
 async function saveRate(){
   const id = document.getElementById('rate-edit-id').value;
   const units = parseFloat(document.getElementById('rate-units').value);
-  if(!units||isNaN(units)||units<=0){ alert('Enter a valid rate (units per USD).'); return; }
+  if(!units||isNaN(units)||units<=0){ showToast('Please enter a valid rate.','error'); return; }
   const row = {
     currency: document.getElementById('rate-currency').value,
     units_per_usd: units,
@@ -1930,13 +2017,13 @@ async function saveRate(){
       rates.unshift(data);
     }
     closeRateModal(); renderRates(); renderAll();
-  } catch(err){ alert('Save failed: '+err.message); }
+  } catch(err){ showToast('Save failed: '+err.message,'error'); }
 }
 
 async function deleteRate(id){
   if(!confirm('Delete this rate entry?')) return;
   const{error}=await sb.from('exchange_rates').delete().eq('id',id);
-  if(error){ alert('Delete failed: '+error.message); return; }
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
   rates=rates.filter(x=>x.id!==id); renderRates();
 }
 

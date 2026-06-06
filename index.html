@@ -1535,7 +1535,6 @@ function renderWallet(){
       </div>
     </div>`;
 
-  // Wallet cards
   // Currency breakdown strip
   const breakdownEl=document.getElementById('wallet-currency-breakdown');
   if(breakdownEl){
@@ -1546,22 +1545,29 @@ function renderWallet(){
       byCcy[w.currency].count++;
       byCcy[w.currency].usd+=walletToUSD(w);
     });
-    const entries=Object.entries(byCcy);
-    if(entries.length>1){
-      breakdownEl.innerHTML=`<div class="card" style="padding:14px 18px;margin-bottom:0">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Balances by Currency</div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px">
-          ${entries.map(([ccy,d])=>`
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;min-width:140px">
-              <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
-                <span class="badge" style="background:rgba(99,102,241,.15);color:var(--accent2);font-size:11px;font-weight:800">${ccy}</span>
-                <span style="font-size:11px;color:var(--muted)">${d.count} wallet${d.count!==1?'s':''}</span>
-              </div>
-              <div style="font-size:18px;font-weight:900;letter-spacing:-.4px">${ccySym(ccy)}${fmtNum(d.total)}</div>
-              ${ccy==='USD'||ccy==='USDT'?'':`<div style="font-size:11px;color:var(--muted2);margin-top:2px">${getLatestRate(ccy)?'≈ $'+fmtNum(d.usd)+' USD':'<span style=\'color:var(--yellow)\'>Set rate</span>'}</div>`}
-            </div>`).join('')}
-        </div>
-      </div>`;
+    const ccyEntries=Object.entries(byCcy);
+    if(ccyEntries.length>1){
+      const ccyCards=ccyEntries.map(function(entry){
+        const ccy=entry[0], d=entry[1];
+        let usdLine='';
+        if(ccy!=='USD'&&ccy!=='USDT'){
+          usdLine=getLatestRate(ccy)
+            ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px">≈ $'+fmtNum(d.usd)+' USD</div>'
+            : '<div style="font-size:11px;color:var(--yellow);margin-top:2px">Add rate to see USD equiv.</div>';
+        }
+        return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 16px;min-width:140px">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">'
+          +'<span class="badge" style="background:rgba(99,102,241,.15);color:var(--accent2);font-size:11px;font-weight:800">'+ccy+'</span>'
+          +'<span style="font-size:11px;color:var(--muted)">'+d.count+' wallet'+(d.count!==1?'s':'')+'</span>'
+          +'</div>'
+          +'<div style="font-size:18px;font-weight:900;letter-spacing:-.4px">'+ccySym(ccy)+fmtNum(d.total)+'</div>'
+          +usdLine
+          +'</div>';
+      }).join('');
+      breakdownEl.innerHTML='<div class="card" style="padding:14px 18px;margin-bottom:0">'
+        +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Balances by Currency</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:10px">'+ccyCards+'</div>'
+        +'</div>';
     } else {
       breakdownEl.innerHTML='';
     }
@@ -1796,7 +1802,7 @@ function buildMonthlyReturns(){
   const map={};
   trades.filter(t=>t.status==='closed'&&t.exitDate).forEach(t=>{
     const m=t.exitDate.slice(0,7);
-    const usd=toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0;
+    const usd=(toUSD(calcPnL(t)||0,t.currency)??(calcPnL(t)||0));
     map[m]=(map[m]||0)+usd;
   });
   return Object.entries(map).sort((a,b)=>a[0]<b[0]?-1:1).map(([m,pnl])=>({month:m,pnl}));
@@ -1806,12 +1812,12 @@ function renderPortfolio(){
   const tl = buildPortfolioTimeline();
   const monthly = buildMonthlyReturns();
   const closed = trades.filter(t=>t.status==='closed');
-  const totalPnLusd = closed.reduce((s,t)=>s+(toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0),0);
+  const totalPnLusd = closed.reduce((s,t)=>s+((toUSD(calcPnL(t)||0,t.currency)??(calcPnL(t)||0))),0);
   const totalInvested = capital.reduce((s,e)=>s+(e.type==='withdrawal'?-capToUSD(e.amount,e.currency):capToUSD(e.amount,e.currency)),0);
   const currentValue = totalInvested + totalPnLusd;
   const roi = totalInvested>0 ? (totalPnLusd/totalInvested*100) : null;
   const open = trades.filter(t=>t.status==='open').length;
-  const allPnLusd = closed.map(t=>toUSD(calcPnL(t)||0,t.currency)??calcPnL(t)||0);
+  const allPnLusd = closed.map(t=>(toUSD(calcPnL(t)||0,t.currency)??(calcPnL(t)||0)));
   const bestDay = allPnLusd.length ? Math.max(...allPnLusd) : null;
   const worstDay = allPnLusd.length ? Math.min(...allPnLusd) : null;
 

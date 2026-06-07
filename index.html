@@ -328,6 +328,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <label class="auth-label">Password</label>
         <input class="auth-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" minlength="6">
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+        <input type="checkbox" id="auth-remember" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+        <label for="auth-remember" style="font-size:13px;color:var(--muted2);cursor:pointer;user-select:none">Remember me</label>
+      </div>
       <button class="auth-btn" id="auth-submit-btn" onclick="handleAuth()">Sign In</button>
     </div>
     <div class="auth-footer">Your trades are private and encrypted. Only you can see them.</div>
@@ -805,6 +809,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <button type="button" class="btn btn-ghost" onclick="closeTradeModal()">Cancel</button>
         <span id="form-msg" style="font-size:12px;color:var(--green);margin-left:auto"></span>
       </div>
+      <div id="form-error-banner" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);font-size:13px;line-height:1.4"></div>
     </form>
   </div>
 </div>
@@ -1170,16 +1175,43 @@ function fmtPnL(n,ccy){
 
 // ── Auth ───────────────────────────────────────────────────────────
 let authMode = 'login';
-function switchAuthTab(mode){ authMode=mode; document.getElementById('tab-login').classList.toggle('active',mode==='login'); document.getElementById('tab-signup').classList.toggle('active',mode==='signup'); document.getElementById('auth-submit-btn').textContent=mode==='login'?'Sign In':'Create Account'; document.getElementById('auth-msg').className='auth-msg'; }
+
+// Restore remembered email on page load
+(function(){
+  const saved=localStorage.getItem('tj_remember_email');
+  if(saved){
+    document.getElementById('auth-email').value=saved;
+    document.getElementById('auth-remember').checked=true;
+  }
+})();
+
+function switchAuthTab(mode){
+  authMode=mode;
+  document.getElementById('tab-login').classList.toggle('active',mode==='login');
+  document.getElementById('tab-signup').classList.toggle('active',mode==='signup');
+  document.getElementById('auth-submit-btn').textContent=mode==='login'?'Sign In':'Create Account';
+  document.getElementById('auth-msg').className='auth-msg';
+  // Only show Remember Me on login
+  document.getElementById('auth-remember').parentElement.style.display=mode==='login'?'flex':'none';
+}
 async function handleAuth(){
   const email=document.getElementById('auth-email').value.trim(), password=document.getElementById('auth-password').value;
+  const remember=document.getElementById('auth-remember').checked;
   const btn=document.getElementById('auth-submit-btn');
   if(!email||!password){showAuthMsg('Please enter email and password.','error');return;}
   btn.disabled=true; btn.textContent='…';
   try {
-    const result=authMode==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
+    const result=authMode==='login'
+      ?await sb.auth.signInWithPassword({email,password})
+      :await sb.auth.signUp({email,password});
     if(result.error) throw result.error;
-    if(authMode==='signup'&&result.data?.user&&!result.data.session){showAuthMsg('Check your email to confirm your account, then sign in.','success');switchAuthTab('login');}
+    if(authMode==='signup'&&result.data?.user&&!result.data.session){
+      showAuthMsg('Check your email to confirm your account, then sign in.','success');
+      switchAuthTab('login');
+    }
+    // Save or clear remembered email
+    if(remember && authMode==='login') localStorage.setItem('tj_remember_email',email);
+    else localStorage.removeItem('tj_remember_email');
   } catch(err){ showAuthMsg(err.message||'Something went wrong.','error'); }
   finally { btn.disabled=false; btn.textContent=authMode==='login'?'Sign In':'Create Account'; }
 }
@@ -1195,10 +1227,11 @@ function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById(
 sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
-async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){console.error(error);return;} trades=data.map(fromDb); }
-async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){console.error(error);return;} rates=data||[]; }
-async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){console.error(error);return;} capital=data||[]; }
-async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){console.error(error);return;} wallets=data||[]; }
+function showLoadError(msg){ showToast('⚠️ '+msg,'error'); console.error('[Tsoro]',msg); }
+async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){showLoadError('Could not load trades: '+error.message);return;} trades=data.map(fromDb); }
+async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Could not load exchange rates: '+error.message);return;} rates=data||[]; }
+async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Could not load capital entries: '+error.message);return;} capital=data||[]; }
+async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Could not load wallets: '+error.message);return;} wallets=data||[]; }
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
@@ -1283,6 +1316,7 @@ function proceedFromChecklist(){
   openNewTradeForm();
 }
 
+function clearFormError(){ const b=document.getElementById('form-error-banner'); if(b){b.style.display='none';b.textContent='';} }
 function resetImageState(){
   const fi=document.getElementById('f-image'); if(fi) fi.value='';
   const thumb=document.getElementById('f-image-thumb'); if(thumb) thumb.src='';
@@ -1301,7 +1335,7 @@ function openNewTradeForm(){
   document.getElementById('f-entry-date').value=nowLocal();
   if(document.getElementById('f-currency')) document.getElementById('f-currency').value='USD';
   setType('day');
-  resetImageState();
+  resetImageState(); clearFormError();
   document.getElementById('trade-modal').classList.add('open');
 }
 
@@ -1309,7 +1343,7 @@ document.getElementById('open-trade-btn').addEventListener('click',()=>{
   document.getElementById('checklist-modal').classList.add('open');
   updateChecklistUI();
 });
-function closeTradeModal(){ resetImageState(); document.getElementById('trade-modal').classList.remove('open'); }
+function closeTradeModal(){ resetImageState(); clearFormError(); document.getElementById('trade-modal').classList.remove('open'); }
 document.getElementById('trade-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTradeModal();});
 document.querySelectorAll('.type-btn').forEach(b=>b.addEventListener('click',()=>setType(b.dataset.type)));
 function setType(t){ document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===t)); document.getElementById('f-type').value=t; }
@@ -1318,11 +1352,17 @@ document.getElementById('trade-form').addEventListener('submit',async e=>{
   const id=document.getElementById('f-id').value, exitVal=document.getElementById('f-exit').value;
   const btn=document.getElementById('form-submit-btn'); btn.disabled=true; btn.textContent='…';
   const t={id:id||null,type:document.getElementById('f-type').value,symbol:document.getElementById('f-symbol').value.trim().toUpperCase(),market:document.getElementById('f-market').value,exchange:document.getElementById('f-exchange').value.trim().toUpperCase()||null,currency:document.getElementById('f-currency').value||'USD',direction:document.getElementById('f-dir').value,qty:parseFloat(document.getElementById('f-qty').value),entry:parseFloat(document.getElementById('f-entry').value),entryDate:document.getElementById('f-entry-date').value||null,exit:exitVal?parseFloat(exitVal):null,exitDate:document.getElementById('f-exit-date').value||null,sl:document.getElementById('f-sl').value?parseFloat(document.getElementById('f-sl').value):null,tp:document.getElementById('f-tp').value?parseFloat(document.getElementById('f-tp').value):null,fee:parseFloat(document.getElementById('f-fee').value)||0,strategy:document.getElementById('f-strategy').value.trim(),notes:document.getElementById('f-notes').value.trim(),status:exitVal?'closed':'open'};
+  const errBanner=document.getElementById('form-error-banner');
+  if(errBanner) errBanner.style.display='none';
   try { if(id){await updateTrade(id,t);}else{await insertTrade(t); resetChecklist();} closeTradeModal(); renderAll(); }
-  catch(err){ showToast('Save failed: '+err.message,'error'); }
+  catch(err){
+    const msg=err.message||'Unknown error';
+    showToast('Save failed: '+msg,'error');
+    if(errBanner){ errBanner.textContent='Save failed: '+msg; errBanner.style.display='block'; }
+  }
   finally { btn.disabled=false; btn.textContent=id?'Save Changes':'Log Trade'; }
 });
-function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; resetImageState(); document.getElementById('f-id').value=t.id; document.getElementById('modal-title').textContent='Edit Trade'; document.getElementById('form-submit-btn').textContent='Save Changes'; setType(t.type); const m={symbol:t.symbol,market:t.market,exchange:t.exchange||'',currency:t.currency||'USD',dir:t.direction,qty:t.qty,entry:t.entry,'entry-date':t.entryDate||'',exit:t.exit??'','exit-date':t.exitDate||'',sl:t.sl??'',tp:t.tp??'',fee:t.fee||0,strategy:t.strategy||'',notes:t.notes||''}; Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;}); if(t.imageUrl) showExistingImage(t.imageUrl); document.getElementById('trade-modal').classList.add('open'); }
+function editTrade(id){ const t=trades.find(x=>x.id===id); if(!t)return; resetImageState(); clearFormError(); document.getElementById('f-id').value=t.id; document.getElementById('modal-title').textContent='Edit Trade'; document.getElementById('form-submit-btn').textContent='Save Changes'; setType(t.type); const m={symbol:t.symbol,market:t.market,exchange:t.exchange||'',currency:t.currency||'USD',dir:t.direction,qty:t.qty,entry:t.entry,'entry-date':t.entryDate||'',exit:t.exit??'','exit-date':t.exitDate||'',sl:t.sl??'',tp:t.tp??'',fee:t.fee||0,strategy:t.strategy||'',notes:t.notes||''}; Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('f-'+k);if(el)el.value=v;}); if(t.imageUrl) showExistingImage(t.imageUrl); document.getElementById('trade-modal').classList.add('open'); }
 
 // ── Close Modal ────────────────────────────────────────────────────
 function openCloseModal(id){ closingId=id; document.getElementById('c-exit').value=''; document.getElementById('c-date').value=nowLocal(); document.getElementById('c-fee').value='0'; document.getElementById('c-notes').value=''; document.getElementById('close-modal').classList.add('open'); }

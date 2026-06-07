@@ -532,6 +532,92 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="securities-grid"></div>
       </div>
 
+      <!-- Wallet -->
+      <div class="page" id="page-wallet">
+        <div id="wallet-quickstart" style="display:none;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(168,85,247,.12));border:1px solid rgba(99,102,241,.3);border-radius:var(--r);padding:20px 24px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:15px;font-weight:800;margin-bottom:4px">Track your account balance</div>
+            <div style="font-size:13px;color:var(--muted2)">Add your Deriv / MT5 balance here. Profits add to it, losses deduct from it automatically.</div>
+          </div>
+          <button class="btn btn-primary" onclick="openWalletModal()" style="flex-shrink:0;padding:10px 20px;font-size:14px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add My First Wallet
+          </button>
+        </div>
+        <div id="wallet-summary" style="margin-bottom:20px"></div>
+        <div id="wallet-currency-breakdown" style="margin-bottom:16px"></div>
+        <div style="margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">My Wallets</div>
+            <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Wallet
+            </button>
+          </div>
+          <div id="wallet-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
+          <div class="card" id="wallet-donut-card">
+            <div class="card-header"><div class="card-title">Allocation</div></div>
+            <canvas id="wallet-donut" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+            <div id="wallet-legend" style="margin-top:14px"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Open Positions vs Available Cash</div><div id="wallet-deployed-meta" style="font-size:12px;color:var(--muted)"></div></div>
+            <canvas id="wallet-bar-chart" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portfolio -->
+      <div class="page" id="page-portfolio">
+        <div class="stats-row" id="port-stats"></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Portfolio Value Over Time</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Invested capital vs actual portfolio value</div>
+            </div>
+            <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center">
+              <span><span style="display:inline-block;width:24px;height:2px;background:var(--accent);border-radius:2px;margin-right:5px;vertical-align:middle"></span>Portfolio Value</span>
+              <span><span style="display:inline-block;width:24px;height:2px;background:var(--muted);border-radius:2px;margin-right:5px;border-top:2px dashed var(--muted);vertical-align:middle"></span>Invested Capital</span>
+            </div>
+          </div>
+          <canvas id="port-main-chart" height="260"></canvas>
+        </div>
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Monthly Returns</div></div>
+            <canvas id="port-monthly-chart" height="160"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Cumulative Growth %</div></div>
+            <canvas id="port-growth-chart" height="160"></canvas>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Capital Entries</div>
+          <button class="btn btn-primary btn-sm" onclick="openCapitalModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Capital Entry
+          </button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
+      </div>
+
+      <!-- Rates -->
+      <div class="page" id="page-rates">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="rates-current"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Rate History</div>
+          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Rate
+          </button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -756,97 +842,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="importCSV()">Import</button>
       <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
       <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
-      <!-- Wallet -->
-      <div class="page" id="page-wallet">
-        <!-- Quick-start banner (hidden once wallets exist) -->
-        <div id="wallet-quickstart" style="display:none;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(168,85,247,.12));border:1px solid rgba(99,102,241,.3);border-radius:var(--r);padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-          <div>
-            <div style="font-size:15px;font-weight:800;margin-bottom:4px">Track your account balance</div>
-            <div style="font-size:13px;color:var(--muted2)">Add your Deriv / MT5 balance here. Profits add to it, losses deduct from it automatically.</div>
-          </div>
-          <button class="btn btn-primary" onclick="openWalletModal()" style="flex-shrink:0;padding:10px 20px;font-size:14px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add My First Wallet
-          </button>
-        </div>
-        <!-- Summary bar -->
-        <div id="wallet-summary" style="margin-bottom:20px"></div>
-        <!-- Currency breakdown -->
-        <div id="wallet-currency-breakdown" style="margin-bottom:16px"></div>
-        <!-- Wallet cards full-width, donut below -->
-        <div style="margin-bottom:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">My Wallets</div>
-            <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Wallet
-            </button>
-          </div>
-          <div id="wallet-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
-        </div>
-        <!-- Allocation donut + deployed bar side by side -->
-        <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
-          <div class="card" id="wallet-donut-card">
-            <div class="card-header"><div class="card-title">Allocation</div></div>
-            <canvas id="wallet-donut" width="220" height="220" style="display:block;margin:0 auto"></canvas>
-            <div id="wallet-legend" style="margin-top:14px"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Open Positions vs Available Cash</div><div id="wallet-deployed-meta" style="font-size:12px;color:var(--muted)"></div></div>
-            <canvas id="wallet-bar-chart" height="100"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Portfolio -->
-      <div class="page" id="page-portfolio">
-        <div class="stats-row" id="port-stats"></div>
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Portfolio Value Over Time</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">Invested capital vs actual portfolio value</div>
-            </div>
-            <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center">
-              <span><span style="display:inline-block;width:24px;height:2px;background:var(--accent);border-radius:2px;margin-right:5px;vertical-align:middle"></span>Portfolio Value</span>
-              <span><span style="display:inline-block;width:24px;height:2px;background:var(--muted);border-radius:2px;margin-right:5px;border-top:2px dashed var(--muted);vertical-align:middle"></span>Invested Capital</span>
-            </div>
-          </div>
-          <canvas id="port-main-chart" height="260"></canvas>
-        </div>
-        <div class="grid-2" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Monthly Returns</div></div>
-            <canvas id="port-monthly-chart" height="160"></canvas>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Cumulative Growth %</div></div>
-            <canvas id="port-growth-chart" height="160"></canvas>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Capital Entries</div>
-          <button class="btn btn-primary btn-sm" onclick="openCapitalModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Capital Entry
-          </button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
-      </div>
-
-      <!-- Rates -->
-      <div class="page" id="page-rates">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="rates-current"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Rate History</div>
-          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Rate
-          </button>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
-      </div>
-
     </div>
   </div>
 </div>
@@ -1589,9 +1584,16 @@ async function deleteWallet(id){
 function walletToUSD(w){ return capToUSD(w.balance, w.currency); }
 
 function renderWallet(){
+  try { _renderWallet(); } catch(e){
+    console.error('renderWallet error:',e);
+    const c=document.getElementById('wallet-cards');
+    if(c) c.innerHTML='<div style="padding:24px;color:var(--red);font-size:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)"><strong>Error loading wallet page:</strong> '+e.message+'</div>';
+  }
+}
+function _renderWallet(){
   // Show/hide quickstart banner
   const qs=document.getElementById('wallet-quickstart');
-  if(qs) qs.style.display=wallets.length===0?'flex':'none';
+  if(qs){ qs.style.display=wallets.length===0?'flex':'none'; }
 
   // ── Totals ──
   const totalCashUSD = wallets.reduce((s,w)=>s+walletToUSD(w),0);

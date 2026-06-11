@@ -400,6 +400,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
       <span>ZSE / VFSE</span>
     </button>
+    <button class="nav-item" data-page="goals">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+      <span>Goals</span>
+    </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar">T</div>
@@ -692,6 +696,68 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
+      <!-- Investment Goals -->
+      <div class="page" id="page-goals">
+        <div id="goals-summary" style="margin-bottom:20px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-size:15px;font-weight:800;letter-spacing:-.2px">My Investment Goals</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Quarterly and yearly targets — progress is measured against your total account value (wallets + open positions)</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openGoalModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Goal
+          </button>
+        </div>
+        <div id="goals-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="overlay" id="goal-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="goal-modal-title">Add Goal</div>
+      <button class="modal-close" onclick="closeGoalModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="g-edit-id">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Goal Name</label>
+        <input class="form-input" id="g-title" placeholder="e.g. Q3 2026 target, End of year portfolio">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Amount (USD)</label>
+        <input class="form-input" id="g-target" type="number" step="any" min="0" placeholder="e.g. 500">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Period</label>
+        <select class="form-select" id="g-period" onchange="goalPeriodPreset()">
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Start Date</label>
+        <input class="form-input" id="g-start" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <input class="form-input" id="g-end" type="date">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="g-notes" placeholder="Why this goal matters…">
+      </div>
+    </div>
+    <div id="g-error" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);font-size:13px"></div>
+    <div class="form-row" style="margin-top:14px">
+      <button type="button" class="btn btn-primary" id="g-save-btn" onclick="saveGoal()">Save Goal</button>
+      <button type="button" class="btn btn-ghost" onclick="closeGoalModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1312,7 +1378,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [];
+let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -1404,7 +1470,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals()]);
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -1426,6 +1492,7 @@ async function loadTrades(){ const{data,error}=await sb.from('trades').select('*
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Rates failed to load: '+error.message);return;} rates=data||[]; }
 async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Capital entries failed to load: '+error.message);return;} capital=data||[]; }
 async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Wallets failed to load: '+error.message);return;} wallets=data||[]; }
+async function loadGoals(){ const{data,error}=await sb.from('investment_goals').select('*').order('end_date',{ascending:true}); if(error){console.error('[Tsoro] goals:',error.message);goals=[];return;} goals=data||[]; }
 async function loadWalletHistory(){ const{data,error}=await sb.from('wallet_history').select('*').order('recorded_at',{ascending:true}); if(error){console.error('[Tsoro] wallet history:',error.message);walletHistory=[];return;} walletHistory=data||[]; }
 async function recordWalletSnapshot(walletId, balance, currency){
   if(!currentUser||!walletId) return;
@@ -1438,7 +1505,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',wallet:'Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',wallet:'Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -1748,7 +1815,7 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -3105,6 +3172,179 @@ function openZseChargesModal(){
 }
 function closeZseChargesModal(){ document.getElementById('zse-charges-modal').classList.remove('open'); }
 document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeZseChargesModal();});
+
+// ═══════════════════════════════════════════════════════════════════
+// INVESTMENT GOALS
+// ═══════════════════════════════════════════════════════════════════
+
+// Total account value in USD — the number goals are measured against
+function accountValueUSD(){
+  const cash=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
+  const deployed=trades.filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
+  return cash+deployed;
+}
+
+function goalPeriodPreset(){
+  const p=document.getElementById('g-period').value;
+  const today=new Date();
+  const s=document.getElementById('g-start'), e=document.getElementById('g-end');
+  if(p==='quarterly'){
+    const q=Math.floor(today.getMonth()/3);
+    s.value=new Date(today.getFullYear(),q*3,1).toISOString().slice(0,10);
+    e.value=new Date(today.getFullYear(),q*3+3,0).toISOString().slice(0,10);
+  } else if(p==='yearly'){
+    s.value=today.getFullYear()+'-01-01';
+    e.value=today.getFullYear()+'-12-31';
+  }
+}
+
+function openGoalModal(id){
+  document.getElementById('goal-modal-title').textContent=id?'Edit Goal':'Add Goal';
+  document.getElementById('g-edit-id').value=id||'';
+  document.getElementById('g-error').style.display='none';
+  if(id){
+    const g=goals.find(x=>x.id===id); if(!g) return;
+    document.getElementById('g-title').value=g.title;
+    document.getElementById('g-target').value=g.target_amount;
+    document.getElementById('g-period').value=g.period_type||'custom';
+    document.getElementById('g-start').value=g.start_date;
+    document.getElementById('g-end').value=g.end_date;
+    document.getElementById('g-notes').value=g.notes||'';
+  } else {
+    document.getElementById('g-title').value='';
+    document.getElementById('g-target').value='';
+    document.getElementById('g-notes').value='';
+    document.getElementById('g-period').value='quarterly';
+    goalPeriodPreset();
+  }
+  document.getElementById('goal-modal').classList.add('open');
+}
+function closeGoalModal(){ document.getElementById('goal-modal').classList.remove('open'); }
+document.getElementById('goal-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeGoalModal();});
+
+function gErr(msg){ const el=document.getElementById('g-error'); el.textContent=msg; el.style.display=msg?'block':'none'; }
+
+async function saveGoal(){
+  gErr('');
+  const id=document.getElementById('g-edit-id').value;
+  const title=document.getElementById('g-title').value.trim();
+  const target=parseFloat(document.getElementById('g-target').value);
+  const start=document.getElementById('g-start').value;
+  const end=document.getElementById('g-end').value;
+  if(!title){ gErr('Please give the goal a name.'); return; }
+  if(!target||isNaN(target)||target<=0){ gErr('Please enter a target amount greater than 0.'); return; }
+  if(!start||!end){ gErr('Please set both a start date and a deadline.'); return; }
+  if(new Date(end)<=new Date(start)){ gErr('The deadline must be after the start date.'); return; }
+  const row={
+    title,
+    target_amount:target,
+    period_type:document.getElementById('g-period').value,
+    start_date:start,
+    end_date:end,
+    notes:document.getElementById('g-notes').value.trim()||null,
+  };
+  const btn=document.getElementById('g-save-btn'); btn.disabled=true; btn.textContent='…';
+  try {
+    if(id){
+      const{error}=await sb.from('investment_goals').update(row).eq('id',id);
+      if(error) throw error;
+      const idx=goals.findIndex(x=>x.id===id); if(idx>=0) goals[idx]={...goals[idx],...row};
+    } else {
+      const{data,error}=await sb.from('investment_goals').insert([{...row,user_id:currentUser.id}]).select().single();
+      if(error) throw error;
+      goals.push(data);
+    }
+    goals.sort((a,b)=>new Date(a.end_date)-new Date(b.end_date));
+    closeGoalModal(); renderGoals();
+  } catch(err){ gErr('Save failed: '+(err.message||'Unknown error')); }
+  finally { btn.disabled=false; btn.textContent='Save Goal'; }
+}
+
+async function deleteGoal(id){
+  if(!confirm('Delete this goal?')) return;
+  const{error}=await sb.from('investment_goals').delete().eq('id',id);
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
+  goals=goals.filter(x=>x.id!==id); renderGoals();
+}
+
+function renderGoals(){
+  const list=document.getElementById('goals-list'); if(!list) return;
+  const current=accountValueUSD();
+  const today=new Date();
+
+  // Summary strip
+  const active=goals.filter(g=>new Date(g.end_date)>=today);
+  const achieved=goals.filter(g=>current>=Number(g.target_amount)).length;
+  document.getElementById('goals-summary').innerHTML=`
+    <div class="wallet-summary-grid">
+      <div class="wallet-sum-card" style="border-left:4px solid var(--accent)">
+        <div class="wallet-sum-lbl">Current Account Value</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtMoney(current)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">wallets + open positions</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--green)">
+        <div class="wallet-sum-lbl">Goals Achieved</div>
+        <div class="wallet-sum-val pnl-pos">${achieved} / ${goals.length}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">targets reached</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--yellow)">
+        <div class="wallet-sum-lbl">Active Goals</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)">${active.length}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">deadlines ahead</div>
+      </div>
+    </div>`;
+
+  if(!goals.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">'+(IC.inbox||'')+'</div><h3>No goals yet</h3><p>Set a quarterly or yearly target and watch your progress towards it.</p></div>';
+    return;
+  }
+
+  list.innerHTML=goals.map(g=>{
+    const target=Number(g.target_amount);
+    const pct=Math.min(current/target*100,100);
+    const hit=current>=target;
+    const end=new Date(g.end_date+'T23:59:59'), start=new Date(g.start_date+'T00:00:00');
+    const totalDays=Math.max(1,Math.round((end-start)/86400000));
+    const daysLeft=Math.ceil((end-today)/86400000);
+    const expired=daysLeft<0;
+    const elapsedPct=Math.min(Math.max((today-start)/(end-start)*100,0),100);
+    // On track if progress % >= time elapsed %
+    const onTrack=hit||pct>=elapsedPct;
+    const status=hit?['Achieved 🎉','var(--green)']:expired?['Deadline passed','var(--red)']:onTrack?['On track','var(--green)']:['Behind pace','var(--yellow)'];
+    const periodBadge=g.period_type==='quarterly'?'Quarterly':g.period_type==='yearly'?'Yearly':'Custom';
+    return `<div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:15px;font-weight:800">${g.title}</span>
+            <span class="badge badge-market" style="color:var(--accent2)">${periodBadge}</span>
+            <span style="font-size:11px;font-weight:700;color:${status[1]}">● ${status[0]}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">
+            ${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})} → ${end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+            ${expired?'':' · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'}
+            ${g.notes?' · '+g.notes:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="btn btn-sm btn-ghost" onclick="openGoalModal('${g.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteGoal('${g.id}')">${IC.trash||'✕'}</button>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+          <span style="font-weight:700">$${fmtMoney(current)} <span style="color:var(--muted);font-weight:400">of $${fmtMoney(target)}</span></span>
+          <span style="font-weight:800;color:${hit?'var(--green)':'var(--accent2)'}">${pct.toFixed(1)}%</span>
+        </div>
+        <div style="height:10px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative">
+          <div style="height:100%;width:${pct.toFixed(1)}%;border-radius:6px;background:${hit?'linear-gradient(90deg,#22c55e,#4ade80)':'linear-gradient(90deg,var(--accent),#a855f7)'};transition:width .4s"></div>
+          ${!hit&&!expired?`<div title="Where you should be by today to stay on pace" style="position:absolute;top:-2px;bottom:-2px;left:${elapsedPct.toFixed(1)}%;width:2px;background:var(--muted2)"></div>`:''}
+        </div>
+        ${!hit?`<div style="font-size:11px;color:var(--muted);margin-top:6px">$${fmtMoney(Math.max(target-current,0))} to go${!expired&&daysLeft>0?' · need ~$'+fmtMoney(Math.max(target-current,0)/daysLeft)+'/day to hit the deadline':''}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function updateZcTotal(){
   const vals=['zc-broker','zc-zimra','zc-stamp','zc-csdr','zc-other','zc-withdraw'].map(id=>parseFloat(document.getElementById(id).value)||0);

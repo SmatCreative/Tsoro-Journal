@@ -567,6 +567,26 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           </div>
           <div id="wallet-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
         </div>
+        <div class="card" style="margin-bottom:16px" id="wallet-perf-card">
+          <div class="card-header" style="flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="card-title">Wallet Performance</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Balance over time — updates every time a balance changes</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select class="form-select" id="wh-wallet-sel" onchange="renderWalletPerf()" style="width:auto;min-width:150px;padding:7px 10px;font-size:12px"></select>
+              <select class="form-select" id="wh-ccy-sel" onchange="renderWalletPerf()" style="width:auto;padding:7px 10px;font-size:12px">
+                <option value="USD">USD $</option>
+                <option value="ZiG">ZiG</option>
+                <option value="ZAR">ZAR R</option>
+                <option value="GBP">GBP £</option>
+                <option value="EUR">EUR €</option>
+              </select>
+            </div>
+          </div>
+          <div id="wh-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
+          <canvas id="wallet-perf-chart" height="220"></canvas>
+        </div>
         <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
           <div class="card" id="wallet-donut-card">
             <div class="card-header"><div class="card-title">Allocation</div></div>
@@ -1285,7 +1305,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [];
+let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -1370,7 +1390,7 @@ async function signOut(){
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
-sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets()]);renderAll();}else{showAuthScreen();} });
+sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
 function showLoadError(msg){
@@ -1383,6 +1403,13 @@ async function loadTrades(){ const{data,error}=await sb.from('trades').select('*
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Rates failed to load: '+error.message);return;} rates=data||[]; }
 async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Capital entries failed to load: '+error.message);return;} capital=data||[]; }
 async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Wallets failed to load: '+error.message);return;} wallets=data||[]; }
+async function loadWalletHistory(){ const{data,error}=await sb.from('wallet_history').select('*').order('recorded_at',{ascending:true}); if(error){console.error('[Tsoro] wallet history:',error.message);walletHistory=[];return;} walletHistory=data||[]; }
+async function recordWalletSnapshot(walletId, balance, currency){
+  if(!currentUser||!walletId) return;
+  const{data,error}=await sb.from('wallet_history').insert([{user_id:currentUser.id,wallet_id:walletId,balance,currency:currency||'USD'}]).select().single();
+  if(error){ console.error('[Tsoro] snapshot failed:',error.message); return; }
+  walletHistory.push(data);
+}
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
@@ -1562,6 +1589,7 @@ async function applyPnLToWallet(trade, pnl){
   // Update local cache
   const idx=wallets.findIndex(x=>x.id===w.id);
   if(idx>=0){wallets[idx].balance=newBalance; wallets[idx].updated_at=new Date().toISOString().slice(0,10);}
+  await recordWalletSnapshot(w.id, newBalance, w.currency);
   showToast((pnl>=0?'+':'')+ccySym(trade.currency)+Math.abs(pnl).toFixed(2)+' applied to '+( w.wallet_name||w.platform||'wallet'),'info');
 }
 
@@ -1753,10 +1781,12 @@ async function saveWallet(){
       const{error}=await sb.from('wallets').update(row).eq('id',id);
       if(error) throw error;
       const idx=wallets.findIndex(x=>x.id===id); if(idx>=0) wallets[idx]={...wallets[idx],...row};
+      await recordWalletSnapshot(id, balance, row.currency);
     } else {
       const{data,error}=await sb.from('wallets').insert([{...row,user_id:currentUser.id}]).select().single();
       if(error) throw error;
       wallets.push(data);
+      await recordWalletSnapshot(data.id, balance, row.currency);
     }
     closeWalletModal(); renderWallet();
   } catch(err){ showModalErr('w-error','Save failed: '+err.message); }
@@ -1778,6 +1808,132 @@ function renderWallet(){
     const c=document.getElementById('wallet-cards');
     if(c) c.innerHTML='<div style="padding:24px;color:var(--red);font-size:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)"><strong>Error loading wallet page:</strong> '+e.message+'</div>';
   }
+  try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
+}
+
+// ── Wallet performance chart ───────────────────────────────────────
+function syncWalletPerfSelector(){
+  const sel=document.getElementById('wh-wallet-sel'); if(!sel) return;
+  const prev=sel.value;
+  sel.innerHTML='<option value="all">All Wallets (combined)</option>'+
+    wallets.map(w=>`<option value="${w.id}">${(w.wallet_name||w.platform||'Wallet')}</option>`).join('');
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value=prev;
+}
+
+// Convert an amount from one currency into the selected display currency
+function convertCcy(amount, fromCcy, toCcy){
+  if(fromCcy===toCcy) return amount;
+  const fromRate = fromCcy==='USD' ? 1 : (getLatestRate(fromCcy)?.units_per_usd ?? null);
+  const toRate   = toCcy==='USD'   ? 1 : (getLatestRate(toCcy)?.units_per_usd ?? null);
+  if(fromRate==null || toRate==null) return null;
+  return amount / fromRate * toRate;
+}
+
+function renderWalletPerf(){
+  const card=document.getElementById('wallet-perf-card'); if(!card) return;
+  card.style.display = wallets.length===0 ? 'none' : 'block';
+  if(wallets.length===0) return;
+
+  const walletId=document.getElementById('wh-wallet-sel')?.value||'all';
+  const ccy=document.getElementById('wh-ccy-sel')?.value||'USD';
+
+  // Build the series: each snapshot converted into the display currency.
+  // For "all" we carry each wallet's latest-known balance forward and sum.
+  let series=[];
+  let missingRate=false;
+  if(walletId==='all'){
+    const snaps=[...walletHistory].sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at));
+    const latest={};
+    snaps.forEach(s=>{
+      latest[s.wallet_id]={balance:Number(s.balance), currency:s.currency};
+      let total=0;
+      for(const k in latest){
+        const v=convertCcy(latest[k].balance, latest[k].currency, ccy);
+        if(v==null){ missingRate=true; return; }
+        total+=v;
+      }
+      series.push({t:new Date(s.recorded_at), v:total});
+    });
+  } else {
+    series=walletHistory.filter(s=>s.wallet_id===walletId)
+      .map(s=>{
+        const v=convertCcy(Number(s.balance), s.currency, ccy);
+        if(v==null) missingRate=true;
+        return {t:new Date(s.recorded_at), v};
+      })
+      .filter(p=>p.v!=null)
+      .sort((a,b)=>a.t-b.t);
+  }
+
+  // Stats strip
+  const stats=document.getElementById('wh-stats');
+  if(stats){
+    if(missingRate){
+      stats.innerHTML='<div style="font-size:12px;color:var(--yellow)">No '+ccy+'/USD rate saved — add one on the Rates page to view in '+ccy+'.</div>';
+    } else if(series.length){
+      const first=series[0].v, last=series[series.length-1].v;
+      const chg=last-first, chgPct=first>0?chg/first*100:0;
+      const stat=(lbl,val,cls)=>`<div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${lbl}</div><div style="font-size:17px;font-weight:800" class="${cls||''}">${val}</div></div>`;
+      stats.innerHTML=
+        stat('Current', ccySym(ccy)+fmtNum(last)) +
+        stat('Change', (chg>=0?'+':'')+ccySym(ccy)+fmtNum(Math.abs(chg)*(chg<0?-1:1)), chg>=0?'pnl-pos':'pnl-neg') +
+        stat('Change %', (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%', chgPct>=0?'pnl-pos':'pnl-neg') +
+        stat('Data Points', series.length);
+    } else { stats.innerHTML=''; }
+  }
+  drawWalletPerfChart(series, ccy);
+}
+
+function drawWalletPerfChart(series, ccy){
+  const canvas=document.getElementById('wallet-perf-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=220; canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  if(series.length<2){
+    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px system-ui'; ctx.textAlign='center';
+    ctx.fillText(series.length===1?'Balance history starts now — update a balance to grow this chart':'No balance history yet',W/2,H/2);
+    return;
+  }
+  const vals=series.map(p=>p.v);
+  const minV=Math.min(...vals), maxV=Math.max(...vals);
+  const range=(maxV-minV)||Math.abs(maxV)||1;
+  const yMin=minV-range*.08, yMax=maxV+range*.08, yRange=yMax-yMin;
+  const padB=26, padT=10, padR=16, padL=58;
+  const t0=series[0].t.getTime(), t1=series[series.length-1].t.getTime(), tRange=(t1-t0)||1;
+  const sx=t=>padL+(t-t0)/tRange*(W-padL-padR);
+  const sy=v=>H-padB-(v-yMin)/yRange*(H-padB-padT);
+  // Grid + y labels
+  ctx.strokeStyle=themeVal('#1c2030','#e2e8f2'); ctx.lineWidth=1;
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px system-ui';
+  for(let i=0;i<=4;i++){
+    const v=yMin+yRange*i/4, y=sy(v);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.textAlign='right'; ctx.fillText(ccySym(ccy)+Number(v).toLocaleString('en-US',{maximumFractionDigits:v<100?2:0}),padL-6,y+3);
+  }
+  // X labels (first, middle, last)
+  ctx.textAlign='center';
+  [series[0], series[Math.floor(series.length/2)], series[series.length-1]].forEach(p=>{
+    ctx.fillText(p.t.toLocaleDateString('en-US',{month:'short',day:'numeric'}), sx(p.t.getTime()), H-8);
+  });
+  const isPos=vals[vals.length-1]>=vals[0];
+  const lineCol=isPos?themeVal('#22c55e','#16a34a'):themeVal('#ef4444','#dc2626');
+  // Gradient fill under line
+  const grd=ctx.createLinearGradient(0,padT,0,H-padB);
+  grd.addColorStop(0,isPos?'rgba(34,197,94,.28)':'rgba(239,68,68,.28)');
+  grd.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
+  ctx.beginPath(); ctx.moveTo(sx(series[0].t.getTime()),sy(series[0].v));
+  series.forEach(p=>ctx.lineTo(sx(p.t.getTime()),sy(p.v)));
+  ctx.lineTo(sx(t1),H-padB); ctx.lineTo(sx(t0),H-padB); ctx.closePath();
+  ctx.fillStyle=grd; ctx.fill();
+  // Line
+  ctx.beginPath(); ctx.moveTo(sx(series[0].t.getTime()),sy(series[0].v));
+  series.forEach(p=>ctx.lineTo(sx(p.t.getTime()),sy(p.v)));
+  ctx.strokeStyle=lineCol; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+  // Point dots
+  series.forEach(p=>{ ctx.beginPath(); ctx.arc(sx(p.t.getTime()),sy(p.v),3,0,Math.PI*2); ctx.fillStyle=lineCol; ctx.fill(); });
+  // End label
+  const lp=series[series.length-1];
+  ctx.font='bold 11px system-ui'; ctx.textAlign='right'; ctx.fillStyle=lineCol;
+  ctx.fillText(ccySym(ccy)+fmtNum(lp.v), W-padR, sy(lp.v)-8);
 }
 function _renderWallet(){
   // Show/hide quickstart banner

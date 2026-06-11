@@ -433,6 +433,9 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         </button>
       </div>
     </div>
+    <!-- Global DB error banner -->
+    <div id="global-error-banner" style="display:none;background:#ef4444;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;position:sticky;top:0;z-index:999;cursor:pointer" onclick="this.style.display='none'" title="Click to dismiss"></div>
+
     <div class="content">
 
       <!-- Dashboard -->
@@ -1360,18 +1363,27 @@ document.getElementById('auth-password').addEventListener('keydown',e=>{if(e.key
 document.getElementById('auth-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('auth-password').focus();});
 document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 document.getElementById('auth-theme-btn').addEventListener('click', toggleTheme);
-async function signOut(){ await sb.auth.signOut(); }
+async function signOut(){
+  try { await sb.auth.signOut(); } catch(e){ console.error('signOut error',e); }
+  // Force reload so the page always returns to the login screen
+  window.location.reload();
+}
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
 sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets()]);renderAll();}else{showAuthScreen();} });
 
 // ── CRUD ───────────────────────────────────────────────────────────
-function showLoadError(msg){ showToast('⚠️ '+msg,'error'); console.error('[Tsoro]',msg); }
-async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){showLoadError('Could not load trades: '+error.message);return;} trades=data.map(fromDb); }
-async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Could not load exchange rates: '+error.message);return;} rates=data||[]; }
-async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Could not load capital entries: '+error.message);return;} capital=data||[]; }
-async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Could not load wallets: '+error.message);return;} wallets=data||[]; }
+function showLoadError(msg){
+  showToast('⚠️ '+msg,'error');
+  console.error('[Tsoro]',msg);
+  const b=document.getElementById('global-error-banner');
+  if(b){ b.textContent='⚠️ '+msg+' — Click to dismiss'; b.style.display='block'; }
+}
+async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){showLoadError('Trades failed to load: '+error.message);return;} trades=data.map(fromDb); }
+async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Rates failed to load: '+error.message);return;} rates=data||[]; }
+async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Capital entries failed to load: '+error.message);return;} capital=data||[]; }
+async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Wallets failed to load: '+error.message);return;} wallets=data||[]; }
 async function insertTrade(t){ const row={...toDb(t),user_id:currentUser.id}; const{data,error}=await sb.from('trades').insert([row]).select().single(); if(error)throw error; trades.unshift(fromDb(data)); }
 async function updateTrade(id,t){ const{data,error}=await sb.from('trades').update(toDb(t)).eq('id',id).select().single(); if(error)throw error; const idx=trades.findIndex(x=>x.id===id); if(idx>=0)trades[idx]=fromDb(data); }
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }

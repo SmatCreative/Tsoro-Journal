@@ -1140,6 +1140,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <div class="modal-title" id="rate-modal-title">Add Exchange Rate</div>
       <button class="modal-close" onclick="closeRateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
+    <div id="rate-err" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;word-break:break-word"></div>
     <input type="hidden" id="rate-edit-id">
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group">
@@ -2305,7 +2306,9 @@ document.getElementById('rate-units').addEventListener('input', ()=>{
   document.getElementById('rate-equiv').textContent = v>0 ? `${ccySym(ccy)}${(1/v).toFixed(6)} per unit` : '—';
 });
 
+function rateErr(msg){ const el=document.getElementById('rate-err'); if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
 function openRateModal(id){
+  rateErr('');
   document.getElementById('rate-edit-id').value = id||'';
   document.getElementById('rate-modal-title').textContent = id ? 'Edit Rate' : 'Add Exchange Rate';
   if(id){
@@ -2340,6 +2343,8 @@ async function saveRate(){
     effective_date: document.getElementById('rate-date').value,
     notes: document.getElementById('rate-notes').value.trim()||null,
   };
+  const rateErr=document.getElementById('rate-err');
+  if(rateErr) rateErr.style.display='none';
   try {
     if(id){
       const{error}=await sb.from('exchange_rates').update(row).eq('id',id);
@@ -2351,7 +2356,11 @@ async function saveRate(){
       rates.unshift(data);
     }
     closeRateModal(); renderRates(); renderAll();
-  } catch(err){ showToast('Save failed: '+err.message,'error'); }
+  } catch(err){
+    const msg=err.message||'Unknown error';
+    showToast('Rate save failed: '+msg,'error');
+    if(rateErr){ rateErr.textContent='Save failed: '+msg; rateErr.style.display='block'; }
+  }
 }
 
 async function deleteRate(id){

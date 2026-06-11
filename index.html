@@ -560,10 +560,16 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div style="margin-bottom:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div style="font-size:13px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">My Wallets</div>
-            <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Wallet
-            </button>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="openCashWalletModal()" title="Track physical cash you hold">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
+                Add Cash
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Wallet
+              </button>
+            </div>
           </div>
           <div id="wallet-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
         </div>
@@ -1085,6 +1091,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <label class="form-label">Account Type <span class="opt">(optional)</span></label>
         <select class="form-select" id="w-type">
           <option value="">—</option>
+          <option value="Cash">Physical Cash</option>
           <option value="Live">Live Account</option>
           <option value="Demo">Demo / Practice</option>
           <option value="Savings">Savings</option>
@@ -1783,6 +1790,16 @@ function openWalletModal(id){
   document.getElementById('wallet-modal').classList.add('open');
 }
 function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); showModalErr('w-error',''); }
+// Quick-add a physical cash wallet (no platform/exchange needed)
+function openCashWalletModal(){
+  openWalletModal();
+  document.getElementById('wallet-modal-title').textContent='Add Cash Wallet';
+  document.getElementById('w-name').value='Cash on Hand';
+  document.getElementById('w-platform').value='Cash';
+  document.getElementById('w-type').value='Cash';
+  document.getElementById('w-color').value='#22c55e';
+  document.getElementById('w-balance').focus();
+}
 document.getElementById('wallet-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeWalletModal(); });
 
 // Auto-fill currency from exchange selection

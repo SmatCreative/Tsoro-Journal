@@ -1712,7 +1712,7 @@ function openWalletModal(id){
   }
   document.getElementById('wallet-modal').classList.add('open');
 }
-function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); wErr(''); }
+function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); showModalErr('w-error',''); }
 document.getElementById('wallet-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeWalletModal(); });
 
 // Auto-fill currency from exchange selection

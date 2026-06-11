@@ -396,6 +396,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
       <span>Rates</span>
     </button>
+    <button class="nav-item" data-page="zse">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span>ZSE / VFSE</span>
+    </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar">T</div>
@@ -620,6 +624,43 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           </button>
         </div>
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
+      </div>
+
+      <!-- ZSE / VFSE Tracker -->
+      <div class="page" id="page-zse">
+        <!-- Summary strip -->
+        <div id="zse-summary" style="margin-bottom:20px"></div>
+
+        <!-- Holdings section -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-size:15px;font-weight:800;letter-spacing:-.2px">My ZSE / VFSE Holdings</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Add your shares — update prices daily to see current value</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openZseChargesModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Charges &amp; Settings
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openZseHoldingModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Holding
+            </button>
+          </div>
+        </div>
+
+        <div id="zse-holdings-table" style="margin-bottom:24px"></div>
+
+        <!-- Withdrawal Calculator -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Withdrawal Calculator</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">See your net proceeds after all charges if you sell &amp; withdraw today</div>
+            </div>
+          </div>
+          <div id="zse-calc-body" style="padding-top:4px"></div>
+        </div>
       </div>
 
     </div>
@@ -847,6 +888,104 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="btn btn-primary" onclick="importCSV()">Import</button>
       <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
       <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ZSE Holding Modal -->
+<div class="overlay" id="zse-holding-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="zse-holding-modal-title">Add Holding</div>
+      <button class="modal-close" onclick="closeZseHoldingModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="zse-holding-err" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px"></div>
+    <input type="hidden" id="zh-edit-id">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Stock Symbol</label>
+        <input class="form-input" id="zh-symbol" placeholder="e.g. DELTA, OK, CBZ" autocomplete="off" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Exchange</label>
+        <select class="form-select" id="zh-exchange">
+          <option value="ZSE">ZSE — Zimbabwe Stock Exchange (ZiG)</option>
+          <option value="VFSE">VFSE — Victoria Falls Stock Exchange (USD)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Number of Shares</label>
+        <input class="form-input" id="zh-shares" type="number" step="any" min="1" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Avg Buy Price <span class="opt">(per share)</span></label>
+        <input class="form-input" id="zh-buy-price" type="number" step="any" min="0" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Current / Today's Price</label>
+        <input class="form-input" id="zh-current-price" type="number" step="any" min="0" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price Date</label>
+        <input class="form-input" id="zh-price-date" type="date">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="zh-notes" placeholder="Sector, why you hold it…">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-primary" id="zh-save-btn" onclick="saveZseHolding()">Save Holding</button>
+      <button class="btn btn-ghost" onclick="closeZseHoldingModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZSE Charges Settings Modal -->
+<div class="overlay" id="zse-charges-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Charges &amp; Withdrawal Settings</div>
+      <button class="modal-close" onclick="closeZseChargesModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Set the charges that apply when you sell shares and withdraw cash. These are used in the Withdrawal Calculator.</p>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Broker Commission %</label>
+        <input class="form-input" id="zc-broker" type="number" step="0.01" min="0" max="100" placeholder="e.g. 2.0">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Typical: 1.5–2%</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ZIMRA Levy %</label>
+        <input class="form-input" id="zc-zimra" type="number" step="0.01" min="0" max="100" placeholder="e.g. 0.5">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Capital gains / levy</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stamp Duty %</label>
+        <input class="form-input" id="zc-stamp" type="number" step="0.01" min="0" max="100" placeholder="e.g. 0.025">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Typical: 0.025%</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">CSDR / Settlement %</label>
+        <input class="form-input" id="zc-csdr" type="number" step="0.01" min="0" max="100" placeholder="e.g. 0.1">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Central depository fee</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Other Charges %</label>
+        <input class="form-input" id="zc-other" type="number" step="0.01" min="0" max="100" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Withdrawal Fee %</label>
+        <input class="form-input" id="zc-withdraw" type="number" step="0.01" min="0" max="100" placeholder="e.g. 2.0">
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Bank/mobile withdrawal</div>
+      </div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--r-sm);padding:12px 14px;margin-top:4px;font-size:12px;color:var(--muted2)">
+      Total charges: <strong id="zc-total-pct" style="color:var(--text)">0%</strong> — you keep <strong id="zc-keep-pct" style="color:var(--green)">100%</strong> of proceeds
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveZseCharges()">Save Settings</button>
+      <button class="btn btn-ghost" onclick="closeZseChargesModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1520,7 +1659,7 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -2618,6 +2757,337 @@ function openSecModal(symbol){
   });
 }
 document.getElementById('sec-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)document.getElementById('sec-modal').classList.remove('open');});
+
+// ═══════════════════════════════════════════════════════════════════
+// ZSE / VFSE TRACKER
+// ═══════════════════════════════════════════════════════════════════
+
+const PAGE_TITLES_ZSE = {'zse':'ZSE / VFSE Tracker'};
+Object.assign(PAGE_TITLES, PAGE_TITLES_ZSE);
+
+function zseKey(suffix){ return 'tj_zse_'+(currentUser?.id||'guest')+'_'+suffix; }
+
+function loadZseHoldings(){ try{ return JSON.parse(localStorage.getItem(zseKey('holdings'))||'[]'); }catch(e){return[];} }
+function saveZseHoldingsLocal(arr){ localStorage.setItem(zseKey('holdings'), JSON.stringify(arr)); }
+function loadZseCharges(){ try{ return JSON.parse(localStorage.getItem(zseKey('charges'))||'{}'); }catch(e){return {};} }
+function saveZseChargesLocal(obj){ localStorage.setItem(zseKey('charges'), JSON.stringify(obj)); }
+
+// ── Modals ─────────────────────────────────────────────────────────
+function openZseHoldingModal(id){
+  document.getElementById('zh-edit-id').value = id||'';
+  document.getElementById('zse-holding-modal-title').textContent = id ? 'Edit Holding' : 'Add Holding';
+  zHoldingErr('');
+  const today = new Date().toISOString().slice(0,10);
+  if(id){
+    const h = loadZseHoldings().find(x=>x.id===id); if(!h) return;
+    document.getElementById('zh-symbol').value      = h.symbol||'';
+    document.getElementById('zh-exchange').value    = h.exchange||'ZSE';
+    document.getElementById('zh-shares').value      = h.shares||'';
+    document.getElementById('zh-buy-price').value   = h.buyPrice||'';
+    document.getElementById('zh-current-price').value = h.currentPrice||'';
+    document.getElementById('zh-price-date').value  = h.priceDate||today;
+    document.getElementById('zh-notes').value       = h.notes||'';
+  } else {
+    ['zh-symbol','zh-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('zh-exchange').value='ZSE';
+    document.getElementById('zh-shares').value='';
+    document.getElementById('zh-buy-price').value='';
+    document.getElementById('zh-current-price').value='';
+    document.getElementById('zh-price-date').value=today;
+  }
+  document.getElementById('zse-holding-modal').classList.add('open');
+}
+function closeZseHoldingModal(){ document.getElementById('zse-holding-modal').classList.remove('open'); }
+document.getElementById('zse-holding-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeZseHoldingModal();});
+
+function zHoldingErr(msg){ const el=document.getElementById('zse-holding-err'); el.textContent=msg; el.style.display=msg?'block':'none'; }
+
+function saveZseHolding(){
+  const id       = document.getElementById('zh-edit-id').value;
+  const symbol   = document.getElementById('zh-symbol').value.trim().toUpperCase();
+  const exchange = document.getElementById('zh-exchange').value;
+  const shares   = parseFloat(document.getElementById('zh-shares').value);
+  const buyPrice = parseFloat(document.getElementById('zh-buy-price').value);
+  const curPrice = parseFloat(document.getElementById('zh-current-price').value);
+  const priceDate= document.getElementById('zh-price-date').value;
+  const notes    = document.getElementById('zh-notes').value.trim();
+
+  if(!symbol)         { zHoldingErr('Please enter a stock symbol.'); return; }
+  if(!shares||shares<=0){ zHoldingErr('Please enter number of shares.'); return; }
+  if(isNaN(buyPrice)||buyPrice<0){ zHoldingErr('Please enter a valid buy price.'); return; }
+
+  const holdings = loadZseHoldings();
+  if(id){
+    const idx=holdings.findIndex(x=>x.id===id);
+    if(idx>=0) holdings[idx]={...holdings[idx],symbol,exchange,shares,buyPrice,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
+  } else {
+    holdings.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes});
+  }
+  saveZseHoldingsLocal(holdings);
+  closeZseHoldingModal();
+  renderZse();
+}
+
+function deleteZseHolding(id){
+  if(!confirm('Remove this holding?')) return;
+  const holdings=loadZseHoldings().filter(x=>x.id!==id);
+  saveZseHoldingsLocal(holdings);
+  renderZse();
+}
+
+// Inline price update
+function openZsePriceUpdate(id){
+  const h=loadZseHoldings().find(x=>x.id===id); if(!h) return;
+  const price=prompt('Enter today\'s price for '+h.symbol+' ('+h.exchange+'):',h.currentPrice||'');
+  if(price===null) return;
+  const p=parseFloat(price);
+  if(isNaN(p)||p<0){showToast('Invalid price','error');return;}
+  const holdings=loadZseHoldings();
+  const idx=holdings.findIndex(x=>x.id===id);
+  if(idx>=0){ holdings[idx].currentPrice=p; holdings[idx].priceDate=new Date().toISOString().slice(0,10); }
+  saveZseHoldingsLocal(holdings);
+  renderZse();
+  showToast(h.symbol+' price updated to '+p,'success');
+}
+
+// ── Charges modal ──────────────────────────────────────────────────
+function openZseChargesModal(){
+  const c=loadZseCharges();
+  document.getElementById('zc-broker').value   = c.broker??2;
+  document.getElementById('zc-zimra').value    = c.zimra??0.5;
+  document.getElementById('zc-stamp').value    = c.stamp??0.025;
+  document.getElementById('zc-csdr').value     = c.csdr??0.1;
+  document.getElementById('zc-other').value    = c.other??0;
+  document.getElementById('zc-withdraw').value = c.withdraw??2;
+  updateZcTotal();
+  document.getElementById('zse-charges-modal').classList.add('open');
+}
+function closeZseChargesModal(){ document.getElementById('zse-charges-modal').classList.remove('open'); }
+document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeZseChargesModal();});
+
+function updateZcTotal(){
+  const vals=['zc-broker','zc-zimra','zc-stamp','zc-csdr','zc-other','zc-withdraw'].map(id=>parseFloat(document.getElementById(id).value)||0);
+  const total=vals.reduce((s,v)=>s+v,0);
+  document.getElementById('zc-total-pct').textContent=total.toFixed(3)+'%';
+  document.getElementById('zc-keep-pct').textContent=(100-total).toFixed(3)+'%';
+}
+['zc-broker','zc-zimra','zc-stamp','zc-csdr','zc-other','zc-withdraw'].forEach(id=>document.getElementById(id).addEventListener('input',updateZcTotal));
+
+function saveZseCharges(){
+  const c={
+    broker:   parseFloat(document.getElementById('zc-broker').value)||0,
+    zimra:    parseFloat(document.getElementById('zc-zimra').value)||0,
+    stamp:    parseFloat(document.getElementById('zc-stamp').value)||0,
+    csdr:     parseFloat(document.getElementById('zc-csdr').value)||0,
+    other:    parseFloat(document.getElementById('zc-other').value)||0,
+    withdraw: parseFloat(document.getElementById('zc-withdraw').value)||0,
+  };
+  saveZseChargesLocal(c);
+  closeZseChargesModal();
+  renderZse();
+  showToast('Charges saved','success');
+}
+
+// ── Rendering ──────────────────────────────────────────────────────
+function getZigUsdRate(){
+  // Use the most recent ZiG rate from the rates system
+  const rate = getLatestRate('ZiG');
+  return rate ? rate : null;
+}
+
+function holdingToUSD(h){
+  const price = h.currentPrice ?? h.buyPrice;
+  const mv = h.shares * price;
+  if(h.exchange==='VFSE') return mv; // already USD
+  const rate = getZigUsdRate();
+  return rate ? mv / rate : null;
+}
+
+function calcNetProceeds(grossValue, charges){
+  const totalPct = (charges.broker||0)+(charges.zimra||0)+(charges.stamp||0)+(charges.csdr||0)+(charges.other||0);
+  const afterSell = grossValue * (1 - totalPct/100);
+  const afterWithdraw = afterSell * (1 - (charges.withdraw||0)/100);
+  return { afterSell, afterWithdraw, totalPct, withdrawPct: charges.withdraw||0 };
+}
+
+function renderZse(){
+  const holdings = loadZseHoldings();
+  const charges  = loadZseCharges();
+  const zigRate  = getZigUsdRate();
+
+  // ── Summary ──
+  let totalUSD=0, totalCostUSD=0, hasAllPrices=true;
+  holdings.forEach(h=>{
+    const usd=holdingToUSD(h);
+    if(usd==null) hasAllPrices=false;
+    else totalUSD+=usd;
+    const costUSD = h.exchange==='VFSE' ? h.shares*h.buyPrice : (zigRate ? h.shares*h.buyPrice/zigRate : null);
+    if(costUSD!=null) totalCostUSD+=costUSD;
+  });
+  const pnlUSD = totalUSD - totalCostUSD;
+
+  const zigWarning = !zigRate && holdings.some(h=>h.exchange==='ZSE')
+    ? '<div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;color:var(--yellow);margin-bottom:16px">⚠️ No ZiG/USD rate found — add one on the <strong>Rates</strong> page to see USD values for ZSE stocks.</div>'
+    : '';
+
+  document.getElementById('zse-summary').innerHTML = zigWarning + `
+    <div class="wallet-summary-grid">
+      <div class="wallet-sum-card" style="border-left:4px solid var(--accent)">
+        <div class="wallet-sum-lbl">Portfolio Value (USD)</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)">${hasAllPrices&&totalUSD?'$'+fmtNum(totalUSD):'—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${holdings.length} holding${holdings.length!==1?'s':''}</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--green)">
+        <div class="wallet-sum-lbl">Cost Basis (USD)</div>
+        <div class="wallet-sum-val pnl-pos">${totalCostUSD?'$'+fmtNum(totalCostUSD):'—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Total invested</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid ${pnlUSD>=0?'var(--green)':'var(--red)'}">
+        <div class="wallet-sum-lbl">Unrealised P&amp;L</div>
+        <div class="wallet-sum-val ${pnlClass(pnlUSD)}">${totalCostUSD?(pnlUSD>=0?'+':'')+fmtPnL(pnlUSD,'USD'):'—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${totalCostUSD&&totalUSD?((pnlUSD/totalCostUSD)*100).toFixed(1)+'% return':'—'}</div>
+      </div>
+      <div class="wallet-sum-card" style="border-left:4px solid var(--yellow)">
+        <div class="wallet-sum-lbl">Net After All Charges</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)">${totalUSD?(()=>{const np=calcNetProceeds(totalUSD,charges);return '$'+fmtNum(np.afterWithdraw);})():'—'}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">If you sell &amp; withdraw everything</div>
+      </div>
+    </div>`;
+
+  // ── Holdings table ──
+  const el = document.getElementById('zse-holdings-table');
+  if(!holdings.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No holdings yet</h3><p>Click <strong>Add Holding</strong> to track your ZSE or VFSE shares.</p></div>';
+  } else {
+    const rows = holdings.map(h=>{
+      const price = h.currentPrice ?? h.buyPrice;
+      const mv    = h.shares * price;
+      const cost  = h.shares * h.buyPrice;
+      const pnl   = mv - cost;
+      const pnlPct= cost>0 ? (pnl/cost*100) : 0;
+      const usd   = holdingToUSD(h);
+      const sym   = h.exchange==='ZSE' ? 'ZiG ' : '$';
+      const np    = usd != null ? calcNetProceeds(usd, charges) : null;
+      const priceStale = h.priceDate && h.priceDate < new Date().toISOString().slice(0,10);
+      return `<tr>
+        <td>
+          <div style="font-weight:800;font-size:14px">${h.symbol}</div>
+          <div style="font-size:11px;margin-top:1px">
+            <span class="badge" style="background:${h.exchange==='ZSE'?'rgba(99,102,241,.15)':'rgba(16,185,129,.15)'};color:${h.exchange==='ZSE'?'var(--accent2)':'var(--green)'};font-size:10px;font-weight:800">${h.exchange}</span>
+          </div>
+          ${h.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+h.notes+'</div>':''}
+        </td>
+        <td style="font-weight:600;text-align:right">${fmtNum(h.shares)}</td>
+        <td style="text-align:right;color:var(--muted2)">${sym}${fmtNum(h.buyPrice)}</td>
+        <td style="text-align:right">
+          <div style="font-weight:700">${sym}${fmtNum(price)}</div>
+          ${priceStale?'<div style="font-size:10px;color:var(--yellow)">'+h.priceDate+'</div>':''}
+          ${!h.currentPrice?'<div style="font-size:10px;color:var(--muted)">buy price</div>':''}
+        </td>
+        <td style="text-align:right;font-weight:700">${sym}${fmtNum(mv)}</td>
+        <td class="${pnlClass(pnl)}" style="text-align:right">
+          <div>${pnl>=0?'+':''}${sym}${fmtNum(Math.abs(pnl))}</div>
+          <div style="font-size:11px;opacity:.8">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%</div>
+        </td>
+        <td style="text-align:right">
+          ${usd!=null?'<div style="font-weight:700;color:var(--accent2)">$'+fmtNum(usd)+'</div>':'<div style="color:var(--muted);font-size:12px">No rate</div>'}
+          ${np!=null?'<div style="font-size:11px;color:var(--yellow)">$'+fmtNum(np.afterWithdraw)+' net</div>':''}
+        </td>
+        <td>
+          <div style="display:flex;gap:4px;justify-content:flex-end">
+            <button class="btn btn-sm btn-primary" onclick="openZsePriceUpdate('${h.id}')" title="Update price">Update Price</button>
+            <button class="btn btn-sm btn-ghost" onclick="openZseHoldingModal('${h.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteZseHolding('${h.id}')">${IC.trash}</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    el.innerHTML=`<div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><table>
+      <thead><tr>
+        <th>Stock</th><th style="text-align:right">Shares</th><th style="text-align:right">Avg Buy</th>
+        <th style="text-align:right">Current Price</th><th style="text-align:right">Market Value</th>
+        <th style="text-align:right">P&amp;L</th><th style="text-align:right">USD Value</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+  }
+
+  // ── Withdrawal calculator ──
+  const calc = document.getElementById('zse-calc-body');
+  if(!holdings.length){
+    calc.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0">Add holdings to use the calculator.</div>';
+  } else {
+    const totalChargePct = (charges.broker||0)+(charges.zimra||0)+(charges.stamp||0)+(charges.csdr||0)+(charges.other||0);
+    const chargeRows = [
+      {label:'Broker Commission', pct:charges.broker||0, color:'var(--red)'},
+      {label:'ZIMRA Levy',        pct:charges.zimra||0,  color:'var(--yellow)'},
+      {label:'Stamp Duty',        pct:charges.stamp||0,  color:'var(--muted2)'},
+      {label:'CSDR / Settlement', pct:charges.csdr||0,   color:'var(--muted2)'},
+      {label:'Other Charges',     pct:charges.other||0,  color:'var(--muted2)'},
+    ].filter(r=>r.pct>0);
+
+    const holdingRows = holdings.map(h=>{
+      const usd = holdingToUSD(h);
+      if(usd==null) return '';
+      const gross = usd;
+      const np    = calcNetProceeds(gross, charges);
+      const sellChargeAmt = gross - np.afterSell;
+      const withdrawAmt   = np.afterSell - np.afterWithdraw;
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 12px">
+          <div style="font-weight:700">${h.symbol} <span style="font-size:11px;font-weight:500;color:var(--muted)">${h.exchange}</span></div>
+          <div style="font-size:11px;color:var(--muted)">${fmtNum(h.shares)} shares @ ${h.exchange==='ZSE'?'ZiG ':'$'}${fmtNum(h.currentPrice??h.buyPrice)}</div>
+        </td>
+        <td style="padding:10px 12px;text-align:right">
+          <div style="font-weight:700">$${fmtNum(gross)}</div>
+          <div style="font-size:11px;color:var(--muted)">gross proceeds</div>
+        </td>
+        <td style="padding:10px 12px;text-align:right;color:var(--red)">
+          <div style="font-weight:600">-$${fmtNum(sellChargeAmt)}</div>
+          <div style="font-size:11px;color:var(--muted)">${totalChargePct.toFixed(3)}% sell charges</div>
+        </td>
+        <td style="padding:10px 12px;text-align:right;color:var(--yellow)">
+          <div style="font-weight:600">-$${fmtNum(withdrawAmt)}</div>
+          <div style="font-size:11px;color:var(--muted)">${(charges.withdraw||0).toFixed(2)}% withdrawal</div>
+        </td>
+        <td style="padding:10px 12px;text-align:right">
+          <div style="font-weight:900;font-size:15px;color:var(--green)">$${fmtNum(np.afterWithdraw)}</div>
+          <div style="font-size:11px;color:var(--muted)">you receive</div>
+        </td>
+      </tr>`;
+    }).filter(Boolean).join('');
+
+    // Total row
+    const totalGross = holdings.reduce((s,h)=>{ const u=holdingToUSD(h); return u?s+u:s; },0);
+    const totalNP    = calcNetProceeds(totalGross, charges);
+
+    calc.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+        ${chargeRows.map(r=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;font-size:12px"><span style="color:${r.color};font-weight:700">${r.pct}%</span> <span style="color:var(--muted)">${r.label}</span></div>`).join('')}
+        ${(charges.withdraw||0)>0?`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;font-size:12px"><span style="color:var(--yellow);font-weight:700">${charges.withdraw}%</span> <span style="color:var(--muted)">Withdrawal Fee</span></div>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="openZseChargesModal()" style="font-size:11px">Edit charges</button>
+      </div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">Stock</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">Gross</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">Sell Charges</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">Withdrawal</th>
+          <th style="padding:8px 12px;text-align:right;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase">Net Received</th>
+        </tr></thead>
+        <tbody>${holdingRows}
+          <tr style="background:var(--surface2)">
+            <td style="padding:12px;font-weight:800;font-size:13px">TOTAL</td>
+            <td style="padding:12px;text-align:right;font-weight:700">$${fmtNum(totalGross)}</td>
+            <td style="padding:12px;text-align:right;font-weight:700;color:var(--red)">-$${fmtNum(totalGross-totalNP.afterSell)}</td>
+            <td style="padding:12px;text-align:right;font-weight:700;color:var(--yellow)">-$${fmtNum(totalNP.afterSell-totalNP.afterWithdraw)}</td>
+            <td style="padding:12px;text-align:right;font-weight:900;font-size:16px;color:var(--green)">$${fmtNum(totalNP.afterWithdraw)}</td>
+          </tr>
+        </tbody>
+      </table></div>`;
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // TRADE IMAGE UPLOAD

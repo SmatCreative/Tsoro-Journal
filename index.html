@@ -1390,7 +1390,23 @@ async function signOut(){
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
 function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
-sb.auth.onAuthStateChange(async(event,session)=>{ hideLoader(); if(session?.user){showApp(session.user);await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory()]);renderAll();}else{showAuthScreen();} });
+// NOTE: never await supabase queries directly inside onAuthStateChange —
+// supabase-js holds an internal lock during this callback and the queries
+// deadlock (data never loads after an interactive login). Defer instead.
+let _loadingData=false;
+async function loadAllData(){
+  if(_loadingData) return; _loadingData=true;
+  try {
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory()]);
+    renderAll();
+  } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
+  finally { _loadingData=false; }
+}
+sb.auth.onAuthStateChange((event,session)=>{
+  hideLoader();
+  if(session?.user){ showApp(session.user); setTimeout(loadAllData,0); }
+  else { showAuthScreen(); }
+});
 
 // ── CRUD ───────────────────────────────────────────────────────────
 function showLoadError(msg){

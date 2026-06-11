@@ -1000,7 +1000,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <div class="modal-title" id="wallet-modal-title">Add Wallet</div>
       <button class="modal-close" onclick="closeWalletModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div id="w-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px"></div>
     <input type="hidden" id="w-edit-id">
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group full">
@@ -1081,9 +1080,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       </div>
     </div>
     <div class="form-row" style="margin-top:14px">
-      <button class="btn btn-primary" id="w-save-btn" onclick="saveWallet()">Save Wallet</button>
-      <button class="btn btn-ghost" onclick="closeWalletModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="w-save-btn" onclick="saveWallet()">Save Wallet</button>
+      <button type="button" class="btn btn-ghost" onclick="closeWalletModal()">Cancel</button>
     </div>
+    <div id="w-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
   </div>
 </div>
 
@@ -1129,10 +1129,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       </div>
     </div>
     <div class="form-row" style="margin-top:14px">
-      <button class="btn btn-primary" onclick="saveCapital()">Save</button>
-      <button class="btn btn-ghost" onclick="closeCapitalModal()">Cancel</button>
-      <span id="cap-msg" style="font-size:12px;color:var(--green);margin-left:auto"></span>
+      <button type="button" class="btn btn-primary" onclick="saveCapital()">Save</button>
+      <button type="button" class="btn btn-ghost" onclick="closeCapitalModal()">Cancel</button>
     </div>
+    <div id="cap-err" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
   </div>
 </div>
 
@@ -1143,7 +1143,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <div class="modal-title" id="rate-modal-title">Add Exchange Rate</div>
       <button class="modal-close" onclick="closeRateModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div id="rate-err" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;word-break:break-word"></div>
     <input type="hidden" id="rate-edit-id">
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group">
@@ -1194,10 +1193,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       Examples: ZiG 352 means 1 USD = 352 ZiG &nbsp;·&nbsp; ZAR 18.5 means 1 USD = R18.50 &nbsp;·&nbsp; GBP 0.79 means 1 USD = £0.79
     </div>
     <div class="form-row" style="margin-top:4px">
-      <button class="btn btn-primary" onclick="saveRate()">Save Rate</button>
-      <button class="btn btn-ghost" onclick="closeRateModal()">Cancel</button>
-      <span id="rate-msg" style="font-size:12px;color:var(--green);margin-left:auto"></span>
+      <button type="button" class="btn btn-primary" id="rate-save-btn" onclick="saveRate()">Save Rate</button>
+      <button type="button" class="btn btn-ghost" onclick="closeRateModal()">Cancel</button>
     </div>
+    <div id="rate-err" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px;word-break:break-word"></div>
   </div>
 </div>
 
@@ -1688,12 +1687,10 @@ function rrect(ctx, x, y, w, h, r){
   ctx.lineTo(x,y+tl); ctx.quadraticCurveTo(x,y,x+tl,y);
 }
 
-function wErr(msg){ const el=document.getElementById('w-error'); el.textContent=msg; el.style.display=msg?'block':'none'; }
-
 function openWalletModal(id){
   document.getElementById('w-edit-id').value = id||'';
   document.getElementById('wallet-modal-title').textContent = id ? 'Edit Wallet' : 'Add Wallet';
-  wErr('');
+  showModalErr('w-error','');
   if(id){
     const w=wallets.find(x=>x.id===id); if(!w) return;
     document.getElementById('w-name').value     = w.wallet_name||'';
@@ -1726,19 +1723,19 @@ document.getElementById('w-exchange').addEventListener('input',()=>{
 });
 
 async function saveWallet(){
-  wErr('');
+  showModalErr('w-error','');
   const id       = document.getElementById('w-edit-id').value;
   const name     = document.getElementById('w-name').value.trim();
   const platform = document.getElementById('w-platform').value.trim();
   const balStr   = document.getElementById('w-balance').value;
   const balance  = parseFloat(balStr);
 
-  if(!name && !platform){ wErr('Please enter an account label or platform name.'); return; }
-  if(balStr===''){ wErr('Please enter a balance (enter 0 if the account is empty).'); return; }
-  if(isNaN(balance)||balance<0){ wErr('Balance must be a valid number (0 or greater).'); return; }
+  if(!name && !platform){ showModalErr('w-error','Please enter an account label or platform name.'); return; }
+  if(balStr===''){ showModalErr('w-error','Please enter a balance (enter 0 if the account is empty).'); return; }
+  if(isNaN(balance)||balance<0){ showModalErr('w-error','Balance must be a valid number (0 or greater).'); return; }
 
   const btn = document.getElementById('w-save-btn');
-  btn.disabled = true; btn.textContent = '…';
+  if(btn){ btn.disabled = true; btn.textContent = 'Saving…'; }
 
   const row = {
     wallet_name  : name||null,
@@ -1762,8 +1759,8 @@ async function saveWallet(){
       wallets.push(data);
     }
     closeWalletModal(); renderWallet();
-  } catch(err){ wErr('Save failed: '+err.message); }
-  finally { btn.disabled=false; btn.textContent='Save Wallet'; }
+  } catch(err){ showModalErr('w-error','Save failed: '+err.message); }
+  finally { if(btn){ btn.disabled=false; btn.textContent='Save Wallet'; } }
 }
 
 async function deleteWallet(id){
@@ -2028,14 +2025,22 @@ function openCapitalModal(id){
 function closeCapitalModal(){ document.getElementById('capital-modal').classList.remove('open'); }
 document.getElementById('capital-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeCapitalModal(); });
 
+function showModalErr(divId, msg){
+  const el=document.getElementById(divId);
+  if(el){ el.textContent=msg; el.style.display=msg?'block':'none'; }
+  const gb=document.getElementById('global-error-banner');
+  if(gb && msg){ gb.textContent='Error: '+msg+' — Click to dismiss'; gb.style.display='block'; }
+}
 async function saveCapital(){
+  showModalErr('cap-err','');
   const id = document.getElementById('cap-edit-id').value;
   const amount = parseFloat(document.getElementById('cap-amount').value);
-  if(!amount||isNaN(amount)||amount<=0){ showToast('Please enter a valid amount.','error'); return; }
+  if(!amount||isNaN(amount)||amount<=0){ showModalErr('cap-err','Please enter a valid amount greater than 0.'); return; }
+  const entry_date = document.getElementById('cap-date').value || new Date().toISOString().slice(0,10);
   const row = {
     type: document.getElementById('cap-type').value,
     amount, currency: document.getElementById('cap-currency').value,
-    entry_date: document.getElementById('cap-date').value,
+    entry_date,
     notes: document.getElementById('cap-notes').value.trim()||null,
   };
   try {
@@ -2050,7 +2055,7 @@ async function saveCapital(){
       capital.sort((a,b)=>new Date(a.entry_date)-new Date(b.entry_date));
     }
     closeCapitalModal(); renderPortfolio();
-  } catch(err){ showToast('Save failed: '+err.message,'error'); }
+  } catch(err){ showModalErr('cap-err','Save failed: '+err.message); }
 }
 
 async function deleteCapital(id){
@@ -2318,9 +2323,8 @@ document.getElementById('rate-units').addEventListener('input', ()=>{
   document.getElementById('rate-equiv').textContent = v>0 ? `${ccySym(ccy)}${(1/v).toFixed(6)} per unit` : '—';
 });
 
-function rateErr(msg){ const el=document.getElementById('rate-err'); if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
 function openRateModal(id){
-  rateErr('');
+  showModalErr('rate-err','');
   document.getElementById('rate-edit-id').value = id||'';
   document.getElementById('rate-modal-title').textContent = id ? 'Edit Rate' : 'Add Exchange Rate';
   if(id){
@@ -2345,18 +2349,19 @@ function closeRateModal(){ document.getElementById('rate-modal').classList.remov
 document.getElementById('rate-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRateModal();});
 
 async function saveRate(){
+  showModalErr('rate-err','');
   const id = document.getElementById('rate-edit-id').value;
   const units = parseFloat(document.getElementById('rate-units').value);
-  if(!units||isNaN(units)||units<=0){ showToast('Please enter a valid rate.','error'); return; }
+  if(!units||isNaN(units)||units<=0){ showModalErr('rate-err','Please enter a valid rate (a number greater than 0).'); return; }
   const row = {
     currency: document.getElementById('rate-currency').value,
     units_per_usd: units,
     inflation_rate: parseFloat(document.getElementById('rate-inflation').value)||0,
-    effective_date: document.getElementById('rate-date').value,
+    effective_date: document.getElementById('rate-date').value || new Date().toISOString().slice(0,10),
     notes: document.getElementById('rate-notes').value.trim()||null,
   };
-  const rateErr=document.getElementById('rate-err');
-  if(rateErr) rateErr.style.display='none';
+  const btn=document.getElementById('rate-save-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
   try {
     if(id){
       const{error}=await sb.from('exchange_rates').update(row).eq('id',id);
@@ -2369,9 +2374,9 @@ async function saveRate(){
     }
     closeRateModal(); renderRates(); renderAll();
   } catch(err){
-    const msg=err.message||'Unknown error';
-    showToast('Rate save failed: '+msg,'error');
-    if(rateErr){ rateErr.textContent='Save failed: '+msg; rateErr.style.display='block'; }
+    showModalErr('rate-err','Save failed: '+(err.message||'Unknown error'));
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Save Rate'; }
   }
 }
 

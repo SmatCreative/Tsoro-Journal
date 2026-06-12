@@ -231,7 +231,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
 .wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:10px;position:relative;overflow:hidden;transition:border-color .15s,transform .1s}
 .wallet-card:hover{transform:translateY(-1px)}
-.wallet-card-accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.wallet-card-accent{position:absolute;left:0;top:0;right:0;height:2px}
 .wallet-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .wallet-platform{font-size:15px;font-weight:600;letter-spacing:-.2px}
 .wallet-exchange{font-size:11px;color:var(--muted);margin-top:3px}
@@ -606,15 +606,23 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             <canvas id="wallet-donut" width="380" height="380" style="display:block;margin:0 auto;max-width:100%"></canvas>
             <div id="wallet-legend" style="margin-top:14px"></div>
           </div>
-          <div class="card">
+          <div class="card" style="align-self:start">
             <div class="card-header"><div class="card-title">Open Positions vs Available Cash</div><div id="wallet-deployed-meta" style="font-size:12px;color:var(--muted)"></div></div>
-            <canvas id="wallet-bar-chart" height="100"></canvas>
+            <canvas id="wallet-bar-chart" height="70"></canvas>
+            <div id="wallet-open-list" style="margin-top:16px"></div>
           </div>
         </div>
       </div>
 
       <!-- Portfolio -->
       <div class="page" id="page-portfolio">
+        <div id="portfolio-quickstart" style="display:none;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:var(--r);padding:18px 22px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:3px">Start tracking your portfolio growth</div>
+            <div style="font-size:12.5px;color:var(--muted2)">Add the money you've deposited into trading (your capital). Portfolio growth, ROI and the charts below are measured against it.</div>
+          </div>
+          <button class="btn btn-primary" onclick="openCapitalModal()" style="flex-shrink:0">Add Starting Capital</button>
+        </div>
         <div class="stats-row" id="port-stats"></div>
         <div class="card" style="margin-bottom:16px">
           <div class="card-header">
@@ -1994,6 +2002,12 @@ function renderWalletPerf(){
       .sort((a,b)=>a.t-b.t);
   }
 
+  // Collapse to one point per day (the day's last snapshot) so intraday
+  // updates don't pile up into vertical spikes
+  const byDay={};
+  series.forEach(p=>{ byDay[p.t.toISOString().slice(0,10)]=p; });
+  series=Object.values(byDay).sort((a,b)=>a.t-b.t);
+
   // Stats strip
   const stats=document.getElementById('wh-stats');
   if(stats){
@@ -2002,12 +2016,12 @@ function renderWalletPerf(){
     } else if(series.length){
       const first=series[0].v, last=series[series.length-1].v;
       const chg=last-first, chgPct=first>0?chg/first*100:0;
-      const stat=(lbl,val,cls)=>`<div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${lbl}</div><div style="font-size:17px;font-weight:600" class="${cls||''}">${val}</div></div>`;
+      const stat=(lbl,val,cls)=>`<div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${lbl}</div><div style="font-size:17px;font-weight:500" class="${cls||''}">${val}</div></div>`;
       stats.innerHTML=
-        stat('Current', ccySym(ccy)+fmtNum(last)) +
-        stat('Change', (chg>=0?'+':'')+ccySym(ccy)+fmtNum(Math.abs(chg)*(chg<0?-1:1)), chg>=0?'pnl-pos':'pnl-neg') +
-        stat('Change %', (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%', chgPct>=0?'pnl-pos':'pnl-neg') +
-        stat('Data Points', series.length);
+        stat('Current', ccySym(ccy)+fmtMoney(last)) +
+        stat('Change', (chg>=0?'+':'−')+ccySym(ccy)+fmtMoney(Math.abs(chg)), chg>=0?'pnl-pos':'pnl-neg') +
+        stat('Change %', (chgPct>=0?'+':'')+chgPct.toFixed(1)+'%', chgPct>=0?'pnl-pos':'pnl-neg') +
+        stat('Days Tracked', series.length);
     } else { stats.innerHTML=''; }
   }
   drawWalletPerfChart(series, ccy);
@@ -2036,12 +2050,16 @@ function drawWalletPerfChart(series, ccy){
   for(let i=0;i<=4;i++){
     const v=yMin+yRange*i/4, y=sy(v);
     ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
-    ctx.textAlign='right'; ctx.fillText(ccySym(ccy)+Number(v).toLocaleString('en-US',{maximumFractionDigits:v<100?2:0}),padL-6,y+3);
+    ctx.textAlign='right'; ctx.fillText(ccySym(ccy)+Number(v).toLocaleString('en-US',{maximumFractionDigits:yRange<20?2:0}),padL-6,y+3);
   }
-  // X labels (first, middle, last)
+  // X labels — first, middle, last, deduped so dates never overlap
   ctx.textAlign='center';
-  [series[0], series[Math.floor(series.length/2)], series[series.length-1]].forEach(p=>{
-    ctx.fillText(p.t.toLocaleDateString('en-US',{month:'short',day:'numeric'}), sx(p.t.getTime()), H-8);
+  const fmtD=p=>p.t.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const xPts=[...new Map([series[0], series[Math.floor(series.length/2)], series[series.length-1]].map(p=>[fmtD(p),p])).values()];
+  xPts.forEach((p,i)=>{
+    let x=sx(p.t.getTime());
+    x=Math.max(padL+18, Math.min(W-padR-18, x));
+    ctx.fillText(fmtD(p), x, H-8);
   });
   const isPos=vals[vals.length-1]>=vals[0];
   const lineCol=isPos?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
@@ -2057,12 +2075,13 @@ function drawWalletPerfChart(series, ccy){
   ctx.beginPath(); ctx.moveTo(sx(series[0].t.getTime()),sy(series[0].v));
   series.forEach(p=>ctx.lineTo(sx(p.t.getTime()),sy(p.v)));
   ctx.strokeStyle=lineCol; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
-  // Point dots
-  series.forEach(p=>{ ctx.beginPath(); ctx.arc(sx(p.t.getTime()),sy(p.v),2.5,0,Math.PI*2); ctx.fillStyle=lineCol; ctx.fill(); });
-  // End label
+  // Point dots — only when sparse enough to read; always mark the last point
+  if(series.length<=20) series.forEach(p=>{ ctx.beginPath(); ctx.arc(sx(p.t.getTime()),sy(p.v),2.5,0,Math.PI*2); ctx.fillStyle=lineCol; ctx.fill(); });
   const lp=series[series.length-1];
+  ctx.beginPath(); ctx.arc(sx(lp.t.getTime()),sy(lp.v),3.5,0,Math.PI*2); ctx.fillStyle=lineCol; ctx.fill();
+  // End label
   ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=lineCol;
-  ctx.fillText(ccySym(ccy)+fmtNum(lp.v), W-padR, sy(lp.v)-8);
+  ctx.fillText(ccySym(ccy)+fmtMoney(lp.v), W-padR, Math.max(sy(lp.v)-8,12));
 }
 function _renderWallet(){
   // Show/hide quickstart banner
@@ -2082,17 +2101,17 @@ function _renderWallet(){
     <div class="wallet-summary-grid">
       <div class="wallet-sum-card" style="border-top:2px solid var(--green)">
         <div class="wallet-sum-lbl">Total Available Cash</div>
-        <div class="wallet-sum-val pnl-pos">$${fmtNum(totalCashUSD)}</div>
+        <div class="wallet-sum-val pnl-pos">$${fmtMoney(totalCashUSD)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${wallets.length} wallet${wallets.length!==1?'s':''} · USD equiv.</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--yellow)">
         <div class="wallet-sum-lbl">Deployed in Trades</div>
-        <div class="wallet-sum-val" style="color:var(--yellow)">$${fmtNum(deployedUSD)}</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)">$${fmtMoney(deployedUSD)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${openTrades.length} open position${openTrades.length!==1?'s':''}</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
         <div class="wallet-sum-lbl">Total Tracked Funds</div>
-        <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtNum(grandTotal)}</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtMoney(grandTotal)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">Cash + open positions</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--muted)">
@@ -2189,7 +2208,7 @@ function _renderWallet(){
         +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+w.notes+'</div>':'')
         +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Recent Trades</div>'
         +tradeRows
-        +'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>'
+        +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
         +'<div class="wallet-actions">'
           +'<button class="btn btn-sm btn-ghost" onclick="openWalletModal(\''+w.id+'\')">Edit</button>'
           +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+' Remove</button>'
@@ -2265,20 +2284,36 @@ function drawWalletDonut(cashUSD, deployedUSD){
     ctx.textBaseline='alphabetic';
   });
 
-  // Outside ticker-style labels (clamped so they never clip at canvas edges)
-  segments.forEach(sg=>{
+  // Outside ticker-style labels — only for slices big enough to matter
+  // (small slivers live in the legend), with per-side collision stacking
+  const labeled=segments.filter(sg=>sg.pct>=3.5).map(sg=>({
+    sg,
+    right:Math.cos(sg.mid)>=0,
+    ly:cy+Math.sin(sg.mid)*(R+20)
+  }));
+  ['left','right'].forEach(side=>{
+    const group=labeled.filter(l=>side==='right'?l.right:!l.right).sort((a,b)=>a.ly-b.ly);
+    const MIN=30;
+    for(let i=1;i<group.length;i++) if(group[i].ly-group[i-1].ly<MIN) group[i].ly=group[i-1].ly+MIN;
+    // keep inside canvas
+    for(let i=group.length-1;i>=0;i--){
+      const maxY=H-20-(group.length-1-i)*MIN;
+      if(group[i].ly>maxY) group[i].ly=maxY;
+    }
+    group.forEach(l=>{ if(l.ly<18) l.ly=18; });
+  });
+  labeled.forEach(l=>{
+    const {sg,right}=l;
     let lx=cx+Math.cos(sg.mid)*(R+14);
-    const ly=Math.min(Math.max(cy+Math.sin(sg.mid)*(R+18),16),H-16);
-    const right=Math.cos(sg.mid)>=0;
     ctx.textAlign=right?'left':'right';
     const name=(sg.label.length>11?sg.label.slice(0,10)+'…':sg.label).toUpperCase();
     ctx.font='600 11px Inter,system-ui';
-    const tw=Math.max(ctx.measureText(name).width, 40);
+    const tw=Math.max(ctx.measureText(name).width, 44);
     if(right) lx=Math.min(lx, W-tw-4); else lx=Math.max(lx, tw+4);
     ctx.fillStyle=themeVal('#60a5fa','#2563eb');
-    ctx.fillText(name,lx,ly-2);
+    ctx.fillText(name,lx,l.ly-2);
     ctx.fillStyle=themeVal('#e2e8f0','#0f172a'); ctx.font='500 11px Inter,system-ui';
-    ctx.fillText(sg.pct.toFixed(2)+'%',lx,ly+12);
+    ctx.fillText(sg.pct.toFixed(2)+'%',lx,l.ly+12);
   });
 
   // Legend
@@ -2307,28 +2342,39 @@ function drawDeployedBar(cashUSD, deployedUSD, openTrades){
   const total=cashUSD+deployedUSD;
   if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px Inter,system-ui'; ctx.textAlign='center'; ctx.fillText('Add wallets and open trades to see allocation',W/2,H/2); return; }
 
-  const pad=0, barH=36, y=(H-barH)/2;
+  const pad=0, barH=14, y=24;
   const cashW=cashUSD/total*(W-pad*2);
   const deployW=deployedUSD/total*(W-pad*2);
+  const cashCol=themeVal('#1e3a5f','#dbeafe');
+  const depCol=themeVal('#3b82f6','#2563eb');
 
-  // Cash segment
-  if(cashW>2){
-    ctx.fillStyle=themeVal('rgba(34,197,94,.8)','rgba(22,163,74,.85)');
-    ctx.beginPath(); rrect(ctx,pad,y,cashW,barH,[6,deployW>2?0:6,deployW>2?0:6,6]); ctx.fill();
-    if(cashW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`Cash ${(cashUSD/total*100).toFixed(1)}%`, pad+cashW/2, y+barH/2+4); }
-  }
-  // Deployed segment
+  // Track background
+  ctx.beginPath(); rrect(ctx,pad,y,W-pad*2,barH,[7,7,7,7]); ctx.fillStyle=cashCol; ctx.fill();
+  // Deployed segment (brand blue, drawn from the right)
   if(deployW>2){
-    ctx.fillStyle=themeVal('rgba(245,158,11,.85)','rgba(217,119,6,.85)');
-    const rx=pad+cashW;
-    ctx.beginPath(); rrect(ctx,rx,y,deployW,barH,[cashW>2?0:6,6,6,cashW>2?0:6]); ctx.fill();
-    if(deployW>60){ ctx.fillStyle='#fff'; ctx.font='bold 12px system-ui'; ctx.textAlign='center'; ctx.fillText(`${openTrades.length} Trade${openTrades.length!==1?'s':''} ${(deployedUSD/total*100).toFixed(1)}%`, rx+deployW/2, y+barH/2+4); }
+    ctx.beginPath(); rrect(ctx,W-pad-deployW,y,deployW,barH,[deployW>=W-pad*2-2?7:0,7,7,deployW>=W-pad*2-2?7:0]); ctx.fillStyle=depCol; ctx.fill();
   }
 
-  // Labels below bar
+  // Clean labels above + below, no text crammed inside the bar
+  ctx.font='500 11px Inter,system-ui';
+  ctx.fillStyle=themeVal('#94a3b8','#475569');
+  ctx.textAlign='left';  ctx.fillText('CASH '+(cashUSD/total*100).toFixed(1)+'%', pad, y-9);
+  ctx.textAlign='right'; ctx.fillText((openTrades.length?openTrades.length+' TRADE'+(openTrades.length!==1?'S':'')+' · ':'')+'DEPLOYED '+(deployedUSD/total*100).toFixed(1)+'%', W-pad, y-9);
   ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='11px Inter,system-ui';
-  ctx.textAlign='left'; ctx.fillText(`Available: $${fmtNum(cashUSD)}`, pad, y+barH+16);
-  ctx.textAlign='right'; ctx.fillText(`Deployed: $${fmtNum(deployedUSD)}`, W-pad, y+barH+16);
+  ctx.textAlign='left';  ctx.fillText('$'+fmtMoney(cashUSD)+' available', pad, y+barH+18);
+  ctx.textAlign='right'; ctx.fillText('$'+fmtMoney(deployedUSD)+' in positions', W-pad, y+barH+18);
+
+  // Open positions list under the bar
+  const listEl=document.getElementById('wallet-open-list');
+  if(listEl){
+    listEl.innerHTML=openTrades.length?openTrades.map(t=>{
+      const usd=toUSD(t.entry*t.qty,t.currency);
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px">
+        <div><span style="font-weight:600">${t.symbol}</span> <span style="font-size:11px;color:var(--muted)">${t.exchange||t.market||''} · ${t.direction}</span></div>
+        <div style="text-align:right"><span style="font-weight:500">${ccySym(t.currency)}${fmtMoney(t.entry*t.qty)}</span>${usd!=null&&t.currency!=='USD'?' <span style="font-size:11px;color:var(--muted)">$'+fmtMoney(usd)+'</span>':''}</div>
+      </div>`;
+    }).join(''):'<div style="font-size:12px;color:var(--muted);padding-top:4px">No open positions</div>';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2447,12 +2493,30 @@ function buildMonthlyReturns(){
 }
 
 function renderPortfolio(){
-  const tl = buildPortfolioTimeline();
+  let tl = buildPortfolioTimeline();
   const monthly = buildMonthlyReturns();
   const closed = trades.filter(t=>t.status==='closed');
   const totalPnLusd = closed.reduce((s,t)=>s+((toUSD(calcPnL(t)||0,t.currency)??(calcPnL(t)||0))),0);
   const totalInvested = capital.reduce((s,e)=>s+(e.type==='withdrawal'?-capToUSD(e.amount,e.currency):capToUSD(e.amount,e.currency)),0);
-  const currentValue = totalInvested + totalPnLusd;
+  const noCapital = capital.length===0;
+  // No capital entries yet: fall back to live account value + wallet history
+  const qs=document.getElementById('portfolio-quickstart');
+  if(qs) qs.style.display=noCapital?'flex':'none';
+  if(noCapital && tl.length<2 && walletHistory.length){
+    const byDay={};
+    [...walletHistory].sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at)).forEach(s=>{
+      byDay[s.recorded_at.slice(0,10)]=null;
+    });
+    const latest={}; const pts=[];
+    [...walletHistory].sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at)).forEach(s=>{
+      latest[s.wallet_id]={balance:Number(s.balance),currency:s.currency};
+      let tot=0; for(const k in latest){ tot+=capToUSD(latest[k].balance,latest[k].currency)||0; }
+      pts.push({date:s.recorded_at.slice(0,10),invested:0,value:tot,pnl:0});
+    });
+    const dedup={}; pts.forEach(p=>{dedup[p.date]=p;});
+    tl=Object.values(dedup);
+  }
+  const currentValue = noCapital ? accountValueUSD() : totalInvested + totalPnLusd;
   const roi = totalInvested>0 ? (totalPnLusd/totalInvested*100) : null;
   const open = trades.filter(t=>t.status==='open').length;
   const allPnLusd = closed.map(t=>(toUSD(calcPnL(t)||0,t.currency)??(calcPnL(t)||0)));
@@ -2461,9 +2525,9 @@ function renderPortfolio(){
 
   // Stat cards
   const stats=[
-    {lbl:'Total Invested',val:'$'+fmtNum(totalInvested),sub:'Net deposited capital (USD)',card:'blue',cls:'blue'},
-    {lbl:'Portfolio Value',val:'$'+fmtNum(currentValue),sub:'Invested + all trade P&L',card:currentValue>=totalInvested?'green':'red',cls:currentValue>=totalInvested?'pnl-pos':'pnl-neg'},
-    {lbl:'Total Gain / Loss',val:(totalPnLusd>=0?'+':'')+'$'+fmtNum(totalPnLusd),sub:'Realised P&L (USD equiv.)',card:totalPnLusd>=0?'green':'red',cls:totalPnLusd>=0?'pnl-pos':'pnl-neg'},
+    {lbl:'Total Invested',val:noCapital?'—':'$'+fmtMoney(totalInvested),sub:noCapital?'Add capital entries below':'Net deposited capital (USD)',card:'blue',cls:'blue'},
+    {lbl:'Portfolio Value',val:'$'+fmtMoney(currentValue),sub:noCapital?'Wallets + open positions':'Invested + all trade P&L',card:currentValue>=totalInvested?'green':'red',cls:currentValue>=totalInvested?'pnl-pos':'pnl-neg'},
+    {lbl:'Total Gain / Loss',val:(totalPnLusd>=0?'+':'')+'$'+fmtMoney(totalPnLusd),sub:'Realised P&L (USD equiv.)',card:totalPnLusd>=0?'green':'red',cls:totalPnLusd>=0?'pnl-pos':'pnl-neg'},
     {lbl:'ROI',val:roi!=null?(roi>=0?'+':'')+roi.toFixed(2)+'%':'—',sub:'Return on invested capital',card:roi>0?'green':roi<0?'red':'',cls:roi>0?'pnl-pos':roi<0?'pnl-neg':''},
     {lbl:'Closed Trades',val:closed.length,sub:`${open} open position${open!==1?'s':''}`,card:'',cls:''},
     {lbl:'Best Trade',val:bestDay!=null?'+$'+fmtNum(bestDay):'—',sub:'Single trade (USD)',card:'',cls:'pnl-pos'},
@@ -2515,20 +2579,25 @@ function drawPortfolioMainChart(tl){
   // X axis labels
   const step=Math.max(1,Math.floor(tl.length/6));
   ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px Inter,system-ui'; ctx.textAlign='center';
-  tl.forEach((p,i)=>{ if(i%step===0||i===tl.length-1){ ctx.fillText(new Date(p.date).toLocaleDateString('en-US',{month:'short',year:'2-digit'}),sx(i),H-10); }});
+  // day-level labels for short ranges, month-level for long ones; never repeat
+  const spanDays=(new Date(tl[tl.length-1].date)-new Date(tl[0].date))/86400000;
+  const xfmt=spanDays<75?{month:'short',day:'numeric'}:{month:'short',year:'2-digit'};
+  let lastLbl='';
+  tl.forEach((p,i)=>{ if(i%step===0||i===tl.length-1){ const lbl=new Date(p.date).toLocaleDateString('en-US',xfmt); if(lbl===lastLbl) return; lastLbl=lbl; ctx.fillText(lbl,sx(i),H-10); }});
 
-  // Fill between invested and value lines
+  // Fill + invested reference line (skipped when no capital has been logged)
+  const hasInvested=tl.some(p=>p.invested>0);
   const isProfit=tl[tl.length-1].value>=tl[tl.length-1].invested;
-  ctx.beginPath();
-  tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.value)):ctx.lineTo(sx(i),sy(p.value)); });
-  [...tl].reverse().forEach((p,i)=>ctx.lineTo(sx(tl.length-1-i),sy(p.invested)));
-  ctx.closePath();
-  ctx.fillStyle=isProfit?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)'; ctx.fill();
-
-  // Invested line (dashed)
-  ctx.setLineDash([6,4]); ctx.strokeStyle=themeVal('#64748b','#8891a8'); ctx.lineWidth=1.5;
-  ctx.beginPath(); tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.invested)):ctx.lineTo(sx(i),sy(p.invested)); }); ctx.stroke();
-  ctx.setLineDash([]);
+  if(hasInvested){
+    ctx.beginPath();
+    tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.value)):ctx.lineTo(sx(i),sy(p.value)); });
+    [...tl].reverse().forEach((p,i)=>ctx.lineTo(sx(tl.length-1-i),sy(p.invested)));
+    ctx.closePath();
+    ctx.fillStyle=isProfit?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'; ctx.fill();
+    ctx.setLineDash([6,4]); ctx.strokeStyle=themeVal('#64748b','#8891a8'); ctx.lineWidth=1.5;
+    ctx.beginPath(); tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.invested)):ctx.lineTo(sx(i),sy(p.invested)); }); ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // Portfolio value line (solid, gradient colour)
   const lineColor=isProfit?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
@@ -2545,8 +2614,8 @@ function drawPortfolioMainChart(tl){
   // End label
   const labelY=sy(last.value);
   const displayY=labelY<padT+14?labelY+18:labelY-8;
-  ctx.fillStyle=lineColor; ctx.font='600 11px Inter,system-ui'; ctx.textAlign='left';
-  ctx.fillText('$'+Math.round(last.value).toLocaleString(), sx(tl.length-1)+8, displayY);
+  ctx.fillStyle=lineColor; ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right';
+  ctx.fillText('$'+Math.round(last.value).toLocaleString(), Math.min(sx(tl.length-1)+8,W-4), displayY);
 }
 
 function drawMonthlyChart(monthly){
@@ -3473,7 +3542,7 @@ function renderZse(){
         <div class="wallet-sum-val pnl-pos">${totalCostUSD?'$'+fmtNum(totalCostUSD):'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">Total invested</div>
       </div>
-      <div class="wallet-sum-card" style="border-left:4px solid ${pnlUSD>=0?'var(--green)':'var(--red)'}">
+      <div class="wallet-sum-card" style="border-top:2px solid ${pnlUSD>=0?'var(--green)':'var(--red)'}">
         <div class="wallet-sum-lbl">Unrealised P&amp;L</div>
         <div class="wallet-sum-val ${pnlClass(pnlUSD)}">${totalCostUSD?(pnlUSD>=0?'+':'')+fmtPnL(pnlUSD,'USD'):'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${totalCostUSD&&totalUSD?((pnlUSD/totalCostUSD)*100).toFixed(1)+'% return':'—'}</div>

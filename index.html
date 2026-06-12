@@ -600,10 +600,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div id="wh-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
           <canvas id="wallet-perf-chart" height="220"></canvas>
         </div>
-        <div style="display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
+        <div style="display:grid;grid-template-columns:minmax(340px,420px) 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
           <div class="card" id="wallet-donut-card">
-            <div class="card-header"><div class="card-title">Allocation</div></div>
-            <canvas id="wallet-donut" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+            <div class="card-header"><div class="card-title">Allocation</div><div id="wallet-donut-total" style="font-size:12px;font-weight:600;color:var(--accent2);background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);padding:3px 10px;border-radius:6px"></div></div>
+            <canvas id="wallet-donut" width="380" height="380" style="display:block;margin:0 auto;max-width:100%"></canvas>
             <div id="wallet-legend" style="margin-top:14px"></div>
           </div>
           <div class="card">
@@ -2207,38 +2207,79 @@ function _renderWallet(){
   drawDeployedBar(totalCashUSD, deployedUSD, openTrades);
 }
 
+// Monochromatic brand-blue ramp, largest holding gets the lightest shade
+const DONUT_BLUES=['#93c5fd','#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e40af','#1e3a8a','#172554'];
+
 function drawWalletDonut(cashUSD, deployedUSD){
   const canvas=document.getElementById('wallet-donut'); if(!canvas) return;
-  const W=220, H=220, cx=110, cy=100, R=80, r=50;
+  const W=380, H=380, cx=W/2, cy=H/2, R=118, r=66;
   canvas.width=W; canvas.height=H;
   const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
 
-  const segments=[];
-  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:w.wallet_name||w.platform||'Wallet',val:usd,color:w.color||getColor(w.wallet_name||w.platform||'x')}); });
-  if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,color:themeVal('#f59e0b','#d97706')});
+  let segments=[];
+  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd}); });
+  if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD});
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
-  if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('No data',cx,cy); return; }
+  const totalEl=document.getElementById('wallet-donut-total');
+  if(totalEl) totalEl.textContent=total?('Total: $'+fmtMoney(total)):'';
+  if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px Inter,system-ui'; ctx.textAlign='center'; ctx.fillText('No data',cx,cy); return; }
 
+  // biggest first, assign blue shades
+  segments.sort((a,b)=>b.val-a.val);
+  segments.forEach((sg,i)=>{ sg.color=DONUT_BLUES[i%DONUT_BLUES.length]; sg.pct=sg.val/total*100; });
+
+  const bgCol=themeVal('#101726','#ffffff');
   let angle=-Math.PI/2;
   segments.forEach(sg=>{
     const slice=sg.val/total*Math.PI*2;
+    sg.mid=angle+slice/2;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
     ctx.fillStyle=sg.color; ctx.fill();
-    ctx.strokeStyle=themeVal('#141720','#ffffff'); ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle=bgCol; ctx.lineWidth=3; ctx.stroke();
     angle+=slice;
   });
 
   // Hole
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.fillStyle=themeVal('#141720','#ffffff'); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=bgCol; ctx.fill();
 
-  // Center text
+  // Center total
   ctx.textAlign='center';
-  ctx.fillStyle=themeVal('#e2e8f0','#1a1d2e'); ctx.font='bold 14px system-ui';
-  ctx.fillText('$'+Math.round(total).toLocaleString(),cx,cy-4);
+  ctx.fillStyle=themeVal('#e2e8f0','#0f172a'); ctx.font='600 17px Inter,system-ui';
+  ctx.fillText('$'+Math.round(total).toLocaleString(),cx,cy-2);
   ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px Inter,system-ui';
-  ctx.fillText('total tracked',cx,cy+12);
+  ctx.fillText('TOTAL TRACKED',cx,cy+14);
+
+  // Logo badges inside segments (initials; custom logos supported via wallet colour field later)
+  segments.forEach(sg=>{
+    if(sg.pct<4) return; // too thin for a badge
+    const bx=cx+Math.cos(sg.mid)*((R+r)/2), by=cy+Math.sin(sg.mid)*((R+r)/2);
+    const s=Math.min(15+sg.pct*0.35,22); // badge half-size scales with slice
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6;
+    roundRect(ctx,bx-s,by-s,s*2,s*2,7); ctx.fillStyle=bgCol; ctx.fill();
+    ctx.restore();
+    ctx.fillStyle=themeVal('#e2e8f0','#1e3a8a');
+    ctx.font='600 '+Math.round(s*0.62)+'px Inter,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(initialsOf(sg.label),bx,by+1);
+    ctx.textBaseline='alphabetic';
+  });
+
+  // Outside ticker-style labels (clamped so they never clip at canvas edges)
+  segments.forEach(sg=>{
+    let lx=cx+Math.cos(sg.mid)*(R+14);
+    const ly=Math.min(Math.max(cy+Math.sin(sg.mid)*(R+18),16),H-16);
+    const right=Math.cos(sg.mid)>=0;
+    ctx.textAlign=right?'left':'right';
+    const name=(sg.label.length>11?sg.label.slice(0,10)+'…':sg.label).toUpperCase();
+    ctx.font='600 11px Inter,system-ui';
+    const tw=Math.max(ctx.measureText(name).width, 40);
+    if(right) lx=Math.min(lx, W-tw-4); else lx=Math.max(lx, tw+4);
+    ctx.fillStyle=themeVal('#60a5fa','#2563eb');
+    ctx.fillText(name,lx,ly-2);
+    ctx.fillStyle=themeVal('#e2e8f0','#0f172a'); ctx.font='500 11px Inter,system-ui';
+    ctx.fillText(sg.pct.toFixed(2)+'%',lx,ly+12);
+  });
 
   // Legend
   const legendEl=document.getElementById('wallet-legend');
@@ -2248,8 +2289,14 @@ function drawWalletDonut(cashUSD, deployedUSD){
         <div class="wallet-legend-dot" style="background:${sg.color}"></div>
         <span style="color:var(--muted2)">${sg.label}</span>
       </div>
-      <span style="font-weight:600">$${fmtNum(sg.val)}</span>
+      <span style="font-weight:600">$${fmtMoney(sg.val)} <span style="color:var(--muted);font-weight:400">· ${sg.pct.toFixed(1)}%</span></span>
     </div>`).join('');
+}
+function roundRect(ctx,x,y,w,h,rad){ ctx.beginPath(); ctx.moveTo(x+rad,y); ctx.arcTo(x+w,y,x+w,y+h,rad); ctx.arcTo(x+w,y+h,x,y+h,rad); ctx.arcTo(x,y+h,x,y,rad); ctx.arcTo(x,y,x+w,y,rad); ctx.closePath(); }
+function initialsOf(name){
+  const parts=String(name).trim().split(/\s+/).filter(Boolean);
+  if(parts.length>=2) return (parts[0][0]+parts[1][0]).toUpperCase();
+  return String(name).slice(0,2).toUpperCase();
 }
 
 function drawDeployedBar(cashUSD, deployedUSD, openTrades){

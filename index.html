@@ -373,27 +373,14 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
       <span>Calendar</span>
     </button>
-    <div class="nav-section">Trades</div>
-    <button class="nav-item" data-page="day-trades">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
-      <span>Day Trades</span>
-    </button>
-    <button class="nav-item" data-page="long-trades">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></span>
-      <span>Long-Term</span>
-    </button>
     <div class="nav-section">Analysis</div>
     <button class="nav-item" data-page="securities">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
       <span>Securities</span>
     </button>
-    <button class="nav-item" data-page="portfolio">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
-      <span>Portfolio</span>
-    </button>
     <button class="nav-item" data-page="wallet">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>
-      <span>Wallet</span>
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
+      <span>Portfolio &amp; Wallet</span>
     </button>
     <button class="nav-item" data-page="rates">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
@@ -509,34 +496,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
-      <!-- Day Trades -->
-      <div class="page" id="page-day-trades">
-        <div class="table-controls">
-          <div class="search-wrap">
-            <span class="search-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input class="search-input" id="dt-search" placeholder="Search symbol…">
-          </div>
-          <select class="filter" id="dt-market"><option value="">All Markets</option></select>
-          <select class="filter" id="dt-exchange"><option value="">All Exchanges</option></select>
-          <select class="filter" id="dt-status"><option value="">All Status</option><option value="open">Open</option><option value="closed">Closed</option></select>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="day-table"></div></div></div>
-      </div>
-
-      <!-- Long Trades -->
-      <div class="page" id="page-long-trades">
-        <div class="table-controls">
-          <div class="search-wrap">
-            <span class="search-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input class="search-input" id="lt-search" placeholder="Search symbol…">
-          </div>
-          <select class="filter" id="lt-market"><option value="">All Markets</option></select>
-          <select class="filter" id="lt-exchange"><option value="">All Exchanges</option></select>
-          <select class="filter" id="lt-status"><option value="">All Status</option><option value="open">Open</option><option value="closed">Closed</option></select>
-        </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="long-table"></div></div></div>
-      </div>
-
       <!-- Securities Analysis -->
       <div class="page" id="page-securities">
         <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
@@ -613,10 +572,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             <div id="wallet-open-list" style="margin-top:16px"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Portfolio -->
-      <div class="page" id="page-portfolio">
+        <!-- Growth & capital (merged from Portfolio page) -->
         <div id="portfolio-quickstart" style="display:none;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:var(--r);padding:18px 22px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px">
           <div>
             <div style="font-size:14px;font-weight:600;margin-bottom:3px">Start tracking your portfolio growth</div>
@@ -625,19 +582,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <button class="btn btn-primary" onclick="openCapitalModal()" style="flex-shrink:0">Add Starting Capital</button>
         </div>
         <div class="stats-row" id="port-stats"></div>
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Portfolio Value Over Time</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">Invested capital vs actual portfolio value</div>
-            </div>
-            <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center">
-              <span><span style="display:inline-block;width:24px;height:2px;background:var(--accent);border-radius:2px;margin-right:5px;vertical-align:middle"></span>Portfolio Value</span>
-              <span><span style="display:inline-block;width:24px;height:2px;background:var(--muted);border-radius:2px;margin-right:5px;border-top:2px dashed var(--muted);vertical-align:middle"></span>Invested Capital</span>
-            </div>
-          </div>
-          <canvas id="port-main-chart" height="260"></canvas>
-        </div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
             <div class="card-header"><div class="card-title">Monthly Returns</div></div>
@@ -655,7 +599,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             Add Capital Entry
           </button>
         </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div></div>
       </div>
 
       <!-- Rates -->
@@ -1517,7 +1461,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar','day-trades':'Day Trades','long-trades':'Long-Term Trades',securities:'Securities Analysis',portfolio:'Portfolio Growth',wallet:'Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -1746,13 +1690,11 @@ function populateFilters(){
   const exchanges=[...new Set(trades.map(t=>t.exchange).filter(Boolean))].sort();
   const mOpts='<option value="">All Markets</option>'+markets.map(m=>`<option value="${m}">${m}</option>`).join('');
   const eOpts='<option value="">All Exchanges</option>'+exchanges.map(e=>`<option value="${e}">${e}</option>`).join('');
-  ['j-market','dt-market','lt-market'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=mOpts;s.value=v;});
-  ['j-exchange','dt-exchange','lt-exchange'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=eOpts;s.value=v;});
+  ['j-market'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=mOpts;s.value=v;});
+  ['j-exchange'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=eOpts;s.value=v;});
 }
 function filtered(type,search,market,exchange,dir,status){ return trades.filter(t=>{if(type&&t.type!==type)return false;if(search&&!t.symbol.toLowerCase().includes(search.toLowerCase()))return false;if(market&&t.market!==market)return false;if(exchange&&t.exchange!==exchange)return false;if(dir&&t.direction!==dir)return false;if(status&&t.status!==status)return false;return true;}); }
 ['j-search','j-type','j-market','j-exchange','j-dir','j-status'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);}));
-['dt-search','dt-market','dt-exchange','dt-status'].forEach(id=>document.getElementById(id).addEventListener('input',()=>renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value))));
-['lt-search','lt-market','lt-exchange','lt-status'].forEach(id=>document.getElementById(id).addEventListener('input',()=>renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value))));
 
 // ── Dashboard ──────────────────────────────────────────────────────
 function renderDashboard(){
@@ -1793,12 +1735,8 @@ function renderDashboard(){
   document.getElementById('db-stats').innerHTML=[
     {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
-    {label:'Profit Factor',val:pf!=null?pf.toFixed(2):'—',cls:pf>1?'green':pf!=null&&pf<1?'red':'',card:''},
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
-    {label:'Avg Win',val:avgWin!=null?fmtPnL(avgWin,[...new Set(closed.filter(t=>calcPnL(t)>0).map(t=>t.currency))][0]||'USD'):'—',cls:'green',card:''},
-    {label:'Avg Loss',val:avgLoss!=null?fmtPnL(-avgLoss,[...new Set(closed.filter(t=>calcPnL(t)<0).map(t=>t.currency))][0]||'USD'):'—',cls:'red',card:''},
-    {label:'Best Trade',val:wins.length?fmtPnL(Math.max(...wins),[...new Set(closed.map(t=>t.currency))][0]||'USD'):'—',cls:'green',card:''},
   ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`).join('');
   drawEquityChart(closed); drawDailyChart(closed);
   const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(calcPnL(t)||0);});
@@ -1853,7 +1791,7 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='day-trades')renderTable('day-table',filtered('day',document.getElementById('dt-search').value,document.getElementById('dt-market').value,document.getElementById('dt-exchange').value,'',document.getElementById('dt-status').value)); else if(page==='long-trades')renderTable('long-table',filtered('long',document.getElementById('lt-search').value,document.getElementById('lt-market').value,document.getElementById('lt-exchange').value,'',document.getElementById('lt-status').value)); else if(page==='securities')renderSecurities(); else if(page==='portfolio')renderPortfolio(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -1973,6 +1911,7 @@ function renderWallet(){
     if(c) c.innerHTML='<div style="padding:24px;color:var(--red);font-size:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)"><strong>Error loading wallet page:</strong> '+e.message+'</div>';
   }
   try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
+  try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
 }
 
 // ── Wallet performance chart ───────────────────────────────────────
@@ -2552,12 +2491,8 @@ function renderPortfolio(){
   // Stat cards
   const stats=[
     {lbl:'Total Invested',val:noCapital?'—':'$'+fmtMoney(totalInvested),sub:noCapital?'Add capital entries below':'Net deposited capital (USD)',card:'blue',cls:'blue'},
-    {lbl:'Portfolio Value',val:'$'+fmtMoney(currentValue),sub:noCapital?'Wallets + open positions':'Invested + all trade P&L',card:currentValue>=totalInvested?'green':'red',cls:currentValue>=totalInvested?'pnl-pos':'pnl-neg'},
     {lbl:'Total Gain / Loss',val:(totalPnLusd>=0?'+':'')+'$'+fmtMoney(totalPnLusd),sub:'Realised P&L (USD equiv.)',card:totalPnLusd>=0?'green':'red',cls:totalPnLusd>=0?'pnl-pos':'pnl-neg'},
     {lbl:'ROI',val:roi!=null?(roi>=0?'+':'')+roi.toFixed(2)+'%':'—',sub:'Return on invested capital',card:roi>0?'green':roi<0?'red':'',cls:roi>0?'pnl-pos':roi<0?'pnl-neg':''},
-    {lbl:'Closed Trades',val:closed.length,sub:`${open} open position${open!==1?'s':''}`,card:'',cls:''},
-    {lbl:'Best Trade',val:bestDay!=null?'+$'+fmtNum(bestDay):'—',sub:'Single trade (USD)',card:'',cls:'pnl-pos'},
-    {lbl:'Worst Trade',val:worstDay!=null?'$'+fmtNum(worstDay):'—',sub:'Single trade (USD)',card:'',cls:'pnl-neg'},
     {lbl:'Active Since',val:capital.length?new Date(capital[0].entry_date).toLocaleDateString('en-US',{month:'short',year:'numeric'}):'—',sub:'First capital entry',card:'',cls:''},
   ];
   document.getElementById('port-stats').innerHTML = stats.map(s=>`

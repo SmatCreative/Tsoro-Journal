@@ -8,18 +8,20 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root{
-  --bg:#0a0f1c;--surface:#101726;--surface2:#162032;--surface3:#1c2940;
-  --border:#1e293b;--accent:#3b82f6;--accent2:#60a5fa;
+  --bg:#0a0f1c;--surface:#111827;--surface2:#1a2333;--surface3:#222e44;
+  --border:#1f2a3d;--accent:#3b82f6;--accent2:#60a5fa;
   --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#38bdf8;--purple:#a855f7;
-  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;--r:10px;--r-sm:8px;
-  --shadow:0 1px 3px rgba(0,0,0,.4);
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;--r:18px;--r-sm:12px;
+  --shadow:0 4px 18px rgba(0,0,0,.35);
+  --hero-grad:linear-gradient(135deg,#2563eb 0%,#3b82f6 55%,#60a5fa 100%);
 }
 html[data-theme="light"]{
-  --bg:#ffffff;--surface:#ffffff;--surface2:#f6f7f9;--surface3:#eef0f3;
-  --border:#e5e7eb;--accent:#2563eb;--accent2:#1d4ed8;
+  --bg:#f3f5f9;--surface:#ffffff;--surface2:#f4f6f9;--surface3:#eaeef4;
+  --border:#edf0f4;--accent:#2563eb;--accent2:#1d4ed8;
   --green:#059669;--red:#dc2626;--yellow:#d97706;--blue:#0369a1;--purple:#7c3aed;
   --text:#111827;--muted:#9ca3af;--muted2:#4b5563;
-  --shadow:0 1px 3px rgba(17,24,39,.05);
+  --shadow:0 6px 22px rgba(17,24,39,.06);
+  --hero-grad:linear-gradient(135deg,#2563eb 0%,#3b82f6 55%,#60a5fa 100%);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;letter-spacing:-.01em;transition:background .2s,color .2s}
@@ -71,9 +73,9 @@ html[data-theme="light"] canvas{filter:none}
 .brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
 .brand-name{font-size:16px;font-weight:600;letter-spacing:-.4px}.brand-name span{color:var(--accent2)}
 .nav-section{padding:16px 12px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:2px 0;border-radius:var(--r-sm);cursor:pointer;color:var(--muted2);transition:all .15s;font-size:13.5px;font-weight:500;border:none;background:none;width:100%;text-align:left}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 0;border-radius:999px;cursor:pointer;color:var(--muted2);transition:all .15s;font-size:13.5px;font-weight:500;border:none;background:none;width:100%;text-align:left}
 .nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:rgba(59,130,246,.15);color:var(--accent2)}
+.nav-item.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.3)}
 .nav-item .nav-icon{width:18px;display:flex;justify-content:center;align-items:center;flex-shrink:0}
 .sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
 .sidebar-user{display:flex;align-items:center;gap:10px}
@@ -84,7 +86,7 @@ html[data-theme="light"] canvas{filter:none}
 /* ── Topbar ── */
 .topbar-title{font-size:16px;font-weight:600}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-sm);border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:999px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;transition:all .15s}
 .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1d4ed8}
 .btn-ghost{background:var(--surface2);color:var(--muted2);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);background:var(--surface3)}
 .btn-sm{padding:6px 12px;font-size:12px}
@@ -101,14 +103,12 @@ html[data-theme="light"] canvas{filter:none}
 /* ── Pages ── */
 .page{display:none}.page.active{display:block}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative}
-.stat-card.green,.stat-card.red,.stat-card.blue{border-top:2px solid var(--border)}
-.stat-card.green{border-top-color:var(--green)}.stat-card.red{border-top-color:var(--red)}.stat-card.blue{border-top-color:var(--accent)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;box-shadow:var(--shadow)}
 .stat-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:10px}
 .stat-value{font-size:22px;font-weight:500;line-height:1;letter-spacing:-.02em}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--accent2)}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .card-title{font-size:11.5px;font-weight:500;letter-spacing:.8px;color:var(--muted2);text-transform:uppercase}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -226,10 +226,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
 /* ── Wallet ── */
 .wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
 .wallet-sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:8px}
 .wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
-.wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:10px;position:relative;overflow:hidden;transition:border-color .15s,transform .1s}
+.wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:10px;position:relative;overflow:hidden;transition:box-shadow .15s,transform .1s;box-shadow:var(--shadow)}
 .wallet-card:hover{transform:translateY(-1px)}
 .wallet-card-accent{position:absolute;left:0;top:0;right:0;height:2px}
 .wallet-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
@@ -447,6 +447,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
       <!-- Dashboard -->
       <div class="page active" id="page-dashboard">
+        <div id="db-hero" style="margin-bottom:18px"></div>
         <div class="stats-row" id="db-stats"></div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
@@ -1415,7 +1416,7 @@ function ccySym(c){ return CURRENCY_SYM[c]||c+' '; }
 function fmtPnL(n,ccy){
   if(n==null)return '—';
   const sym=ccySym(ccy||'USD');
-  const abs=Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4});
+  const abs=Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   return (n>=0?'+':'-')+sym+abs;
 }
 
@@ -1770,10 +1771,26 @@ function renderDashboard(){
   const walletCashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const deployedUSD=openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
   const accountValueUSD=walletCashUSD+deployedUSD;
+  // Hero balance card (gradient, like a banking app's Total Balance)
+  const chip=(arrow,lbl,val)=>`<div style="flex:1;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.16);border-radius:14px;padding:12px 16px;backdrop-filter:blur(4px)">
+      <div style="width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;color:${arrow==='up'?'var(--green)':'#2563eb'};flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${arrow==='up'?'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>':'<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>'}</svg>
+      </div>
+      <div><div style="font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.75)">${lbl}</div>
+      <div style="font-size:15px;font-weight:600;color:#fff">${val}</div></div>
+    </div>`;
+  document.getElementById('db-hero').innerHTML=`
+    <div style="background:var(--hero-grad);border-radius:var(--r);padding:26px 28px;box-shadow:0 12px 32px rgba(37,99,235,.3);position:relative;overflow:hidden">
+      <div style="position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+      <div style="position:absolute;right:50px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.8);font-weight:500;margin-bottom:8px">Total Balance</div>
+      <div style="font-size:38px;font-weight:600;color:#fff;letter-spacing:-.02em;line-height:1;margin-bottom:20px">$${fmtMoney(accountValueUSD)}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;position:relative">
+        ${chip('up','Available Cash','$'+fmtMoney(walletCashUSD))}
+        ${chip('out','In Open Positions','$'+fmtMoney(deployedUSD))}
+      </div>
+    </div>`;
   document.getElementById('db-stats').innerHTML=[
-    {label:'Account Value (USD)',val:'$'+fmtMoney(accountValueUSD),cls:'',card:'blue'},
-    {label:'Available Cash',val:'$'+fmtMoney(walletCashUSD),cls:'green',card:''},
-    {label:'In Open Positions',val:'$'+fmtMoney(deployedUSD),cls:'',card:''},
     {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
     {label:'Profit Factor',val:pf!=null?pf.toFixed(2):'—',cls:pf>1?'green':pf!=null&&pf<1?'red':'',card:''},
@@ -1793,11 +1810,21 @@ function renderDashboard(){
 }
 
 function themeVal(darkVal, lightVal){ return document.documentElement.getAttribute('data-theme')==='light' ? lightVal : darkVal; }
+// Trace a smooth curve through points [{x,y}] using quadratic midpoints
+function smoothPath(ctx, pts){
+  ctx.moveTo(pts[0].x, pts[0].y);
+  if(pts.length<3){ pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y)); return; }
+  for(let i=1;i<pts.length-1;i++){
+    const mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2;
+    ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+  }
+  ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
+}
 function chartGrid(ctx, W, H, pad){
   ctx.strokeStyle=themeVal('#1a2336','#eef2f7'); ctx.lineWidth=1;
   for(let i=0;i<=4;i++){const y=pad+(i/4)*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
 }
-function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);chartGrid(ctx,W,H,pad);const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,themeVal('rgba(59,130,246,.22)','rgba(82,84,224,.2)'));grad.addColorStop(1,themeVal('rgba(59,130,246,0)','rgba(82,84,224,0)'));ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();ctx.moveTo(sx(0),sy(pts[0]));pts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));ctx.strokeStyle=themeVal('#3b82f6','#2563eb');ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),3.5,0,Math.PI*2);ctx.fillStyle=themeVal('#3b82f6','#2563eb');ctx.fill(); }
+function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);chartGrid(ctx,W,H,pad);const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,themeVal('rgba(59,130,246,.22)','rgba(82,84,224,.2)'));grad.addColorStop(1,themeVal('rgba(59,130,246,0)','rgba(82,84,224,0)'));const xy=pts.map((v,i)=>({x:sx(i),y:sy(v)}));ctx.beginPath();smoothPath(ctx,xy);ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();smoothPath(ctx,xy);ctx.strokeStyle=themeVal('#3b82f6','#2563eb');ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),8,0,Math.PI*2);ctx.fillStyle=themeVal('rgba(59,130,246,.25)','rgba(37,99,235,.18)');ctx.fill();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),4,0,Math.PI*2);ctx.fillStyle=themeVal('#3b82f6','#2563eb');ctx.fill(); }
 function drawDailyChart(closed){ const canvas=document.getElementById('daily-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const byDay={};closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const days=Object.keys(byDay).sort().slice(-30);if(!days.length){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No data yet',W/2,H/2);return;}const vals=days.map(d=>byDay[d]);const maxAbs=Math.max(...vals.map(Math.abs),1);const pad=20;const barW=Math.max(3,Math.floor((W-pad*2)/days.length)-2);const baseline=H/2;ctx.strokeStyle=themeVal('#1a2336','#eef2f7');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();days.forEach((d,i)=>{const x=pad+i*((W-pad*2)/days.length);const v=vals[i];const barH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad));ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.75)','rgba(22,163,74,.75)'):themeVal('rgba(239,68,68,.75)','rgba(220,38,38,.75)');if(v>=0)ctx.fillRect(x,baseline-barH,barW,barH);else ctx.fillRect(x,baseline,barW,barH);}); }
 
 // ── Analytics ──────────────────────────────────────────────────────
@@ -2067,14 +2094,13 @@ function drawWalletPerfChart(series, ccy){
   const grd=ctx.createLinearGradient(0,padT,0,H-padB);
   grd.addColorStop(0,isPos?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)');
   grd.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
-  ctx.beginPath(); ctx.moveTo(sx(series[0].t.getTime()),sy(series[0].v));
-  series.forEach(p=>ctx.lineTo(sx(p.t.getTime()),sy(p.v)));
+  const xyW=series.map(p=>({x:sx(p.t.getTime()),y:sy(p.v)}));
+  ctx.beginPath(); smoothPath(ctx,xyW);
   ctx.lineTo(sx(t1),H-padB); ctx.lineTo(sx(t0),H-padB); ctx.closePath();
   ctx.fillStyle=grd; ctx.fill();
   // Line
-  ctx.beginPath(); ctx.moveTo(sx(series[0].t.getTime()),sy(series[0].v));
-  series.forEach(p=>ctx.lineTo(sx(p.t.getTime()),sy(p.v)));
-  ctx.strokeStyle=lineCol; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+  ctx.beginPath(); smoothPath(ctx,xyW);
+  ctx.strokeStyle=lineCol; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
   // Point dots — only when sparse enough to read; always mark the last point
   if(series.length<=20) series.forEach(p=>{ ctx.beginPath(); ctx.arc(sx(p.t.getTime()),sy(p.v),2.5,0,Math.PI*2); ctx.fillStyle=lineCol; ctx.fill(); });
   const lp=series[series.length-1];
@@ -2603,8 +2629,8 @@ function drawPortfolioMainChart(tl){
   const lineColor=isProfit?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
   const grad=ctx.createLinearGradient(0,0,W,0);
   grad.addColorStop(0,themeVal('#3b82f6','#2563eb')); grad.addColorStop(1,lineColor);
-  ctx.beginPath(); tl.forEach((p,i)=>{ i===0?ctx.moveTo(sx(i),sy(p.value)):ctx.lineTo(sx(i),sy(p.value)); });
-  ctx.strokeStyle=grad; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+  ctx.beginPath(); smoothPath(ctx, tl.map((p,i)=>({x:sx(i),y:sy(p.value)})));
+  ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
 
   // End dot
   const last=tl[tl.length-1];

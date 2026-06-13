@@ -2300,9 +2300,20 @@ function _renderWallet(){
   // card shows cash + positions = total (e.g. ZSE wallet: ZiG140 cash +
   // ZiG77.50 in MCMS.ZW = ZiG217.50)
   const posByWallet={};
+  // Supabase trades
   trades.filter(t=>t.status==='open').forEach(t=>{
     const w=findLinkedWallet(t); if(!w) return;
     let val=t.entry*t.qty;
+    if(t.currency!==w.currency){ const c=convertCcy(val,t.currency,w.currency); if(c==null) return; val=c; }
+    (posByWallet[w.id]=posByWallet[w.id]||{val:0,items:[]});
+    posByWallet[w.id].val+=val;
+    posByWallet[w.id].items.push({symbol:t.symbol,val});
+  });
+  // ZSE/VFSE localStorage holdings — link them to their wallet by exchange
+  zseHoldingsAsTrades().forEach(t=>{
+    const w=findLinkedWallet(t); if(!w) return;
+    const price=t.exit??t.entry; // currentPrice or buyPrice
+    let val=price*t.qty;
     if(t.currency!==w.currency){ const c=convertCcy(val,t.currency,w.currency); if(c==null) return; val=c; }
     (posByWallet[w.id]=posByWallet[w.id]||{val:0,items:[]});
     posByWallet[w.id].val+=val;

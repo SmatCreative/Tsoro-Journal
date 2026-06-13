@@ -3466,10 +3466,19 @@ document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.t
 // ═══════════════════════════════════════════════════════════════════
 
 // Total account value in USD — the number goals are measured against
+function zseHoldingsValueUSD(){
+  return loadZseHoldings().reduce((s,h)=>{
+    const price=h.currentPrice??h.buyPrice;
+    if(!price||!h.shares) return s;
+    const ccy=h.exchange==='ZSE'?'ZiG':'USD';
+    const v=toUSD(price*h.shares, ccy);
+    return v==null?s:s+v;
+  },0);
+}
 function accountValueUSD(){
   const cash=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const deployed=trades.filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
-  return cash+deployed+privInvestValueUSD();
+  return cash+deployed+privInvestValueUSD()+zseHoldingsValueUSD();
 }
 
 function goalPeriodPreset(){

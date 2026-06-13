@@ -3451,9 +3451,9 @@ function saveZseCharges(){
 
 // ── Rendering ──────────────────────────────────────────────────────
 function getZigUsdRate(){
-  // Use the most recent ZiG rate from the rates system
+  // Most recent ZiG/USD rate (units of ZiG per 1 USD) from the Rates page
   const rate = getLatestRate('ZiG');
-  return rate ? rate : null;
+  return rate && rate.units_per_usd ? Number(rate.units_per_usd) : null;
 }
 
 function holdingToUSD(h){
@@ -3495,22 +3495,22 @@ function renderZse(){
     <div class="wallet-summary-grid">
       <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
         <div class="wallet-sum-lbl">Portfolio Value (USD)</div>
-        <div class="wallet-sum-val" style="color:var(--accent2)">${hasAllPrices&&totalUSD?'$'+fmtNum(totalUSD):'—'}</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)">${hasAllPrices&&totalUSD?'$'+fmtMoney(totalUSD):'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${holdings.length} holding${holdings.length!==1?'s':''}</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--green)">
         <div class="wallet-sum-lbl">Cost Basis (USD)</div>
-        <div class="wallet-sum-val pnl-pos">${totalCostUSD?'$'+fmtNum(totalCostUSD):'—'}</div>
+        <div class="wallet-sum-val pnl-pos">${totalCostUSD?'$'+fmtMoney(totalCostUSD):'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">Total invested</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid ${pnlUSD>=0?'var(--green)':'var(--red)'}">
         <div class="wallet-sum-lbl">Unrealised P&amp;L</div>
-        <div class="wallet-sum-val ${pnlClass(pnlUSD)}">${totalCostUSD?(pnlUSD>=0?'+':'')+fmtPnL(pnlUSD,'USD'):'—'}</div>
+        <div class="wallet-sum-val ${pnlClass(pnlUSD)}">${totalCostUSD?fmtPnL(pnlUSD,'USD'):'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${totalCostUSD&&totalUSD?((pnlUSD/totalCostUSD)*100).toFixed(1)+'% return':'—'}</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--yellow)">
         <div class="wallet-sum-lbl">Net After All Charges</div>
-        <div class="wallet-sum-val" style="color:var(--yellow)">${totalUSD?(()=>{const np=calcNetProceeds(totalUSD,charges);return '$'+fmtNum(np.afterWithdraw);})():'—'}</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)">${totalUSD?(()=>{const np=calcNetProceeds(totalUSD,charges);return '$'+fmtMoney(np.afterWithdraw);})():'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">If you sell &amp; withdraw everything</div>
       </div>
     </div>`;
@@ -3551,8 +3551,8 @@ function renderZse(){
           <div style="font-size:11px;opacity:.8">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%</div>
         </td>
         <td style="text-align:right">
-          ${usd!=null?'<div style="font-weight:600;color:var(--accent2)">$'+fmtNum(usd)+'</div>':'<div style="color:var(--muted);font-size:12px">No rate</div>'}
-          ${np!=null?'<div style="font-size:11px;color:var(--yellow)">$'+fmtNum(np.afterWithdraw)+' net</div>':''}
+          ${usd!=null?'<div style="font-weight:600;color:var(--accent2)">$'+fmtMoney(usd)+'</div>':'<div style="color:var(--muted);font-size:12px">No rate</div>'}
+          ${np!=null?'<div style="font-size:11px;color:var(--yellow)">$'+fmtMoney(np.afterWithdraw)+' net</div>':''}
         </td>
         <td>
           <div style="display:flex;gap:4px;justify-content:flex-end">
@@ -3601,19 +3601,19 @@ function renderZse(){
           <div style="font-size:11px;color:var(--muted)">${fmtNum(h.shares)} shares @ ${h.exchange==='ZSE'?'ZiG ':'$'}${fmtNum(h.currentPrice??h.buyPrice)}</div>
         </td>
         <td style="padding:10px 12px;text-align:right">
-          <div style="font-weight:600">$${fmtNum(gross)}</div>
+          <div style="font-weight:600">$${fmtMoney(gross)}</div>
           <div style="font-size:11px;color:var(--muted)">gross proceeds</div>
         </td>
         <td style="padding:10px 12px;text-align:right;color:var(--red)">
-          <div style="font-weight:600">-$${fmtNum(sellChargeAmt)}</div>
+          <div style="font-weight:600">-$${fmtMoney(sellChargeAmt)}</div>
           <div style="font-size:11px;color:var(--muted)">${totalChargePct.toFixed(3)}% sell charges</div>
         </td>
         <td style="padding:10px 12px;text-align:right;color:var(--yellow)">
-          <div style="font-weight:600">-$${fmtNum(withdrawAmt)}</div>
+          <div style="font-weight:600">-$${fmtMoney(withdrawAmt)}</div>
           <div style="font-size:11px;color:var(--muted)">${(charges.withdraw||0).toFixed(2)}% withdrawal</div>
         </td>
         <td style="padding:10px 12px;text-align:right">
-          <div style="font-weight:900;font-size:15px;color:var(--green)">$${fmtNum(np.afterWithdraw)}</div>
+          <div style="font-weight:600;font-size:15px;color:var(--green)">$${fmtMoney(np.afterWithdraw)}</div>
           <div style="font-size:11px;color:var(--muted)">you receive</div>
         </td>
       </tr>`;
@@ -3640,10 +3640,10 @@ function renderZse(){
         <tbody>${holdingRows}
           <tr style="background:var(--surface2)">
             <td style="padding:12px;font-weight:600;font-size:13px">TOTAL</td>
-            <td style="padding:12px;text-align:right;font-weight:600">$${fmtNum(totalGross)}</td>
-            <td style="padding:12px;text-align:right;font-weight:600;color:var(--red)">-$${fmtNum(totalGross-totalNP.afterSell)}</td>
-            <td style="padding:12px;text-align:right;font-weight:600;color:var(--yellow)">-$${fmtNum(totalNP.afterSell-totalNP.afterWithdraw)}</td>
-            <td style="padding:12px;text-align:right;font-weight:900;font-size:16px;color:var(--green)">$${fmtNum(totalNP.afterWithdraw)}</td>
+            <td style="padding:12px;text-align:right;font-weight:600">$${fmtMoney(totalGross)}</td>
+            <td style="padding:12px;text-align:right;font-weight:600;color:var(--red)">-$${fmtMoney(totalGross-totalNP.afterSell)}</td>
+            <td style="padding:12px;text-align:right;font-weight:600;color:var(--yellow)">-$${fmtMoney(totalNP.afterSell-totalNP.afterWithdraw)}</td>
+            <td style="padding:12px;text-align:right;font-weight:600;font-size:16px;color:var(--green)">$${fmtMoney(totalNP.afterWithdraw)}</td>
           </tr>
         </tbody>
       </table></div>`;

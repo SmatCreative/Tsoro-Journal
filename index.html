@@ -528,6 +528,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div style="font-size:13px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">My Wallets</div>
             <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="openBankWalletModal()" title="Track a bank account balance">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
+                Add Bank
+              </button>
               <button class="btn btn-ghost btn-sm" onclick="openCashWalletModal()" title="Track physical cash you hold">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
                 Add Cash
@@ -1114,6 +1118,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <select class="form-select" id="w-type">
           <option value="">—</option>
           <option value="Cash">Physical Cash</option>
+          <option value="Bank">Bank Account</option>
           <option value="Live">Live Account</option>
           <option value="Demo">Demo / Practice</option>
           <option value="Savings">Savings</option>
@@ -1833,6 +1838,16 @@ function openWalletModal(id){
   document.getElementById('wallet-modal').classList.add('open');
 }
 function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); showModalErr('w-error',''); }
+// Quick-add a bank account wallet
+function openBankWalletModal(){
+  openWalletModal();
+  document.getElementById('wallet-modal-title').textContent='Add Bank Account';
+  document.getElementById('w-platform').value='Bank';
+  document.getElementById('w-type').value='Bank';
+  document.getElementById('w-color').value='#0ea5e9';
+  document.getElementById('w-name').placeholder='e.g. CBZ USD account, Stanbic ZiG account';
+  document.getElementById('w-name').focus();
+}
 // Quick-add a physical cash wallet (no platform/exchange needed)
 function openCashWalletModal(){
   openWalletModal();
@@ -2124,12 +2139,27 @@ function _renderWallet(){
     }
   }
 
+  // Attribute each open position's value to its linked wallet so a venue's
+  // card shows cash + positions = total (e.g. ZSE wallet: ZiG140 cash +
+  // ZiG77.50 in MCMS.ZW = ZiG217.50)
+  const posByWallet={};
+  trades.filter(t=>t.status==='open').forEach(t=>{
+    const w=findLinkedWallet(t); if(!w) return;
+    let val=t.entry*t.qty;
+    if(t.currency!==w.currency){ const c=convertCcy(val,t.currency,w.currency); if(c==null) return; val=c; }
+    (posByWallet[w.id]=posByWallet[w.id]||{val:0,items:[]});
+    posByWallet[w.id].val+=val;
+    posByWallet[w.id].items.push({symbol:t.symbol,val});
+  });
+
   const cardsEl=document.getElementById('wallet-cards');
   if(!wallets.length){
     cardsEl.innerHTML='<div class="empty-state" style="padding:32px"><div class="empty-icon">'+IC.inbox+'</div><h3>No wallets yet</h3><p>Click <strong>Add Wallet</strong> and enter your Deriv / MT5 / ZSE broker balance. Profits and losses from your trades will automatically update it.</p></div>';
   } else {
     cardsEl.innerHTML=wallets.map(function(w){
-      const usd=walletToUSD(w);
+      const pos=posByWallet[w.id]||{val:0,items:[]};
+      const totalVal=Number(w.balance)+pos.val;
+      const usd=capToUSD(totalVal, w.currency);
       const color=w.color||'#3b82f6';
       const displayName=w.wallet_name||w.platform||'Unnamed Wallet';
       const subParts=[w.platform&&w.wallet_name?w.platform:null, w.exchange].filter(Boolean);
@@ -2153,7 +2183,7 @@ function _renderWallet(){
       }).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">No closed trades linked yet</div>';
 
       const usdLine=w.currency==='USD'||w.currency==='USDT'?''
-        :getLatestRate(w.currency)?'<span style="font-size:13px;color:var(--muted2);font-weight:600">≈ $'+fmtNum(usd)+' USD</span>'
+        :getLatestRate(w.currency)?'<span style="font-size:13px;color:var(--muted2);font-weight:600">≈ $'+fmtMoney(usd)+' USD</span>'
         :'<span style="font-size:11px;color:var(--yellow)">Set rate on Rates page for USD equiv.</span>';
 
       return '<div class="wallet-card" style="border-color:'+color+'40;margin-bottom:12px">'
@@ -2168,8 +2198,15 @@ function _renderWallet(){
             +'<span class="badge" style="background:var(--surface3);color:var(--muted2);font-size:11px;font-weight:600">'+w.currency+'</span>'
           +'</div>'
         +'</div>'
-        +'<div class="wallet-balance" style="color:'+color+'">'+ccySym(w.currency)+Number(w.balance).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+        +'<div class="wallet-balance" style="color:'+color+'">'+ccySym(w.currency)+fmtMoney(totalVal)+'</div>'
         +(usdLine?'<div style="margin-top:2px;margin-bottom:8px">'+usdLine+'</div>':'<div style="margin-bottom:8px"></div>')
+        +(pos.val>0
+          ?'<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px">'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--muted2)">Cash available</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(w.balance)+'</span></div>'
+            +pos.items.map(function(it){return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--muted2)">'+it.symbol+' <span style="font-size:10px;color:var(--muted)">position</span></span><span style="font-weight:600;color:var(--accent2)">'+ccySym(w.currency)+fmtMoney(it.val)+'</span></div>';}).join('')
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding-top:5px;margin-top:3px;border-top:1px solid var(--border)"><span style="font-weight:600">Total</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(totalVal)+'</span></div>'
+          +'</div>'
+          :'')
         +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+w.notes+'</div>':'')
         +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Recent Trades</div>'
         +tradeRows
@@ -2662,7 +2699,7 @@ function renderCapitalTable(){
         <td><span class="badge cap-type-${e.type}">${typeLabel[e.type]}</span></td>
         <td style="font-weight:600">${ccySym(e.currency)}${fmtNum(e.amount)}</td>
         <td><span class="badge badge-market" style="color:var(--accent2)">${e.currency}</span></td>
-        <td style="color:var(--muted2)">${e.currency==='USD'?'—':'$'+fmtNum(usd)}</td>
+        <td style="color:var(--muted2)">${e.currency==='USD'?'—':'$'+fmtMoney(usd)}</td>
         <td class="${bal>=0?'pnl-pos':'pnl-neg'}" style="font-weight:600">$${fmtNum(bal)}</td>
         <td style="font-size:12px;color:var(--muted)">${e.notes||'—'}</td>
         <td><div style="display:flex;gap:5px">

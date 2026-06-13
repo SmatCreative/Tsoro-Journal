@@ -101,14 +101,16 @@ html[data-theme="light"] canvas{filter:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── Pages ── */
-.page{display:none}.page.active{display:block}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.page{display:none}.page.active{display:block;animation:fadeSlideIn .22s cubic-bezier(.22,1,.36,1)}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;box-shadow:var(--shadow)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s,background .2s,border-color .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(37,99,235,.13)}
 .stat-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:10px}
 .stat-value{font-size:22px;font-weight:500;line-height:1;letter-spacing:-.02em}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--accent2)}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s,background .2s,border-color .2s}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .card-title{font-size:13.5px;font-weight:700;letter-spacing:-.1px;color:var(--text)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -226,11 +228,12 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
 /* ── Wallet ── */
 .wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow)}
+.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
+.wallet-sum-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(37,99,235,.12)}
 .wallet-sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:8px}
 .wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
-.wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:10px;position:relative;overflow:hidden;transition:box-shadow .15s,transform .1s;box-shadow:var(--shadow)}
-.wallet-card:hover{transform:translateY(-1px)}
+.wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:10px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .18s,border-color .2s;box-shadow:var(--shadow)}
+.wallet-card:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(37,99,235,.14)}
 .wallet-card-accent{position:absolute;left:0;top:0;right:0;height:2px}
 .wallet-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .wallet-platform{font-size:15px;font-weight:600;letter-spacing:-.2px}
@@ -268,7 +271,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
 /* ── Securities ── */
 .sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
-.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:border-color .15s,transform .1s}
+.sec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:border-color .2s,transform .18s,box-shadow .18s}
+.sec-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 10px 36px rgba(37,99,235,.14)}
 .sec-card:hover{border-color:var(--accent);transform:translateY(-1px)}
 .sec-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .sec-avatar{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
@@ -622,14 +626,18 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
       <!-- Rates -->
       <div class="page" id="page-rates">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="rates-current"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-size:13px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px">Rate History</div>
-          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
+        <div style="background:var(--hero-grad);border-radius:var(--r);padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px">Exchange Rates</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:4px">Track currency rates — used across all pages to convert values to USD</div>
+          </div>
+          <button class="btn btn-sm" onclick="openRateModal()" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);flex-shrink:0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Rate
           </button>
         </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px" id="rates-current"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Rate History</div>
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
       </div>
 
@@ -1804,24 +1812,43 @@ function renderTable(containerId,list){
       <td style="color:var(--muted2);font-size:12px">${rr}</td>
       <td><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}">${t.status}</span></td>
       <td><div style="display:flex;gap:5px;align-items:center">
+        ${t._synthetic?`<button class="btn btn-sm btn-ghost" onclick="navigate('zse')" style="font-size:11px;white-space:nowrap">View in ZSE/VFSE</button>`:`
         ${t.imageUrl?`<button class="btn btn-sm btn-ghost" onclick="viewImage('${t.imageUrl}')" title="View screenshot" style="padding:4px 6px;font-size:14px">📷</button>`:''}
         ${t.status==='open'?`<button class="btn btn-sm btn-primary" onclick="openCloseModal('${t.id}')">Close</button>`:''}
         <button class="btn btn-sm btn-ghost" onclick="editTrade('${t.id}')">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteTrade('${t.id}')" title="Delete">${IC.trash}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteTrade('${t.id}')" title="Delete">${IC.trash}</button>`}
       </div></td></tr>`;
   }).join('')}</tbody></table>`;
 }
 
 // ── Filters ────────────────────────────────────────────────────────
 function populateFilters(){
-  const markets=[...new Set(trades.map(t=>t.market).filter(Boolean))].sort();
-  const exchanges=[...new Set(trades.map(t=>t.exchange).filter(Boolean))].sort();
+  const all=allTrades();
+  const markets=[...new Set(all.map(t=>t.market).filter(Boolean))].sort();
+  const exchanges=[...new Set(all.map(t=>t.exchange).filter(Boolean))].sort();
   const mOpts='<option value="">All Markets</option>'+markets.map(m=>`<option value="${m}">${m}</option>`).join('');
   const eOpts='<option value="">All Exchanges</option>'+exchanges.map(e=>`<option value="${e}">${e}</option>`).join('');
   ['j-market'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=mOpts;s.value=v;});
   ['j-exchange'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=eOpts;s.value=v;});
 }
-function filtered(type,search,market,exchange,dir,status){ return trades.filter(t=>{if(type&&t.type!==type)return false;if(search&&!t.symbol.toLowerCase().includes(search.toLowerCase()))return false;if(market&&t.market!==market)return false;if(exchange&&t.exchange!==exchange)return false;if(dir&&t.direction!==dir)return false;if(status&&t.status!==status)return false;return true;}); }
+// Bridge: convert ZSE/VFSE localStorage holdings into synthetic open trade objects
+// so they appear in Journal and Securities pages
+function zseHoldingsAsTrades(){
+  try{
+    return loadZseHoldings().map(h=>({
+      id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
+      market:'Stock', direction:'Long', type:'long', status:'open',
+      entry:h.buyPrice, qty:h.shares,
+      currency:h.exchange==='ZSE'?'ZiG':'USD',
+      entryDate:h.priceDate||new Date().toISOString().slice(0,10),
+      exit:h.currentPrice||null, exitDate:null,
+      notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
+      _synthetic:true
+    }));
+  }catch(e){return[];}
+}
+function allTrades(){ return [...trades,...zseHoldingsAsTrades()]; }
+function filtered(type,search,market,exchange,dir,status){ return allTrades().filter(t=>{if(type&&t.type!==type)return false;if(search&&!t.symbol.toLowerCase().includes(search.toLowerCase()))return false;if(market&&t.market!==market)return false;if(exchange&&t.exchange!==exchange)return false;if(dir&&t.direction!==dir)return false;if(status&&t.status!==status)return false;return true;}); }
 ['j-search','j-type','j-market','j-exchange','j-dir','j-status'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);}));
 
 // ── Dashboard ──────────────────────────────────────────────────────
@@ -2167,12 +2194,11 @@ function drawWalletPerfChart(series, ccy){
     x=Math.max(padL+18, Math.min(W-padR-18, x));
     ctx.fillText(fmtD(p), x, H-8);
   });
-  const isPos=vals[vals.length-1]>=vals[0];
-  const lineCol=isPos?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
+  const lineCol=themeVal('#3b82f6','#2563eb');
   // Gradient fill under line
   const grd=ctx.createLinearGradient(0,padT,0,H-padB);
-  grd.addColorStop(0,isPos?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)');
-  grd.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
+  grd.addColorStop(0,'rgba(59,130,246,.18)');
+  grd.addColorStop(1,'rgba(59,130,246,0)');
   const xyW=series.map(p=>({x:sx(p.t.getTime()),y:sy(p.v)}));
   ctx.beginPath(); smoothPath(ctx,xyW);
   ctx.lineTo(sx(t1),H-padB); ctx.lineTo(sx(t0),H-padB); ctx.closePath();
@@ -2723,10 +2749,10 @@ function drawPortfolioMainChart(tl){
     ctx.setLineDash([]);
   }
 
-  // Portfolio value line (solid, gradient colour)
-  const lineColor=isProfit?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
+  // Portfolio value line (solid, brand blue)
+  const lineColor=themeVal('#3b82f6','#2563eb');
   const grad=ctx.createLinearGradient(0,0,W,0);
-  grad.addColorStop(0,themeVal('#3b82f6','#2563eb')); grad.addColorStop(1,lineColor);
+  grad.addColorStop(0,themeVal('#2563eb','#1d4ed8')); grad.addColorStop(1,themeVal('#60a5fa','#3b82f6'));
   ctx.beginPath(); smoothPath(ctx, tl.map((p,i)=>({x:sx(i),y:sy(p.value)})));
   ctx.strokeStyle=grad; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
 
@@ -2786,18 +2812,18 @@ function drawGrowthChart(tl, totalInvested){
   // Gradient fill
   const lastPct=pcts[pcts.length-1]; const isPos=lastPct>=0;
   const grd=ctx.createLinearGradient(0,0,0,H);
-  grd.addColorStop(0,isPos?'rgba(16,185,129,.18)':'rgba(239,68,68,.18)'); grd.addColorStop(1,isPos?'rgba(34,197,94,0)':'rgba(239,68,68,0)');
+  grd.addColorStop(0,'rgba(59,130,246,.18)'); grd.addColorStop(1,'rgba(59,130,246,0)');
   ctx.beginPath(); ctx.moveTo(sx(0),sy(pcts[0]));
   pcts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
   ctx.lineTo(sx(pcts.length-1),H); ctx.lineTo(sx(0),H); ctx.closePath(); ctx.fillStyle=grd; ctx.fill();
   // Line
   ctx.beginPath(); ctx.moveTo(sx(0),sy(pcts[0]));
   pcts.forEach((v,i)=>ctx.lineTo(sx(i),sy(v)));
-  ctx.strokeStyle=isPos?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626');
+  ctx.strokeStyle=themeVal('#3b82f6','#2563eb');
   ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
   // End dot + label
   ctx.beginPath(); ctx.arc(sx(pcts.length-1),sy(lastPct),4,0,Math.PI*2);
-  ctx.fillStyle=isPos?themeVal('#10b981','#059669'):themeVal('#ef4444','#dc2626'); ctx.fill();
+  ctx.fillStyle=themeVal('#3b82f6','#2563eb'); ctx.fill();
   ctx.font='600 11px Inter,system-ui'; ctx.textAlign='left'; ctx.fillStyle=ctx.fillStyle;
   ctx.fillText((lastPct>=0?'+':'')+lastPct.toFixed(1)+'%', sx(pcts.length-1)+7, sy(lastPct)+4);
 }
@@ -3024,7 +3050,7 @@ window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard
 // SECURITIES ANALYSIS ENGINE
 // ═══════════════════════════════════════════════════════════════════
 function analyzeSymbol(symbol){
-  const all=trades.filter(t=>t.symbol===symbol);
+  const all=allTrades().filter(t=>t.symbol===symbol);
   const closed=all.filter(t=>t.status==='closed');
   const open=all.filter(t=>t.status==='open');
   const pnls=closed.map(t=>calcPnL(t)||0);
@@ -3104,9 +3130,10 @@ function renderSecurities(){
   const search=(document.getElementById('sec-search')?.value||'').toLowerCase();
   const mf=document.getElementById('sec-market')?.value||'';
   const ef=document.getElementById('sec-exchange')?.value||'';
-  const symbols=[...new Set(trades.map(t=>t.symbol))].filter(s=>{
+  const all=allTrades();
+  const symbols=[...new Set(all.map(t=>t.symbol))].filter(s=>{
     if(search&&!s.toLowerCase().includes(search))return false;
-    const t=trades.find(x=>x.symbol===s);
+    const t=all.find(x=>x.symbol===s);
     if(mf&&t?.market!==mf)return false;
     if(ef&&t?.exchange!==ef)return false;
     return true;

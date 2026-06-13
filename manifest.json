@@ -4,8 +4,8 @@
   "description": "Personal trading & investment journal",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0f1c",
-  "theme_color": "#2563eb",
+  "background_color": "#050d1f",
+  "theme_color": "#004aad",
   "orientation": "portrait-primary",
   "icons": [
     {

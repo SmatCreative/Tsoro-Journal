@@ -578,6 +578,19 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           </div>
         </div>
 
+        <!-- Private / unlisted investments -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
+          <div>
+            <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Private Investments</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Unlisted businesses, projects, farms and other ventures</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openPrivInvestModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Investment
+          </button>
+        </div>
+        <div id="priv-invest-list" style="margin-bottom:20px"></div>
+
         <!-- Growth & capital (merged from Portfolio page) -->
         <div id="portfolio-quickstart" style="display:none;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:var(--r);padding:18px 22px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px">
           <div>
@@ -673,6 +686,69 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="goals-list"></div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Private Investment Modal -->
+<div class="overlay" id="priv-invest-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="pi-modal-title">Add Private Investment</div>
+      <button class="modal-close" onclick="closePrivInvestModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="pi-edit-id">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="pi-name" placeholder="e.g. Mazowe poultry farm, Kombi business">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="pi-category">
+          <option value="Business">Business</option>
+          <option value="Farm">Farm / Agriculture</option>
+          <option value="Project">Project</option>
+          <option value="Real Estate">Real Estate</option>
+          <option value="Startup">Startup Equity</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="pi-currency">
+          <option value="USD">USD $</option>
+          <option value="ZiG">ZiG</option>
+          <option value="ZAR">ZAR R</option>
+          <option value="GBP">GBP £</option>
+          <option value="EUR">EUR €</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Invested</label>
+        <input class="form-input" id="pi-invested" type="number" step="any" min="0" placeholder="e.g. 500">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Current Value <span class="opt">(your estimate)</span></label>
+        <input class="form-input" id="pi-value" type="number" step="any" min="0" placeholder="defaults to invested">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date Invested</label>
+        <input class="form-input" id="pi-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ownership % <span class="opt">(optional)</span></label>
+        <input class="form-input" id="pi-ownership" type="number" step="any" min="0" max="100" placeholder="e.g. 25">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="pi-notes" placeholder="Partners, payout expectations, etc.">
+      </div>
+    </div>
+    <div id="pi-error" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:var(--r-sm);font-size:13px"></div>
+    <div class="form-row" style="margin-top:14px">
+      <button type="button" class="btn btn-primary" id="pi-save-btn" onclick="savePrivInvest()">Save Investment</button>
+      <button type="button" class="btn btn-ghost" onclick="closePrivInvestModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1384,7 +1460,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [];
+let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [], privInvest = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -1476,7 +1552,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest()]);
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -1498,6 +1574,7 @@ async function loadTrades(){ const{data,error}=await sb.from('trades').select('*
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Rates failed to load: '+error.message);return;} rates=data||[]; }
 async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Capital entries failed to load: '+error.message);return;} capital=data||[]; }
 async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Wallets failed to load: '+error.message);return;} wallets=data||[]; }
+async function loadPrivInvest(){ const{data,error}=await sb.from('private_investments').select('*').order('invest_date',{ascending:false}); if(error){console.error('[Tsoro] private investments:',error.message);privInvest=[];return;} privInvest=data||[]; }
 async function loadDividends(){ const{data,error}=await sb.from('dividends').select('*').order('pay_date',{ascending:false}); if(error){console.error('[Tsoro] dividends:',error.message);dividends=[];return;} dividends=data||[]; }
 async function loadGoals(){ const{data,error}=await sb.from('investment_goals').select('*').order('end_date',{ascending:true}); if(error){console.error('[Tsoro] goals:',error.message);goals=[];return;} goals=data||[]; }
 async function loadWalletHistory(){ const{data,error}=await sb.from('wallet_history').select('*').order('recorded_at',{ascending:true}); if(error){console.error('[Tsoro] wallet history:',error.message);walletHistory=[];return;} walletHistory=data||[]; }
@@ -1973,6 +2050,7 @@ function renderWallet(){
     if(c) c.innerHTML='<div style="padding:24px;color:var(--red);font-size:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)"><strong>Error loading wallet page:</strong> '+e.message+'</div>';
   }
   try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
+  try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
 }
 
@@ -2287,6 +2365,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
   let segments=[];
   wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd}); });
   if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD});
+  privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v}); });
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
   const totalEl=document.getElementById('wallet-donut-total');
@@ -3355,7 +3434,7 @@ document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.t
 function accountValueUSD(){
   const cash=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const deployed=trades.filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
-  return cash+deployed;
+  return cash+deployed+privInvestValueUSD();
 }
 
 function goalPeriodPreset(){
@@ -3442,6 +3521,120 @@ async function deleteGoal(id){
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════════
+// PRIVATE / UNLISTED INVESTMENTS (businesses, farms, projects)
+// ═══════════════════════════════════════════════════════════════════
+
+function privInvestValueUSD(){
+  return privInvest.reduce((s,p)=>{
+    const v=toUSD(Number(p.current_value??p.amount_invested), p.currency);
+    return v==null?s:s+v;
+  },0);
+}
+
+function openPrivInvestModal(id){
+  document.getElementById('pi-modal-title').textContent=id?'Edit Private Investment':'Add Private Investment';
+  document.getElementById('pi-edit-id').value=id||'';
+  document.getElementById('pi-error').style.display='none';
+  if(id){
+    const p=privInvest.find(x=>x.id===id); if(!p) return;
+    document.getElementById('pi-name').value=p.name;
+    document.getElementById('pi-category').value=p.category||'Business';
+    document.getElementById('pi-currency').value=p.currency||'USD';
+    document.getElementById('pi-invested').value=p.amount_invested;
+    document.getElementById('pi-value').value=p.current_value??'';
+    document.getElementById('pi-date').value=p.invest_date;
+    document.getElementById('pi-ownership').value=p.ownership_pct??'';
+    document.getElementById('pi-notes').value=p.notes||'';
+  } else {
+    ['pi-name','pi-invested','pi-value','pi-ownership','pi-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('pi-category').value='Business';
+    document.getElementById('pi-currency').value='USD';
+    document.getElementById('pi-date').value=new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('priv-invest-modal').classList.add('open');
+}
+function closePrivInvestModal(){ document.getElementById('priv-invest-modal').classList.remove('open'); }
+document.getElementById('priv-invest-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closePrivInvestModal();});
+
+async function savePrivInvest(){
+  const err=document.getElementById('pi-error'); err.style.display='none';
+  const id=document.getElementById('pi-edit-id').value;
+  const name=document.getElementById('pi-name').value.trim();
+  const invested=parseFloat(document.getElementById('pi-invested').value);
+  if(!name){ err.textContent='Please give the investment a name.'; err.style.display='block'; return; }
+  if(!invested||isNaN(invested)||invested<=0){ err.textContent='Please enter the amount you invested.'; err.style.display='block'; return; }
+  const valRaw=parseFloat(document.getElementById('pi-value').value);
+  const ownRaw=parseFloat(document.getElementById('pi-ownership').value);
+  const row={
+    name,
+    category:document.getElementById('pi-category').value,
+    currency:document.getElementById('pi-currency').value,
+    amount_invested:invested,
+    current_value:isNaN(valRaw)?invested:valRaw,
+    invest_date:document.getElementById('pi-date').value||new Date().toISOString().slice(0,10),
+    ownership_pct:isNaN(ownRaw)?null:ownRaw,
+    notes:document.getElementById('pi-notes').value.trim()||null,
+  };
+  const btn=document.getElementById('pi-save-btn'); btn.disabled=true; btn.textContent='…';
+  try {
+    if(id){
+      const{error}=await sb.from('private_investments').update(row).eq('id',id);
+      if(error) throw error;
+      const idx=privInvest.findIndex(x=>x.id===id); if(idx>=0) privInvest[idx]={...privInvest[idx],...row};
+    } else {
+      const{data,error}=await sb.from('private_investments').insert([{...row,user_id:currentUser.id}]).select().single();
+      if(error) throw error;
+      privInvest.unshift(data);
+    }
+    closePrivInvestModal(); renderWallet(); renderDashboard&&document.getElementById('page-dashboard').classList.contains('active')&&renderDashboard();
+  } catch(e){ err.textContent='Save failed: '+(e.message||'Unknown error'); err.style.display='block'; }
+  finally { btn.disabled=false; btn.textContent='Save Investment'; }
+}
+
+async function deletePrivInvest(id){
+  if(!confirm('Remove this investment?')) return;
+  const{error}=await sb.from('private_investments').delete().eq('id',id);
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
+  privInvest=privInvest.filter(x=>x.id!==id); renderWallet();
+}
+
+const PI_CAT_ICON={'Business':'💼','Farm':'🌾','Project':'🛠','Real Estate':'🏠','Startup':'🚀','Other':'📦'};
+function renderPrivInvest(){
+  const el=document.getElementById('priv-invest-list'); if(!el) return;
+  if(!privInvest.length){
+    el.innerHTML='<div class="card" style="padding:16px 20px;font-size:13px;color:var(--muted2)">No private investments yet — track money you have put into unlisted businesses, farms or projects alongside your trading capital.</div>';
+    return;
+  }
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+privInvest.map(p=>{
+    const cur=Number(p.current_value??p.amount_invested);
+    const gain=cur-Number(p.amount_invested);
+    const gainPct=p.amount_invested>0?gain/p.amount_invested*100:0;
+    const usd=toUSD(cur,p.currency);
+    return `<div class="card" style="padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="min-width:0">
+          <div style="font-size:14.5px;font-weight:600">${p.name}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.category}${p.ownership_pct?' · '+p.ownership_pct+'% owned':''} · since ${new Date(p.invest_date+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})}</div>
+        </div>
+        <span class="badge" style="background:var(--surface3);color:var(--muted2);font-size:11px;font-weight:600;flex-shrink:0">${p.currency}</span>
+      </div>
+      <div style="font-size:24px;font-weight:600;letter-spacing:-.02em;margin:10px 0 2px;color:var(--accent2)">${ccySym(p.currency)}${fmtMoney(cur)}</div>
+      ${usd!=null&&p.currency!=='USD'?'<div style="font-size:12px;color:var(--muted2)">≈ $'+fmtMoney(usd)+' USD</div>':''}
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="color:var(--muted2)">Invested ${ccySym(p.currency)}${fmtMoney(p.amount_invested)}</span>
+        <span class="${gain>=0?'pnl-pos':'pnl-neg'}" style="font-weight:600">${gain>=0?'+':'−'}${ccySym(p.currency)}${fmtMoney(Math.abs(gain))} (${gainPct>=0?'+':''}${gainPct.toFixed(1)}%)</span>
+      </div>
+      ${p.notes?'<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">'+p.notes+'</div>':''}
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn btn-sm btn-ghost" onclick="openPrivInvestModal('${p.id}')">Edit</button>
+        <button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deletePrivInvest('${p.id}')">Remove</button>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // DIVIDENDS & TITHE
 // ═══════════════════════════════════════════════════════════════════
@@ -3455,7 +3648,7 @@ function openDividendModal(){
   document.getElementById('dv-notes').value='';
   document.getElementById('dv-date').value=new Date().toISOString().slice(0,10);
   // Suggest symbols from long-term positions and existing dividends
-  const syms=[...new Set([...trades.filter(t=>t.type==='long').map(t=>t.symbol),...dividends.map(d=>d.symbol)])];
+  const syms=[...new Set([...trades.filter(t=>t.type==='long').map(t=>t.symbol),...dividends.map(d=>d.symbol),...privInvest.map(p=>p.name)])];
   document.getElementById('dv-symbol-list').innerHTML=syms.map(sy=>'<option value="'+sy+'">').join('');
   document.getElementById('dividend-modal').classList.add('open');
 }

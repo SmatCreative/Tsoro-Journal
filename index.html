@@ -4074,13 +4074,48 @@ function renderGoals(){
     const hit=current>=target;
     const end=new Date(g.end_date+'T23:59:59'), start=new Date(g.start_date+'T00:00:00');
     const totalDays=Math.max(1,Math.round((end-start)/86400000));
-    const daysLeft=Math.ceil((end-today)/86400000);
-    const expired=daysLeft<0;
+    const daysLeft=Math.max(0,Math.ceil((end-today)/86400000));
+    const daysElapsed=Math.max(0,Math.round((today-start)/86400000));
+    const expired=Math.ceil((end-today)/86400000)<0;
     const elapsedPct=Math.min(Math.max((today-start)/(end-start)*100,0),100);
-    // On track if progress % >= time elapsed %
     const onTrack=hit||pct>=elapsedPct;
     const status=hit?['Achieved 🎉','var(--green)']:expired?['Deadline passed','var(--red)']:onTrack?['On track','var(--green)']:['Behind pace','var(--yellow)'];
     const periodBadge=g.period_type==='quarterly'?'Quarterly':g.period_type==='yearly'?'Yearly':'Custom';
+    const remaining=Math.max(target-current,0);
+
+    // ── Breakdown targets ──────────────────────────────────────────
+    const dailyNeeded   = daysLeft>0 ? remaining/daysLeft : null;
+    const weeklyNeeded  = daysLeft>0 ? remaining/Math.max(daysLeft/7,1/7) : null;
+    const monthlyNeeded = daysLeft>0 ? remaining/Math.max(daysLeft/30.44,1/30.44) : null;
+
+    // Daily target from the start of the goal (ideal pace)
+    const dailyIdeal    = target/totalDays;
+    const weeklyIdeal   = target/(totalDays/7);
+    const monthlyIdeal  = target/(totalDays/30.44);
+
+    // How much gained since start (approximate using current − starting value proxy)
+    const gained        = Math.max(current - (target - (dailyIdeal*totalDays)), 0); // rough
+    const avgPerDay     = daysElapsed>0 ? (current>0?((current-(target-remaining))/daysElapsed):0) : 0;
+
+    // Weeks and months left
+    const weeksLeft     = daysLeft/7;
+    const monthsLeft    = daysLeft/30.44;
+
+    function breakdownCell(label, val, ideal, isLast){
+      if(hit) return `<div style="flex:1;text-align:center;${isLast?'':'border-right:1px solid var(--border)'}">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${label}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--green)">Done</div>
+      </div>`;
+      return `<div style="flex:1;text-align:center;${isLast?'':'border-right:1px solid var(--border)'}">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${label}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent2)">$${fmtMoney(val??0)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">ideal: $${fmtMoney(ideal)}</div>
+      </div>`;
+    }
+
+    const weeksLeftStr  = weeksLeft<1 ? Math.round(weeksLeft*7)+' days' : weeksLeft.toFixed(1)+' wk';
+    const monthsLeftStr = monthsLeft<1 ? Math.round(monthsLeft*30)+' days' : monthsLeft.toFixed(1)+' mo';
+
     return `<div class="card" style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
@@ -4092,7 +4127,7 @@ function renderGoals(){
           <div style="font-size:12px;color:var(--muted);margin-top:3px">
             ${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})} → ${end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
             ${expired?'':' · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'}
-            ${g.notes?' · '+g.notes:''}
+            ${g.notes?' · <em>'+g.notes+'</em>':''}
           </div>
         </div>
         <div style="display:flex;gap:5px">
@@ -4100,6 +4135,8 @@ function renderGoals(){
           <button class="btn btn-sm btn-danger" onclick="deleteGoal('${g.id}')">${IC.trash||'✕'}</button>
         </div>
       </div>
+
+      <!-- Progress bar -->
       <div style="margin-top:14px">
         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
           <span style="font-weight:600">$${fmtMoney(current)} <span style="color:var(--muted);font-weight:400">of $${fmtMoney(target)}</span></span>
@@ -4107,10 +4144,46 @@ function renderGoals(){
         </div>
         <div style="height:10px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative">
           <div style="height:100%;width:${pct.toFixed(1)}%;border-radius:6px;background:${hit?'linear-gradient(90deg,#10b981,#34d399)':'linear-gradient(90deg,#004aad,#5098e8)'};transition:width .4s"></div>
-          ${!hit&&!expired?`<div title="Where you should be by today to stay on pace" style="position:absolute;top:-2px;bottom:-2px;left:${elapsedPct.toFixed(1)}%;width:2px;background:var(--muted2)"></div>`:''}
+          ${!hit&&!expired?`<div title="Ideal pace marker" style="position:absolute;top:-2px;bottom:-2px;left:${elapsedPct.toFixed(1)}%;width:2px;background:var(--muted2)"></div>`:''}
         </div>
-        ${!hit?`<div style="font-size:11px;color:var(--muted);margin-top:6px">$${fmtMoney(Math.max(target-current,0))} to go${!expired&&daysLeft>0?' · need ~$'+fmtMoney(Math.max(target-current,0)/daysLeft)+'/day to hit the deadline':''}</div>`:''}
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px">
+          <span>$${fmtMoney(remaining)} remaining</span>
+          ${!expired&&!hit?`<span>${daysElapsed} days elapsed · ${daysLeft} left</span>`:''}
+        </div>
       </div>
+
+      <!-- Breakdown targets -->
+      <div style="margin-top:16px;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden">
+        <div style="background:var(--surface2);padding:7px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)">
+          Target breakdown — to reach goal by deadline
+        </div>
+        <div style="display:flex;padding:14px 8px">
+          ${breakdownCell('Daily',dailyNeeded,dailyIdeal,false)}
+          ${breakdownCell('Weekly',weeklyNeeded,weeklyIdeal,false)}
+          ${breakdownCell('Monthly',monthlyNeeded,monthlyIdeal,true)}
+        </div>
+      </div>
+
+      <!-- Pace summary -->
+      ${!hit&&!expired?`<div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
+        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Weeks left</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px">${weeksLeftStr}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Months left</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px">${monthsLeftStr}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total days</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px">${totalDays}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Ideal daily</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--accent2)">$${fmtMoney(dailyIdeal)}</div>
+        </div>
+      </div>`:''}
+      ${hit?`<div style="margin-top:10px;background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:var(--r-sm);padding:12px 16px;font-size:13px;color:var(--green);font-weight:600;text-align:center">🎉 Goal achieved! Your account of $${fmtMoney(current)} has surpassed the $${fmtMoney(target)} target.</div>`:''}
     </div>`;
   }).join('');
 }

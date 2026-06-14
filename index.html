@@ -457,6 +457,30 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             <canvas id="daily-chart" height="160"></canvas>
           </div>
         </div>
+        <!-- Market Sessions + Position Size Calculator -->
+        <div class="grid-2" style="margin-bottom:16px">
+          <div class="card" id="sessions-card">
+            <div class="card-header">
+              <div class="card-title">Market Sessions</div>
+              <span id="sessions-clock" style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums"></span>
+            </div>
+            <div id="sessions-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Position Size Calculator</div><button class="btn btn-ghost btn-sm" onclick="openPosCalc()">Open full ↗</button></div>
+            <div id="psc-mini" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Account Balance ($)</label><input class="form-input" id="psc-bal" type="number" placeholder="e.g. 100" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
+              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Risk %</label><input class="form-input" id="psc-risk" type="number" placeholder="1" value="1" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
+              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Entry Price</label><input class="form-input" id="psc-entry" type="number" placeholder="e.g. 1.2345" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
+              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Stop Loss Price</label><input class="form-input" id="psc-sl" type="number" placeholder="e.g. 1.2300" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
+              <div style="grid-column:1/-1;background:var(--surface2);border-radius:var(--r-sm);padding:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risk $</div><div id="psc-risk-usd" style="font-size:16px;font-weight:700;color:var(--red)">—</div></div>
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Units</div><div id="psc-units" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Lots (Forex)</div><div id="psc-lots" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="grid-2">
           <div class="card"><div class="card-header"><div class="card-title">P&amp;L by Asset</div></div><div id="asset-bars" class="bar-list"></div></div>
           <div class="card">
@@ -1333,6 +1357,78 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Position Size Calculator Modal -->
+<div class="overlay" id="pos-calc-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <div class="modal-title">Position Size Calculator</div>
+      <button class="modal-close" onclick="document.getElementById('pos-calc-modal').classList.remove('open')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--muted2);margin:0 0 18px">Never risk more than you plan. Enter your account details and stop loss — get the exact position size to stay within your risk limit.</p>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Account Balance ($)</label>
+        <input class="form-input" id="psc2-bal" type="number" step="any" placeholder="e.g. 500" oninput="calcPosSizeFull()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Risk per Trade (%)</label>
+        <input class="form-input" id="psc2-risk" type="number" step="any" value="1" placeholder="1" oninput="calcPosSizeFull()">
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          ${[0.5,1,2,3].map(v=>`<button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=${v};calcPosSizeFull()">${v}%</button>`).join('')}
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Entry Price</label>
+        <input class="form-input" id="psc2-entry" type="number" step="any" placeholder="e.g. 1.2345" oninput="calcPosSizeFull()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stop Loss Price</label>
+        <input class="form-input" id="psc2-sl" type="number" step="any" placeholder="e.g. 1.2300" oninput="calcPosSizeFull()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Take Profit Price <span class="opt">(optional)</span></label>
+        <input class="form-input" id="psc2-tp" type="number" step="any" placeholder="e.g. 1.2450" oninput="calcPosSizeFull()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pip Value ($ per pip per lot)</label>
+        <input class="form-input" id="psc2-pip" type="number" step="any" value="10" placeholder="10" oninput="calcPosSizeFull()">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Forex standard: $10/pip/lot. Adjust for instrument.</div>
+      </div>
+    </div>
+    <!-- Results -->
+    <div style="background:var(--surface2);border-radius:var(--r-sm);padding:16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px">
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Risk $</div>
+        <div id="psc2-risk-usd" style="font-size:20px;font-weight:700;color:var(--red)">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">SL (pips)</div>
+        <div id="psc2-pips" style="font-size:20px;font-weight:700">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Lots (Forex)</div>
+        <div id="psc2-lots" style="font-size:20px;font-weight:700;color:var(--accent2)">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Units</div>
+        <div id="psc2-units" style="font-size:20px;font-weight:700;color:var(--accent2)">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">R:R Ratio</div>
+        <div id="psc2-rr" style="font-size:20px;font-weight:700;color:var(--green)">—</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Potential Profit</div>
+        <div id="psc2-profit" style="font-size:20px;font-weight:700;color:var(--green)">—</div>
+      </div>
+    </div>
+    <div id="psc2-verdict" style="display:none;border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px"></div>
+    <div class="form-row">
+      <button type="button" class="btn btn-ghost" onclick="document.getElementById('pos-calc-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Capital Modal -->
 <div class="overlay" id="capital-modal">
   <div class="modal" style="max-width:460px">
@@ -1921,6 +2017,8 @@ function filtered(type,search,market,exchange,dir,status){ return allTrades().fi
 
 // ── Dashboard ──────────────────────────────────────────────────────
 function renderDashboard(){
+  startSessionsTicker();
+  calcPosSize();
   const closed=trades.filter(t=>t.status==='closed');
   const allPnL=closed.map(t=>calcPnL(t)||0);
   const totalPnL=allPnL.reduce((s,v)=>s+v,0);
@@ -3446,6 +3544,157 @@ const CURRENCIES_FULL={
 
 function renderAll(){ renderPage(document.querySelector('.page.active')?.id?.replace('page-','')||'dashboard'); }
 window.addEventListener('resize',()=>{if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();});
+
+// ═══════════════════════════════════════════════════════════════════
+// MARKET SESSIONS
+// ═══════════════════════════════════════════════════════════════════
+const SESSIONS = [
+  { name:'Sydney',   open:21, close:6,  color:'#6366f1', tz:'Australia/Sydney',   flag:'🇦🇺' },
+  { name:'Tokyo',    open:0,  close:9,  color:'#f59e0b', tz:'Asia/Tokyo',         flag:'🇯🇵' },
+  { name:'London',   open:8,  close:17, color:'#10b981', tz:'Europe/London',      flag:'🇬🇧' },
+  { name:'New York', open:13, close:22, color:'#ef4444', tz:'America/New_York',   flag:'🇺🇸' },
+];
+
+function sessionIsOpen(s, nowUtc){
+  // nowUtc: Date object — compare against UTC hour+minute as fractional hour
+  const utcH = nowUtc.getUTCHours() + nowUtc.getUTCMinutes()/60;
+  if(s.open < s.close) return utcH >= s.open && utcH < s.close;
+  // Crosses midnight (Sydney: 21–06 UTC)
+  return utcH >= s.open || utcH < s.close;
+}
+
+function minutesUntil(targetUtcH, nowUtc){
+  const nowMin = nowUtc.getUTCHours()*60 + nowUtc.getUTCMinutes();
+  const tgtMin = Math.floor(targetUtcH)*60 + Math.round((targetUtcH%1)*60);
+  let diff = tgtMin - nowMin;
+  if(diff <= 0) diff += 1440;
+  return diff;
+}
+
+function renderSessions(){
+  const grid = document.getElementById('sessions-grid');
+  const clock = document.getElementById('sessions-clock');
+  if(!grid) return;
+  const now = new Date();
+  // UTC clock
+  clock.textContent = now.toUTCString().slice(17,22) + ' UTC';
+
+  grid.innerHTML = SESSIONS.map(s => {
+    const open = sessionIsOpen(s, now);
+    const minsTill = open
+      ? minutesUntil(s.close, now)
+      : minutesUntil(s.open, now);
+    const hrs  = Math.floor(minsTill/60);
+    const mins = minsTill%60;
+    const countdown = hrs ? `${hrs}h ${mins}m` : `${mins}m`;
+    const localTime = now.toLocaleTimeString('en-US',{timeZone:s.tz,hour:'2-digit',minute:'2-digit',hour12:true});
+    return `<div style="border:1.5px solid ${open?s.color:'var(--border)'};border-radius:var(--r-sm);padding:10px 12px;background:${open?s.color+'18':'var(--surface2)'};transition:all .3s">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:12px;font-weight:600">${s.flag} ${s.name}</span>
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${open?s.color:'var(--surface3,var(--border))'};color:${open?'#fff':'var(--muted)'}">${open?'LIVE':'CLOSED'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted2)">${localTime}</div>
+      <div style="font-size:11px;color:${open?s.color:'var(--muted)'};margin-top:3px">${open?'Closes in '+countdown:'Opens in '+countdown}</div>
+    </div>`;
+  }).join('');
+
+  // Overlap note
+  const openSessions = SESSIONS.filter(s=>sessionIsOpen(s,now));
+  if(openSessions.length>=2){
+    const names = openSessions.map(s=>s.name).join(' + ');
+    grid.insertAdjacentHTML('beforeend',`<div style="grid-column:1/-1;background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:var(--r-sm);padding:8px 12px;font-size:11px;color:var(--green);font-weight:600">⚡ ${names} overlap — highest liquidity window</div>`);
+  }
+}
+
+let _sessionsTimer = null;
+function startSessionsTicker(){
+  renderSessions();
+  if(_sessionsTimer) clearInterval(_sessionsTimer);
+  _sessionsTimer = setInterval(()=>{
+    if(document.getElementById('page-dashboard').classList.contains('active')) renderSessions();
+    else { clearInterval(_sessionsTimer); _sessionsTimer=null; }
+  }, 30000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// POSITION SIZE CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function openPosCalc(){
+  // Sync mini-calc values into full modal
+  ['bal','risk','entry','sl'].forEach(k=>{
+    const mini=document.getElementById('psc-'+k);
+    const full=document.getElementById('psc2-'+k);
+    if(mini&&full&&mini.value) full.value=mini.value;
+  });
+  calcPosSizeFull();
+  document.getElementById('pos-calc-modal').classList.add('open');
+}
+document.getElementById('pos-calc-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open');});
+
+function calcPosSize(){
+  const bal    = parseFloat(document.getElementById('psc-bal').value);
+  const riskPct= parseFloat(document.getElementById('psc-risk').value)||1;
+  const entry  = parseFloat(document.getElementById('psc-entry').value);
+  const sl     = parseFloat(document.getElementById('psc-sl').value);
+  const riskUsd= document.getElementById('psc-risk-usd');
+  const unitsEl= document.getElementById('psc-units');
+  const lotsEl = document.getElementById('psc-lots');
+  if(isNaN(bal)||isNaN(entry)||isNaN(sl)||entry===sl){
+    riskUsd.textContent='—'; unitsEl.textContent='—'; lotsEl.textContent='—'; return;
+  }
+  const risk$   = bal*(riskPct/100);
+  const slDist  = Math.abs(entry-sl);
+  const units   = risk$/slDist;
+  const lots    = units/100000;
+  riskUsd.textContent  = '$'+fmtMoney(risk$);
+  unitsEl.textContent  = Math.round(units).toLocaleString();
+  lotsEl.textContent   = lots.toFixed(2)+' lots';
+}
+
+function calcPosSizeFull(){
+  const bal    = parseFloat(document.getElementById('psc2-bal').value);
+  const riskPct= parseFloat(document.getElementById('psc2-risk').value)||1;
+  const entry  = parseFloat(document.getElementById('psc2-entry').value);
+  const sl     = parseFloat(document.getElementById('psc2-sl').value);
+  const tp     = parseFloat(document.getElementById('psc2-tp').value);
+  const pipVal = parseFloat(document.getElementById('psc2-pip').value)||10;
+  const set=(id,v)=>{ document.getElementById(id).textContent=v; };
+  if(isNaN(bal)||isNaN(entry)||isNaN(sl)||entry===sl){
+    ['psc2-risk-usd','psc2-pips','psc2-lots','psc2-units','psc2-rr','psc2-profit'].forEach(id=>set(id,'—'));
+    document.getElementById('psc2-verdict').style.display='none'; return;
+  }
+  const risk$   = bal*(riskPct/100);
+  const slDist  = Math.abs(entry-sl);
+  const pips    = slDist*10000; // standard forex pip calc
+  const lots    = (risk$/(pips*pipVal));
+  const units   = lots*100000;
+  set('psc2-risk-usd','$'+fmtMoney(risk$));
+  set('psc2-pips', pips.toFixed(1));
+  set('psc2-lots', lots.toFixed(2));
+  set('psc2-units', Math.round(units).toLocaleString());
+  // R:R
+  const verdict = document.getElementById('psc2-verdict');
+  if(!isNaN(tp)&&tp!==entry){
+    const tpDist = Math.abs(tp-entry);
+    const rr     = tpDist/slDist;
+    const profit = risk$*rr;
+    set('psc2-rr','1:'+rr.toFixed(2));
+    set('psc2-profit','$'+fmtMoney(profit));
+    verdict.style.display='block';
+    if(rr>=2){
+      verdict.style.cssText='display:block;background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--green)';
+      verdict.textContent='✓ Good setup — R:R of 1:'+rr.toFixed(2)+' means potential reward exceeds risk.';
+    } else if(rr>=1){
+      verdict.style.cssText='display:block;background:rgba(245,158,11,.1);border:1px solid var(--yellow);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--yellow)';
+      verdict.textContent='⚠ Acceptable R:R of 1:'+rr.toFixed(2)+' — consider widening TP for a better ratio.';
+    } else {
+      verdict.style.cssText='display:block;background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-bottom:14px;color:var(--red)';
+      verdict.textContent='✕ Poor R:R of 1:'+rr.toFixed(2)+' — you risk more than you stand to gain. Move TP further or SL tighter.';
+    }
+  } else {
+    set('psc2-rr','—'); set('psc2-profit','—'); verdict.style.display='none';
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // SECURITIES ANALYSIS ENGINE

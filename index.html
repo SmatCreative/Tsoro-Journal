@@ -1950,7 +1950,254 @@ function openExposureCard(){
     `<div class="perf-row"><span class="perf-key" style="font-weight:600">Wallet Cash (USD)</span><span class="perf-val pnl-pos">$${fmtMoney(walletCashUSD)}</span></div>`+
     `<div class="perf-row"><span class="perf-key" style="font-weight:600">Total Account (USD)</span><span class="perf-val" style="color:var(--accent2)">$${fmtMoney(deployedUSD+walletCashUSD)}</span></div></div>`;
 }
-function renderAnalytics(){ const closed=trades.filter(t=>t.status==='closed');const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];const byMarket={},byExchange={},byStrategy={},byDir={},byDow={};closed.forEach(t=>{const p=calcPnL(t)||0;(byMarket[t.market]=byMarket[t.market]||{pnl:0,count:0,wins:0}).pnl+=p;byMarket[t.market].count++;if(p>0)byMarket[t.market].wins++;if(t.exchange){(byExchange[t.exchange]=byExchange[t.exchange]||{pnl:0,count:0,wins:0}).pnl+=p;byExchange[t.exchange].count++;if(p>0)byExchange[t.exchange].wins++;}const s=t.strategy||'No Strategy';(byStrategy[s]=byStrategy[s]||{pnl:0,count:0,wins:0}).pnl+=p;byStrategy[s].count++;if(p>0)byStrategy[s].wins++;(byDir[t.direction]=byDir[t.direction]||{pnl:0,count:0,wins:0}).pnl+=p;byDir[t.direction].count++;if(p>0)byDir[t.direction].wins++;const dow=DAYS[new Date(t.entryDate||Date.now()).getDay()];(byDow[dow]=byDow[dow]||{pnl:0,count:0,wins:0}).pnl+=p;byDow[dow].count++;if(p>0)byDow[dow].wins++;});function perfCard(title,entries){const rows=entries.length?entries.map(([k,v])=>`<div class="perf-row"><span class="perf-key">${k}</span><div style="text-align:right"><div class="perf-val ${pnlClass(v.pnl)}">${pnlStr(v.pnl)}</div><div style="font-size:11px;color:var(--muted)">${v.count} trades · ${v.count?((v.wins/v.count)*100).toFixed(0):0}% WR</div></div></div>`).join(''):'<div style="color:var(--muted);padding:16px;font-size:13px">No data</div>';return `<div class="card"><div class="card-header"><div class="card-title">${title}</div></div>${rows}</div>`;}const allPnL=closed.map(t=>calcPnL(t)||0);const wins2=allPnL.filter(v=>v>0),losses2=allPnL.filter(v=>v<0);const grossP=wins2.reduce((s,v)=>s+v,0),grossL=Math.abs(losses2.reduce((s,v)=>s+v,0)),pf=grossL?grossP/grossL:null;const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();document.getElementById('analytics-grid').innerHTML=openExposureCard()+perfCard('By Market',Object.entries(byMarket).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('By Exchange',Object.entries(byExchange).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('By Strategy',Object.entries(byStrategy).sort((a,b)=>b[1].pnl-a[1].pnl))+perfCard('Long vs Short',Object.entries(byDir))+perfCard('By Day of Week',DAYS.map(d=>[d,byDow[d]||{pnl:0,count:0,wins:0}]).filter(([,v])=>v.count>0))+`<div class="card"><div class="card-header"><div class="card-title">Summary Statistics</div></div>${[['Total Closed',closed.length],['Win Rate',closed.length?((wins2.length/closed.length)*100).toFixed(1)+'%':'—'],['Profit Factor',pf!=null?pf.toFixed(2):'—'],['Gross Profit','+'+fmtNum(grossP)],['Gross Loss','−'+fmtNum(grossL)],['Max Drawdown','−'+fmtNum(maxDD)],['Best Trade',wins2.length?'+'+fmtNum(Math.max(...wins2)):'—'],['Worst Trade',losses2.length?fmtNum(Math.min(...losses2)):'—']].map(([k,v])=>`<div class="perf-row"><span class="perf-key">${k}</span><span class="perf-val">${v}</span></div>`).join('')}</div>`; }
+function renderAnalytics(){
+  const closed=trades.filter(t=>t.status==='closed');
+  const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // ── Core stats ──────────────────────────────────────────────────
+  const pnls=closed.map(t=>calcPnL(t)||0);
+  const wins=pnls.filter(v=>v>0), losses=pnls.filter(v=>v<0);
+  const grossP=wins.reduce((s,v)=>s+v,0);
+  const grossL=Math.abs(losses.reduce((s,v)=>s+v,0));
+  const pf=grossL?grossP/grossL:null;
+  const wr=closed.length?wins.length/closed.length*100:0;
+  const noSLCount=closed.filter(t=>!t.sl).length;
+  const bestPnL=wins.length?Math.max(...wins):null;
+  const worstPnL=losses.length?Math.min(...losses):null;
+  const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();
+  const avgWin=wins.length?grossP/wins.length:0;
+  const avgLoss=losses.length?grossL/losses.length:0;
+
+  // ── Per-trade issue detection ───────────────────────────────────
+  function detectIssues(t){
+    const flags=[];
+    if(!t.sl) flags.push({level:'warn',text:'No stop loss'});
+    if(t.tp&&t.direction==='Long'&&Number(t.tp)<Number(t.entry)) flags.push({level:'danger',text:'TP below entry on Long'});
+    if(t.tp&&t.direction==='Short'&&Number(t.tp)>Number(t.entry)) flags.push({level:'danger',text:'TP above entry on Short'});
+    const qtys=closed.map(x=>Number(x.qty)).filter(Boolean).sort((a,b)=>a-b);
+    const med=qtys[Math.floor(qtys.length/2)]||1;
+    if(Number(t.qty)>med*1.8) flags.push({level:'warn',text:'Oversized vs median'});
+    if(t.sl&&t.tp&&t.entry){
+      const risk=Math.abs(Number(t.entry)-Number(t.sl));
+      const reward=Math.abs(Number(t.tp)-Number(t.entry));
+      if(risk>0&&reward/risk<1) flags.push({level:'warn',text:'R:R below 1:1'});
+    }
+    if(!t.tp) flags.push({level:'info',text:'No take profit set'});
+    return flags;
+  }
+
+  // ── Pattern detection ───────────────────────────────────────────
+  function detectPatterns(){
+    const pts=[];
+    // Revenge trading: same symbol multiple times same day
+    const byDaySym={};
+    [...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{
+      const k=(t.entryDate||'').slice(0,10)+'||'+t.symbol;
+      (byDaySym[k]=byDaySym[k]||[]).push(t);
+    });
+    Object.values(byDaySym).forEach(ts=>{
+      if(ts.length>=2){
+        const lossFirst=calcPnL(ts[0])<0;
+        pts.push({level:'warn',title:'Possible revenge trading detected',text:`${ts[0].symbol} was traded ${ts.length}x on the same day${lossFirst?' after an initial loss':''}. Re-entering a market immediately after a loss is usually driven by emotion, not edge.`});
+      }
+    });
+    // No SL habit
+    if(noSLCount>=Math.ceil(closed.length*0.4))
+      pts.push({level:'danger',title:'Stop loss absent on most trades',text:`${noSLCount} of ${closed.length} trades had no stop loss. This is your biggest structural risk — a single unprotected large move can erase many winning trades.`});
+    // One trade dominates losses
+    if(worstPnL!=null&&grossL>0&&Math.abs(worstPnL)/grossL>0.5){
+      const t=closed[pnls.indexOf(worstPnL)];
+      pts.push({level:'warn',title:'Single trade dominates losses',text:`${t?t.symbol:'One trade'} represents ${(Math.abs(worstPnL)/grossL*100).toFixed(0)}% of all your losses. This is a position sizing or missing stop-loss problem.`});
+    }
+    // Win rate + PF both below threshold
+    if(wr<40&&(pf==null||pf<1))
+      pts.push({level:'danger',title:'Win rate and profit factor both critical',text:`At ${wr.toFixed(1)}% win rate you need an average winner ${((1-wr/100)/(wr/100)).toFixed(1)}x larger than your average loser just to break even. Your current avg win ($${fmtMoney(avgWin)}) vs avg loss ($${fmtMoney(avgLoss)}) does not meet this.`});
+    // Direction bias
+    const dirLoss={};
+    closed.forEach(t=>{if((calcPnL(t)||0)<0)(dirLoss[t.direction]=(dirLoss[t.direction]||0)+1);});
+    Object.entries(dirLoss).forEach(([dir,count])=>{
+      if(count>=3&&count>=closed.length*0.55) pts.push({level:'warn',title:`${dir} trade entries need review`,text:`${count} of your losses are ${dir} trades. Review your ${dir.toLowerCase()} entry signals — there may be a systematic flaw in how you identify ${dir.toLowerCase()} setups.`});
+    });
+    // Positive: proper RR trades
+    const withRR=closed.filter(t=>t.sl&&t.tp&&t.entry);
+    if(withRR.length) pts.push({level:'good',title:`${withRR.length} trade${withRR.length>1?'s had':'  had'} proper SL + TP`,text:'These are the right habits — SL protects capital, TP enforces discipline. Expand this to every single trade.'});
+    return pts;
+  }
+
+  // ── What is working ─────────────────────────────────────────────
+  function detectPositives(){
+    const pos=[];
+    const withRR=closed.filter(t=>t.sl&&t.tp&&t.entry);
+    if(withRR.length) pos.push(`${withRR.length} trade${withRR.length>1?'s':''}  had both SL and TP defined — correct process`);
+    const smallForex=closed.filter(t=>Number(t.qty)<=0.01&&t.market==='Forex');
+    if(smallForex.length) pos.push('Forex positions use 0.01 lots — appropriate micro sizing for a small account');
+    const ltOpen=allTrades().filter(t=>t.type==='long'&&t.status==='open');
+    if(ltOpen.length) pos.push(`${ltOpen.length} long-term position${ltOpen.length>1?'s':''} open — good portfolio diversification alongside active trading`);
+    if(avgWin>0&&avgLoss>0&&avgWin>avgLoss) pos.push(`Average winner ($${fmtMoney(avgWin)}) exceeds average loser ($${fmtMoney(avgLoss)}) — good when win rate improves`);
+    return pos;
+  }
+
+  // ── Breakdown maps ──────────────────────────────────────────────
+  const byMarket={},byExchange={},byStrategy={},byDir={},byDow={};
+  closed.forEach(t=>{
+    const p=calcPnL(t)||0;
+    (byMarket[t.market]=byMarket[t.market]||{pnl:0,count:0,wins:0}).pnl+=p; byMarket[t.market].count++; if(p>0)byMarket[t.market].wins++;
+    if(t.exchange){(byExchange[t.exchange]=byExchange[t.exchange]||{pnl:0,count:0,wins:0}).pnl+=p; byExchange[t.exchange].count++; if(p>0)byExchange[t.exchange].wins++;}
+    const s=t.strategy||'No Strategy';(byStrategy[s]=byStrategy[s]||{pnl:0,count:0,wins:0}).pnl+=p; byStrategy[s].count++; if(p>0)byStrategy[s].wins++;
+    (byDir[t.direction]=byDir[t.direction]||{pnl:0,count:0,wins:0}).pnl+=p; byDir[t.direction].count++; if(p>0)byDir[t.direction].wins++;
+    const dow=DAYS[new Date(t.entryDate||Date.now()).getDay()];
+    (byDow[dow]=byDow[dow]||{pnl:0,count:0,wins:0}).pnl+=p; byDow[dow].count++; if(p>0)byDow[dow].wins++;
+  });
+
+  function perfCard(title,entries){
+    const rows=entries.length?entries.map(([k,v])=>`<div class="perf-row"><span class="perf-key">${k}</span><div style="text-align:right"><div class="perf-val ${pnlClass(v.pnl)}">${pnlStr(v.pnl)}</div><div style="font-size:11px;color:var(--muted)">${v.count} trades · ${v.count?((v.wins/v.count)*100).toFixed(0):0}% WR</div></div></div>`).join(''):'<div style="color:var(--muted);padding:16px;font-size:13px">No data</div>';
+    return '<div class="card"><div class="card-header"><div class="card-title">'+title+'</div></div>'+rows+'</div>';
+  }
+
+  // ── Chips + alert helpers ───────────────────────────────────────
+  function chip(f){
+    const s={danger:'rgba(224,16,16,.14);color:var(--red)',warn:'rgba(245,158,11,.14);color:var(--yellow)',info:'rgba(26,111,212,.14);color:var(--accent2)',good:'rgba(16,185,129,.14);color:var(--green)'};
+    return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;background:'+( s[f.level]||s.warn)+'">'+f.text+'</span>';
+  }
+  function alertBox(p){
+    const border={danger:'var(--red)',warn:'var(--yellow)',good:'var(--green)'};
+    const bg={danger:'rgba(224,16,16,.07)',warn:'rgba(245,158,11,.07)',good:'rgba(16,185,129,.07)'};
+    return '<div style="border-left:3px solid '+(border[p.level]||border.warn)+';background:'+(bg[p.level]||bg.warn)+';border-radius:0 var(--r-sm) var(--r-sm) 0;padding:10px 14px;margin-bottom:8px">'
+      +'<div style="font-weight:600;font-size:13px;margin-bottom:2px">'+p.title+'</div>'
+      +'<div style="font-size:12px;color:var(--muted2)">'+p.text+'</div></div>';
+  }
+
+  // ── Trade deep dive rows ─────────────────────────────────────────
+  const sortedClosed=[...closed].sort((a,b)=>new Date(b.entryDate)-new Date(a.entryDate));
+  const tradeRows=sortedClosed.map(t=>{
+    const p=calcPnL(t)||0;
+    const flags=detectIssues(t);
+    const rr=(t.sl&&t.tp&&t.entry)?((Math.abs(Number(t.tp)-Number(t.entry))/Math.abs(Number(t.entry)-Number(t.sl))).toFixed(1)+'R'):'—';
+    const hold=(t.entryDate&&t.exitDate)?(()=>{const ms=new Date(t.exitDate)-new Date(t.entryDate);const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);return h>24?Math.floor(h/24)+'d '+(h%24)+'h':h+'h '+m+'m';})():'—';
+    const pnlPct=(t.sl&&t.entry&&Number(t.sl)>0)?((Math.abs(p)/(Number(t.entry)*Number(t.qty)))*100).toFixed(1)+'%':'';
+    return '<div style="padding:14px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">'
+        +'<div style="min-width:130px"><div style="font-weight:700;font-size:13px">'+t.symbol+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:1px">'+(t.market||'')+' · '+(t.entryDate||'').slice(0,10)+'</div></div>'
+        +'<span class="badge '+(t.direction==='Long'?'badge-long':'badge-short')+'" style="font-size:11px">'+t.direction+'</span>'
+        +'<div style="flex:1;min-width:110px"><div style="font-size:11px;color:var(--muted)">Entry → Exit</div>'
+        +'<div style="font-size:12px;font-weight:500">'+fmtNum(t.entry)+' → '+(t.exit!=null?fmtNum(t.exit):'<span style="color:var(--yellow)">open</span>')+'</div></div>'
+        +'<div style="text-align:center;min-width:44px"><div style="font-size:11px;color:var(--muted)">Qty</div><div style="font-size:12px;font-weight:500">'+fmtNum(t.qty)+'</div></div>'
+        +'<div style="text-align:center;min-width:40px"><div style="font-size:11px;color:var(--muted)">R:R</div><div style="font-size:12px;font-weight:600;color:'+(rr==='—'?'var(--muted)':'var(--accent2)')+'">'+rr+'</div></div>'
+        +'<div style="text-align:center;min-width:52px"><div style="font-size:11px;color:var(--muted)">Hold time</div><div style="font-size:12px">'+hold+'</div></div>'
+        +'<div style="text-align:right;min-width:60px"><div class="'+pnlClass(p)+'" style="font-size:16px;font-weight:700">'+(p>=0?'+':'')+fmtMoney(p)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted)">'+(t.currency||'USD')+(pnlPct?' · '+pnlPct:'')+'</div></div>'
+      +'</div>'
+      +(flags.length?'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">'+flags.map(chip).join('')+'</div>'
+        :'<div style="margin-top:6px;font-size:11px;color:var(--green)">✓ No issues detected</div>')
+      +(t.notes?'<div style="font-size:11px;color:var(--muted2);margin-top:4px;font-style:italic">'+t.notes+'</div>':'')
+    +'</div>';
+  }).join('');
+
+  const patterns=detectPatterns();
+  const positives=detectPositives();
+
+  // ── Build HTML ──────────────────────────────────────────────────
+  const wrCol=wr>=50?'var(--green)':wr>=35?'var(--yellow)':'var(--red)';
+  const pfCol=pf!=null&&pf>=1?'var(--green)':pf!=null&&pf>=0.5?'var(--yellow)':'var(--red)';
+  const netPnL=grossP-grossL;
+
+  const statsRow='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:12px;grid-column:1/-1">'
+    +[{l:'Win Rate',v:closed.length?wr.toFixed(1)+'%':'—',col:wrCol},
+      {l:'Net P&L',v:(netPnL>=0?'+':'')+'$'+fmtMoney(netPnL),col:netPnL>=0?'var(--green)':'var(--red)'},
+      {l:'Profit Factor',v:pf!=null?pf.toFixed(3):'—',col:pfCol},
+      {l:'Max Drawdown',v:'−$'+fmtMoney(maxDD),col:'var(--red)'},
+      {l:'No SL Trades',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
+      {l:'Avg Winner',v:wins.length?'+$'+fmtMoney(avgWin):'—',col:'var(--green)'},
+      {l:'Avg Loser',v:losses.length?'−$'+fmtMoney(avgLoss):'—',col:'var(--red)'},
+      {l:'Closed Trades',v:closed.length,col:'var(--text)'},
+    ].map(s=>'<div class="stat-card"><div class="stat-label">'+s.l+'</div><div class="stat-value" style="font-size:19px;color:'+s.col+'">'+s.v+'</div></div>').join('')
+  +'</div>';
+
+  const chartCard='<div class="card" style="grid-column:1/-1">'
+    +'<div class="card-header"><div class="card-title">P&L per trade</div><div style="font-size:11px;color:var(--muted)">Each bar = one closed trade · green = profit · red = loss</div></div>'
+    +'<canvas id="an-pnl-chart" height="150"></canvas></div>';
+
+  const deepDive='<div class="card" style="grid-column:1/-1">'
+    +'<div class="card-header"><div class="card-title">Trade deep dive</div>'
+    +'<div style="font-size:11px;color:var(--muted)">'+closed.length+' closed trades · auto-flagged issues</div></div>'
+    +(tradeRows||'<div style="color:var(--muted);padding:24px;text-align:center">No closed trades yet</div>')
+    +'</div>';
+
+  const patternsCard=patterns.length?'<div class="card" style="grid-column:1/-1">'
+    +'<div class="card-header"><div class="card-title">Pattern analysis</div>'
+    +'<div style="font-size:11px;color:var(--muted)">'+patterns.length+' pattern'+( patterns.length>1?'s':'')+' detected</div></div>'
+    +patterns.map(alertBox).join('')+'</div>':'';
+
+  const posCard=positives.length?'<div class="card" style="grid-column:1/-1">'
+    +'<div class="card-header"><div class="card-title">What\'s working</div></div>'
+    +positives.map(p=>'<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">'
+      +'<span style="color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px">✓</span>'
+      +'<span style="color:var(--muted2)">'+p+'</span></div>').join('')
+    +'</div>':'';
+
+  const summaryCard='<div class="card"><div class="card-header"><div class="card-title">Summary statistics</div></div>'
+    +[['Total closed',closed.length],['Win rate',closed.length?wr.toFixed(1)+'%':'—'],['Profit factor',pf!=null?pf.toFixed(2):'—'],
+      ['Gross profit','+$'+fmtMoney(grossP)],['Gross loss','−$'+fmtMoney(grossL)],['Max drawdown','−$'+fmtMoney(maxDD)],
+      ['Best trade',bestPnL!=null?'+$'+fmtMoney(bestPnL):'—'],['Worst trade',worstPnL!=null?'−$'+fmtMoney(Math.abs(worstPnL)):'—'],
+      ['Avg winner',wins.length?'+$'+fmtMoney(avgWin):'—'],['Avg loser',losses.length?'−$'+fmtMoney(avgLoss):'—'],
+    ].map(([k,v])=>'<div class="perf-row"><span class="perf-key">'+k+'</span><span class="perf-val">'+v+'</span></div>').join('')
+    +'</div>';
+
+  document.getElementById('analytics-grid').innerHTML =
+    statsRow + chartCard + deepDive + patternsCard + posCard + openExposureCard() +
+    perfCard('By Market', Object.entries(byMarket).sort((a,b)=>b[1].pnl-a[1].pnl)) +
+    perfCard('By Exchange', Object.entries(byExchange).sort((a,b)=>b[1].pnl-a[1].pnl)) +
+    perfCard('By Strategy', Object.entries(byStrategy).sort((a,b)=>b[1].pnl-a[1].pnl)) +
+    perfCard('Long vs Short', Object.entries(byDir)) +
+    perfCard('By Day of Week', DAYS.map(d=>[d,byDow[d]||{pnl:0,count:0,wins:0}]).filter(([,v])=>v.count>0)) +
+    summaryCard;
+
+  // ── Draw P&L bar chart ──────────────────────────────────────────
+  setTimeout(()=>{
+    const canvas=document.getElementById('an-pnl-chart'); if(!canvas) return;
+    const sorted2=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
+    const W=canvas.parentElement.clientWidth-44, H=150;
+    canvas.width=W; canvas.height=H;
+    const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+    const vals=sorted2.map(t=>calcPnL(t)||0);
+    const maxAbs=Math.max(...vals.map(Math.abs),0.01);
+    const padL=44,padR=12,padT=10,padB=24;
+    const baseline=padT+(H-padT-padB)/2;
+    const innerW=W-padL-padR;
+    const bw=Math.max(10,Math.floor(innerW/sorted2.length)-4);
+    // grid lines
+    ctx.strokeStyle=themeVal('#1e2f4d','#dce6f2'); ctx.lineWidth=1;
+    [maxAbs,0,-maxAbs].forEach(v=>{
+      const y=baseline-v/maxAbs*(H-padT-padB)/2;
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+      ctx.fillStyle=themeVal('#5a7090','#8da4c0'); ctx.font='10px Inter,system-ui'; ctx.textAlign='right';
+      ctx.fillText((v>0?'+':'')+v.toFixed(2),padL-4,y+3);
+    });
+    // bars
+    sorted2.forEach((t,i)=>{
+      const x=padL+i*(innerW/sorted2.length)+(innerW/sorted2.length-bw)/2;
+      const v=vals[i];
+      const bh=Math.max(3,Math.abs(v)/maxAbs*(H-padT-padB)/2);
+      ctx.fillStyle=v>=0?themeVal('#10b981','#059669'):themeVal('#e01010','#cc0a0a');
+      ctx.beginPath();
+      if(v>=0) ctx.roundRect(x,baseline-bh,bw,bh,2);
+      else ctx.roundRect(x,baseline,bw,bh,2);
+      ctx.fill();
+      // x label
+      if(sorted2.length<=14){
+        ctx.fillStyle=themeVal('#5a7090','#8da4c0'); ctx.font='9px Inter,system-ui'; ctx.textAlign='center';
+        ctx.fillText(t.symbol.slice(0,5), x+bw/2, H-6);
+      }
+    });
+    // end label
+    const lastV=vals[vals.length-1];
+    const lastX=padL+(sorted2.length-1)*(innerW/sorted2.length)+(innerW/sorted2.length)/2;
+    ctx.fillStyle=lastV>=0?themeVal('#10b981','#059669'):themeVal('#e01010','#cc0a0a');
+    ctx.font='600 10px Inter,system-ui'; ctx.textAlign='center';
+    ctx.fillText((lastV>=0?'+':'')+fmtMoney(lastV), lastX, baseline-(lastV>=0?1:-1)*( Math.abs(lastV)/maxAbs*(H-padT-padB)/2+12));
+  },0);
+}
 
 // ── Calendar ───────────────────────────────────────────────────────
 function renderCalendar(){ const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'],DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; document.getElementById('cal-title').textContent=MONTHS[calMonth]+' '+calYear; const byDay={};trades.filter(t=>t.status==='closed').forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const firstDay=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),today=new Date().toISOString().slice(0,10);let html='';DAYS.forEach(d=>{html+=`<div class="cal-day-label">${d}</div>`;});for(let i=0;i<firstDay;i++)html+=`<div class="cal-cell empty"></div>`;for(let d=1;d<=dim;d++){const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const pnl=byDay[key];const cls=(pnl!=null?(pnl>=0?' pos':' neg'):'')+(key===today?' today':'');html+=`<div class="cal-cell${cls}" title="${pnl!=null?pnlStr(pnl):'No trades'}">${d}</div>`;}document.getElementById('cal-wrap').innerHTML=`<div class="cal-grid">${html}</div>`; }

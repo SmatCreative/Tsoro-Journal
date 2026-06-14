@@ -1868,11 +1868,11 @@ function renderDashboard(){
   const avgLoss=losses.length?losses.reduce((s,v)=>s+v,0)/losses.length:null;
   const grossP=wins.reduce((s,v)=>s+v,0),grossL=Math.abs(losses.reduce((s,v)=>s+v,0));
   const pf=grossL?grossP/grossL:null;
-  const openTrades=trades.filter(t=>t.status==='open');
+  const openTrades=allTrades().filter(t=>t.status==='open');
   const open=openTrades.length;
-  // Account-level numbers pulled from Wallet + open positions
+  // Account-level numbers pulled from Wallet + open positions (incl. ZSE/VFSE)
   const walletCashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
-  const deployedUSD=openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
+  const deployedUSD=openTrades.reduce((s,t)=>s+(toUSD((t.exit??t.entry)*t.qty,t.currency)??0),0);
   const accountValueUSD=walletCashUSD+deployedUSD;
   // Hero balance card (gradient, like a banking app's Total Balance)
   const chip=(arrow,lbl,val)=>`<div style="flex:1;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.16);border-radius:14px;padding:12px 16px;backdrop-filter:blur(4px)">
@@ -1905,7 +1905,7 @@ function renderDashboard(){
   const entries=Object.entries(byAsset).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,7);
   const maxAbs=Math.max(...entries.map(([,v])=>Math.abs(v)),1);
   document.getElementById('asset-bars').innerHTML=entries.length?entries.map(([sym,pnl])=>`<div class="bar-row"><div class="bar-label">${sym}</div><div class="bar-track"><div class="bar-fill ${pnl>=0?'pos':'neg'}" style="width:${(Math.abs(pnl)/maxAbs*100).toFixed(1)}%">${Math.abs(pnl)>maxAbs*.18?pnlStr(pnl):''}</div></div><div class="bar-val ${pnlClass(pnl)}">${pnlStr(pnl)}</div></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:28px;font-size:13px">No closed trades yet</div>';
-  const recent=trades.slice(0,6);
+  const recent=allTrades().slice(0,6);
   document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);const c=getColor(t.symbol);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="symbol-icon" style="background:${c}22;color:${c};width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${t.symbol.slice(0,3)}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:600">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
 }
 
@@ -1931,7 +1931,7 @@ function drawDailyChart(closed){ const canvas=document.getElementById('daily-cha
 // Live snapshot of open positions + wallet cash so Analytics is useful
 // even before any trade has been closed
 function openExposureCard(){
-  const open=trades.filter(t=>t.status==='open');
+  const open=allTrades().filter(t=>t.status==='open');
   const walletCashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const rows=open.map(t=>{
     const val=t.entry*t.qty;

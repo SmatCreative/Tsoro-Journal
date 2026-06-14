@@ -1838,19 +1838,24 @@ function populateFilters(){
   ['j-exchange'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML=eOpts;s.value=v;});
 }
 // Bridge: convert ZSE/VFSE localStorage holdings into synthetic open trade objects
-// so they appear in Journal and Securities pages
+// so they appear in Journal and Securities pages.
+// Skip any holding whose symbol already exists in the real Supabase trades array
+// (avoids duplicates when a position is tracked in both systems).
 function zseHoldingsAsTrades(){
   try{
-    return loadZseHoldings().map(h=>({
-      id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
-      market:'Stock', direction:'Long', type:'long', status:'open',
-      entry:h.buyPrice, qty:h.shares,
-      currency:h.exchange==='ZSE'?'ZiG':'USD',
-      entryDate:h.priceDate||new Date().toISOString().slice(0,10),
-      exit:h.currentPrice||null, exitDate:null,
-      notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
-      _synthetic:true
-    }));
+    const realSymbols=new Set(trades.map(t=>t.symbol.toUpperCase()));
+    return loadZseHoldings()
+      .filter(h=>!realSymbols.has(h.symbol.toUpperCase()))
+      .map(h=>({
+        id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
+        market:h.exchange==='ZSE'?'ETF':'Stock', direction:'Long', type:'long', status:'open',
+        entry:h.buyPrice, qty:h.shares,
+        currency:h.exchange==='ZSE'?'ZiG':'USD',
+        entryDate:h.priceDate||new Date().toISOString().slice(0,10),
+        exit:h.currentPrice||null, exitDate:null,
+        notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
+        _synthetic:true
+      }));
   }catch(e){return[];}
 }
 function allTrades(){ return [...trades,...zseHoldingsAsTrades()]; }

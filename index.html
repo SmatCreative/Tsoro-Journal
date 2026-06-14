@@ -547,6 +547,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg>
                 Add Cash
               </button>
+              <button class="btn btn-ghost btn-sm" onclick="openTransferModal()" title="Record a transfer between wallets (with charges)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+                Transfer
+              </button>
               <button class="btn btn-primary btn-sm" onclick="openWalletModal()">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Wallet
@@ -1273,6 +1277,59 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button type="button" class="btn btn-ghost" onclick="closeWalletModal()">Cancel</button>
     </div>
     <div id="w-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div class="overlay" id="transfer-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Transfer Between Wallets</div>
+      <button class="modal-close" onclick="closeTransferModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--muted2);margin:0 0 16px">Record money moved between two wallets. Any difference between sent and received is logged as transfer charges.</p>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">From Wallet</label>
+        <select class="form-select" id="tr-from"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">To Wallet</label>
+        <select class="form-select" id="tr-to"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Sent</label>
+        <input class="form-input" type="number" step="any" min="0" id="tr-sent" placeholder="e.g. 20.00" oninput="calcTransferCharge()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Received</label>
+        <input class="form-input" type="number" step="any" min="0" id="tr-received" placeholder="e.g. 15.00" oninput="calcTransferCharge()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="tr-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="tr-notes" placeholder="e.g. Ecocash to Deriv">
+      </div>
+    </div>
+    <!-- Charge summary -->
+    <div id="tr-charge-summary" style="display:none;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:14px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--muted2)">Transfer charges / fees</span>
+        <span id="tr-charge-val" style="font-weight:700;color:var(--red)"></span>
+      </div>
+      <div id="tr-charge-pct" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted2)">
+      <strong style="color:var(--text)">What this does:</strong> Updates both wallet balances and records a history snapshot for each — so their charts and P&amp;L history stay accurate.
+    </div>
+    <div class="form-row">
+      <button type="button" class="btn btn-primary" id="tr-save-btn" onclick="saveTransfer()">Record Transfer</button>
+      <button type="button" class="btn btn-ghost" onclick="closeTransferModal()">Cancel</button>
+    </div>
+    <div id="tr-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
   </div>
 </div>
 
@@ -2247,6 +2304,81 @@ function openWalletModal(id){
   document.getElementById('wallet-modal').classList.add('open');
 }
 function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); showModalErr('w-error',''); }
+
+function openTransferModal(){
+  // Populate wallet dropdowns
+  const fromSel=document.getElementById('tr-from'), toSel=document.getElementById('tr-to');
+  const opts=wallets.map(w=>`<option value="${w.id}">${w.wallet_name||w.platform} (${w.currency})</option>`).join('');
+  fromSel.innerHTML=opts; toSel.innerHTML=opts;
+  if(wallets.length>1) toSel.selectedIndex=1;
+  document.getElementById('tr-sent').value='';
+  document.getElementById('tr-received').value='';
+  document.getElementById('tr-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tr-notes').value='';
+  document.getElementById('tr-charge-summary').style.display='none';
+  showModalErr('tr-error','');
+  document.getElementById('transfer-modal').classList.add('open');
+}
+function closeTransferModal(){ document.getElementById('transfer-modal').classList.remove('open'); }
+document.getElementById('transfer-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTransferModal();});
+
+function calcTransferCharge(){
+  const sent=parseFloat(document.getElementById('tr-sent').value);
+  const recv=parseFloat(document.getElementById('tr-received').value);
+  const box=document.getElementById('tr-charge-summary');
+  if(!isNaN(sent)&&!isNaN(recv)&&sent>0){
+    const charge=sent-recv;
+    box.style.display=charge>0.001?'block':'none';
+    document.getElementById('tr-charge-val').textContent='−$'+fmtMoney(Math.abs(charge));
+    document.getElementById('tr-charge-pct').textContent=(charge/sent*100).toFixed(2)+'% of amount sent lost to charges';
+  } else { box.style.display='none'; }
+}
+
+async function saveTransfer(){
+  showModalErr('tr-error','');
+  const fromId=document.getElementById('tr-from').value;
+  const toId=document.getElementById('tr-to').value;
+  const sent=parseFloat(document.getElementById('tr-sent').value);
+  const received=parseFloat(document.getElementById('tr-received').value);
+  const date=document.getElementById('tr-date').value;
+  const notes=document.getElementById('tr-notes').value.trim();
+  if(!fromId||!toId){ showModalErr('tr-error','Select both wallets.'); return; }
+  if(fromId===toId){ showModalErr('tr-error','From and To wallets must be different.'); return; }
+  if(isNaN(sent)||sent<=0){ showModalErr('tr-error','Enter a valid amount sent (greater than 0).'); return; }
+  if(isNaN(received)||received<0){ showModalErr('tr-error','Enter a valid amount received (0 or more).'); return; }
+  if(!date){ showModalErr('tr-error','Please set a date.'); return; }
+  const fromW=wallets.find(w=>w.id===fromId);
+  const toW=wallets.find(w=>w.id===toId);
+  if(!fromW||!toW){ showModalErr('tr-error','Wallet not found.'); return; }
+  const charge=sent-received;
+  const newFromBal=Math.max(0,(fromW.balance||0)-sent);
+  const newToBal=(toW.balance||0)+received;
+  const btn=document.getElementById('tr-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  try {
+    const noteFrom=notes?`Transfer to ${toW.wallet_name||toW.platform} · ${notes}`:`Transfer to ${toW.wallet_name||toW.platform}`;
+    const noteTo=notes?`Transfer from ${fromW.wallet_name||fromW.platform} · ${notes}`:`Transfer from ${fromW.wallet_name||fromW.platform}`;
+    // Update from-wallet balance
+    const{error:e1}=await sb.from('wallets').update({balance:newFromBal,updated_at:date,notes:(fromW.notes?fromW.notes+' | ':'')+noteFrom}).eq('id',fromId);
+    if(e1) throw e1;
+    // Update to-wallet balance
+    const{error:e2}=await sb.from('wallets').update({balance:newToBal,updated_at:date,notes:(toW.notes?toW.notes+' | ':'')+noteTo}).eq('id',toId);
+    if(e2) throw e2;
+    // Record history snapshots for both
+    await sb.from('wallet_history').insert([
+      {user_id:currentUser.id,wallet_id:fromId,balance:newFromBal,currency:fromW.currency||'USD',recorded_at:date+'T12:00:00'},
+      {user_id:currentUser.id,wallet_id:toId,balance:newToBal,currency:toW.currency||'USD',recorded_at:date+'T12:00:01'},
+    ]);
+    // Sync local state
+    const fi=wallets.findIndex(w=>w.id===fromId); if(fi>=0) wallets[fi]={...wallets[fi],balance:newFromBal};
+    const ti=wallets.findIndex(w=>w.id===toId);   if(ti>=0) wallets[ti]={...wallets[ti],balance:newToBal};
+    await loadWalletHistory();
+    closeTransferModal();
+    const chargeMsg=charge>0.001?` (charges: $${fmtMoney(charge)})`:'';
+    showToast(`Transfer recorded${chargeMsg}. ${fromW.wallet_name||fromW.platform}: $${fmtMoney(newFromBal)} · ${toW.wallet_name||toW.platform}: $${fmtMoney(newToBal)}`,'success');
+    renderWallet();
+  } catch(err){ showModalErr('tr-error','Save failed: '+err.message); }
+  finally { btn.disabled=false; btn.textContent='Record Transfer'; }
+}
 // Quick-add a bank account wallet
 function openBankWalletModal(){
   openWalletModal();

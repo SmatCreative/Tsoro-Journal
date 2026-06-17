@@ -451,6 +451,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="db-hero" style="margin-bottom:18px"></div>
         <div id="db-tithe" style="margin-bottom:18px"></div>
         <div class="stats-row" id="db-stats"></div>
+        <div id="db-winbar" style="margin-bottom:16px"></div>
         <div class="grid-2" style="margin-bottom:16px">
           <div class="card">
             <div class="card-header"><div class="card-title">Equity Curve</div><div class="chart-legend"><span><span class="legend-dot" style="background:var(--accent)"></span>Cumulative P&amp;L</span></div></div>
@@ -2196,6 +2197,41 @@ function renderDashboard(){
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
   ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`).join('');
+  // Win / Loss bar
+  const winCount  = wins.length;
+  const lossCount = losses.length;
+  const breakeven = closed.filter(t=>(calcPnL(t)||0)===0).length;
+  const sessions  = closed.length;
+  const winPct    = sessions ? winCount/sessions*100 : 0;
+  const lossPct   = sessions ? lossCount/sessions*100 : 0;
+  const bePct     = sessions ? breakeven/sessions*100 : 0;
+  document.getElementById('db-winbar').innerHTML = sessions ? `
+    <div class="card" style="padding:18px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px">
+        <div style="text-align:left">
+          <div style="font-size:22px;font-weight:800;color:var(--green)">${winCount}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Wins</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:22px;font-weight:800">${sessions}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Sessions</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:800;color:var(--red)">${lossCount}</div>
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Losses</div>
+        </div>
+      </div>
+      <div style="height:18px;border-radius:20px;overflow:hidden;display:flex;background:var(--surface2)">
+        ${winPct>0 ?`<div style="width:${winPct.toFixed(2)}%;background:linear-gradient(90deg,#10b981,#34d399);transition:width .5s;position:relative" title="${winCount} wins (${winPct.toFixed(1)}%)"></div>`:''}
+        ${bePct>0  ?`<div style="width:${bePct.toFixed(2)}%;background:var(--muted2);transition:width .5s" title="${breakeven} breakeven"></div>`:''}
+        ${lossPct>0?`<div style="width:${lossPct.toFixed(2)}%;background:linear-gradient(90deg,#ef4444,#f87171);transition:width .5s" title="${lossCount} losses (${lossPct.toFixed(1)}%)"></div>`:''}
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--muted)">
+        <span style="color:var(--green);font-weight:600">${winPct.toFixed(1)}% win rate</span>
+        ${breakeven?`<span>${breakeven} breakeven</span>`:''}
+        <span style="color:var(--red);font-weight:600">${lossPct.toFixed(1)}% loss rate</span>
+      </div>
+    </div>` : '';
   renderTithe();
   drawEquityChart(closed); drawDailyChart(closed);
   const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(calcPnL(t)||0);});

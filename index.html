@@ -1170,6 +1170,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <input class="form-input" id="zh-buy-price" type="number" step="any" min="0" placeholder="0.00">
       </div>
       <div class="form-group">
+        <label class="form-label">Date Purchased</label>
+        <input class="form-input" id="zh-buy-date" type="date">
+      </div>
+      <div class="form-group">
         <label class="form-label">Current / Today's Price</label>
         <input class="form-input" id="zh-current-price" type="number" step="any" min="0" placeholder="0.00">
       </div>
@@ -2142,7 +2146,7 @@ function zseHoldingsAsTrades(){
         market:h.exchange==='ZSE'?'ETF':'Stock', direction:'Long', type:'long', status:'open',
         entry:h.buyPrice, qty:h.shares,
         currency:h.exchange==='ZSE'?'ZiG':'USD',
-        entryDate:h.priceDate||new Date().toISOString().slice(0,10),
+        entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
         exit:h.currentPrice||null, exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
         _synthetic:true
@@ -4192,18 +4196,20 @@ function openZseHoldingModal(id){
   const today = new Date().toISOString().slice(0,10);
   if(id){
     const h = loadZseHoldings().find(x=>x.id===id); if(!h) return;
-    document.getElementById('zh-symbol').value      = h.symbol||'';
-    document.getElementById('zh-exchange').value    = h.exchange||'ZSE';
-    document.getElementById('zh-shares').value      = h.shares||'';
-    document.getElementById('zh-buy-price').value   = h.buyPrice||'';
+    document.getElementById('zh-symbol').value        = h.symbol||'';
+    document.getElementById('zh-exchange').value      = h.exchange||'ZSE';
+    document.getElementById('zh-shares').value        = h.shares||'';
+    document.getElementById('zh-buy-price').value     = h.buyPrice||'';
+    document.getElementById('zh-buy-date').value      = h.buyDate||'';
     document.getElementById('zh-current-price').value = h.currentPrice||'';
-    document.getElementById('zh-price-date').value  = h.priceDate||today;
-    document.getElementById('zh-notes').value       = h.notes||'';
+    document.getElementById('zh-price-date').value    = h.priceDate||today;
+    document.getElementById('zh-notes').value         = h.notes||'';
   } else {
     ['zh-symbol','zh-notes'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('zh-exchange').value='ZSE';
     document.getElementById('zh-shares').value='';
     document.getElementById('zh-buy-price').value='';
+    document.getElementById('zh-buy-date').value='';
     document.getElementById('zh-current-price').value='';
     document.getElementById('zh-price-date').value=today;
   }
@@ -4221,6 +4227,7 @@ function saveZseHolding(){
   const shares   = parseFloat(document.getElementById('zh-shares').value);
   const buyPrice = parseFloat(document.getElementById('zh-buy-price').value);
   const curPrice = parseFloat(document.getElementById('zh-current-price').value);
+  const buyDate  = document.getElementById('zh-buy-date').value;
   const priceDate= document.getElementById('zh-price-date').value;
   const notes    = document.getElementById('zh-notes').value.trim();
 
@@ -4231,9 +4238,9 @@ function saveZseHolding(){
   const holdings = loadZseHoldings();
   if(id){
     const idx=holdings.findIndex(x=>x.id===id);
-    if(idx>=0) holdings[idx]={...holdings[idx],symbol,exchange,shares,buyPrice,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
+    if(idx>=0) holdings[idx]={...holdings[idx],symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
   } else {
-    holdings.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes});
+    holdings.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes});
   }
   saveZseHoldingsLocal(holdings);
   closeZseHoldingModal();
@@ -5140,11 +5147,14 @@ function renderZse(){
       const sym   = h.exchange==='ZSE' ? 'ZiG ' : '$';
       const np    = usd != null ? calcNetProceeds(usd, charges) : null;
       const priceStale = h.priceDate && h.priceDate < new Date().toISOString().slice(0,10);
+      const holdDays   = h.buyDate ? Math.floor((new Date()-new Date(h.buyDate))/86400000) : null;
+      const holdLabel  = holdDays!=null ? (holdDays>=365 ? (holdDays/365).toFixed(1)+'y' : holdDays>=30 ? Math.floor(holdDays/30)+'mo' : holdDays+'d') : null;
       return `<tr>
         <td>
           <div style="font-weight:600;font-size:14px">${h.symbol}</div>
-          <div style="font-size:11px;margin-top:1px">
+          <div style="font-size:11px;margin-top:1px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
             <span class="badge" style="background:${h.exchange==='ZSE'?'rgba(26,111,212,.15)':'rgba(16,185,129,.15)'};color:${h.exchange==='ZSE'?'var(--accent2)':'var(--green)'};font-size:10px;font-weight:600">${h.exchange}</span>
+            ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">⏱ ${holdLabel}</span>`:''}
           </div>
           ${h.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+h.notes+'</div>':''}
         </td>

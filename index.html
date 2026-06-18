@@ -705,6 +705,9 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
         <div id="zse-holdings-table" style="margin-bottom:24px"></div>
 
+        <!-- Price History Charts -->
+        <div id="zse-price-charts" style="margin-bottom:24px"></div>
+
         <!-- Withdrawal Calculator -->
         <div class="card" style="margin-bottom:20px">
           <div class="card-header">
@@ -1761,7 +1764,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
-let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [], privInvest = [], loans = [], loanPayments = [];
+let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [], privInvest = [], loans = [], loanPayments = [], zsePriceHistory = [];
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
@@ -1853,7 +1856,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory()]);
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -1878,6 +1881,20 @@ async function loadWallets(){ const{data,error}=await sb.from('wallets').select(
 async function loadPrivInvest(){ const{data,error}=await sb.from('private_investments').select('*').order('invest_date',{ascending:false}); if(error){console.error('[Tsoro] private investments:',error.message);privInvest=[];return;} privInvest=data||[]; }
 async function loadDividends(){ const{data,error}=await sb.from('dividends').select('*').order('pay_date',{ascending:false}); if(error){console.error('[Tsoro] dividends:',error.message);dividends=[];return;} dividends=data||[]; }
 async function loadGoals(){ const{data,error}=await sb.from('investment_goals').select('*').order('end_date',{ascending:true}); if(error){console.error('[Tsoro] goals:',error.message);goals=[];return;} goals=data||[]; }
+async function loadZsePriceHistory(){
+  const{data,error}=await sb.from('zse_price_history').select('*').order('recorded_date',{ascending:true});
+  if(error){console.error('[Tsoro] zse_price_history:',error.message);zsePriceHistory=[];return;}
+  zsePriceHistory=data||[];
+}
+async function recordZsePrice(symbol,exchange,price,currency,date,note){
+  const recorded_date=date||new Date().toISOString().slice(0,10);
+  // Avoid duplicate for same symbol+date
+  const{data,error}=await sb.from('zse_price_history')
+    .upsert([{user_id:currentUser.id,symbol,exchange,price,currency,recorded_date,note:note||null}],
+            {onConflict:'user_id,symbol,recorded_date',ignoreDuplicates:false})
+    .select().single();
+  if(!error&&data){ zsePriceHistory=zsePriceHistory.filter(r=>!(r.symbol===symbol&&r.recorded_date===recorded_date)); zsePriceHistory.push(data); zsePriceHistory.sort((a,b)=>a.recorded_date.localeCompare(b.recorded_date)); }
+}
 async function loadLoans(){
   const[{data:ld,error:le},{data:pd,error:pe}]=await Promise.all([
     sb.from('loans').select('*').order('start_date',{ascending:false}),
@@ -4244,6 +4261,15 @@ function saveZseHolding(){
   }
   saveZseHoldingsLocal(holdings);
   closeZseHoldingModal();
+  // Record buy price as first history point (if new holding with buyDate)
+  const ccy = exchange==='VFSE'?'USD':'ZiG';
+  if(buyDate && !isNaN(buyPrice) && buyPrice>0){
+    recordZsePrice(symbol,exchange,buyPrice,ccy,buyDate,'Buy price');
+  }
+  // Record current price snapshot (today)
+  if(!isNaN(curPrice) && curPrice>0){
+    recordZsePrice(symbol,exchange,curPrice,ccy,priceDate||new Date().toISOString().slice(0,10),'Price update').then(()=>renderZsePriceCharts());
+  }
   renderZse();
 }
 
@@ -4263,8 +4289,11 @@ function openZsePriceUpdate(id){
   if(isNaN(p)||p<0){showToast('Invalid price','error');return;}
   const holdings=loadZseHoldings();
   const idx=holdings.findIndex(x=>x.id===id);
-  if(idx>=0){ holdings[idx].currentPrice=p; holdings[idx].priceDate=new Date().toISOString().slice(0,10); }
+  const today=new Date().toISOString().slice(0,10);
+  if(idx>=0){ holdings[idx].currentPrice=p; holdings[idx].priceDate=today; }
   saveZseHoldingsLocal(holdings);
+  const ccy=h.exchange==='VFSE'?'USD':'ZiG';
+  recordZsePrice(h.symbol,h.exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
   renderZse();
   showToast(h.symbol+' price updated to '+p,'success');
 }
@@ -5088,6 +5117,180 @@ function calcNetProceeds(grossValue, charges){
   return { afterSell, afterWithdraw, totalPct, withdrawPct: charges.withdraw||0 };
 }
 
+function renderZsePriceCharts(){
+  const el=document.getElementById('zse-price-charts'); if(!el) return;
+  const holdings=loadZseHoldings();
+  if(!holdings.length){ el.innerHTML=''; return; }
+
+  // Group history by symbol
+  const bySymbol={};
+  zsePriceHistory.forEach(r=>{ (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push(r); });
+  holdings.forEach(h=>{
+    if(!bySymbol[h.symbol]) bySymbol[h.symbol]=[];
+    // Always ensure buy price is the baseline point
+    if(h.buyDate&&h.buyPrice>0&&!bySymbol[h.symbol].find(r=>r.recorded_date===h.buyDate)){
+      bySymbol[h.symbol].push({symbol:h.symbol,exchange:h.exchange,price:h.buyPrice,recorded_date:h.buyDate,note:'Buy price'});
+    }
+    // Ensure current price appears
+    const today=new Date().toISOString().slice(0,10);
+    if(h.currentPrice>0&&!bySymbol[h.symbol].find(r=>r.recorded_date===today)){
+      bySymbol[h.symbol].push({symbol:h.symbol,exchange:h.exchange,price:h.currentPrice,recorded_date:h.priceDate||today,note:'Latest'});
+    }
+    bySymbol[h.symbol].sort((a,b)=>a.recorded_date.localeCompare(b.recorded_date));
+  });
+
+  el.innerHTML=`
+    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      ${holdings.map(h=>`<div class="card" style="padding:0;overflow:hidden" id="zph-wrap-${h.id}">
+        <canvas id="zph-${h.id}" height="180" style="display:block;width:100%"></canvas>
+      </div>`).join('')}
+    </div>`;
+
+  // Draw each chart after DOM is ready
+  requestAnimationFrame(()=>{
+    holdings.forEach(h=>{
+      const pts=(bySymbol[h.symbol]||[]).map(r=>({date:r.recorded_date,price:Number(r.price),note:r.note||''}));
+      if(!pts.length) return;
+      const canvas=document.getElementById('zph-'+h.id); if(!canvas) return;
+      const W=canvas.parentElement.offsetWidth||340;
+      canvas.width=W; canvas.height=180;
+      const ctx=canvas.getContext('2d');
+      const PAD={t:48,r:20,b:36,l:58};
+      const cW=W-PAD.l-PAD.r, cH=180-PAD.t-PAD.b;
+
+      const prices=pts.map(p=>p.price);
+      const minP=Math.min(...prices), maxP=Math.max(...prices);
+      const range=maxP-minP||maxP*0.1||1;
+      const padR=range*0.18;
+      const lo=minP-padR, hi=maxP+padR;
+
+      const xOf=i=>PAD.l+(i/(pts.length-1||1))*cW;
+      const yOf=v=>PAD.t+cH-(((v-lo)/(hi-lo))*cH);
+      const mapped=pts.map((p,i)=>({x:xOf(i),y:yOf(p.price),price:p.price,date:p.date,note:p.note}));
+
+      // Background
+      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#0a1628';
+      ctx.fillRect(0,0,W,180);
+
+      // Gradient fill under curve
+      const isUp=prices[prices.length-1]>=prices[0];
+      const grad=ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
+      if(isUp){
+        grad.addColorStop(0,'rgba(0,74,173,0.45)');
+        grad.addColorStop(1,'rgba(0,74,173,0.02)');
+      } else {
+        grad.addColorStop(0,'rgba(239,68,68,0.35)');
+        grad.addColorStop(1,'rgba(239,68,68,0.02)');
+      }
+      ctx.beginPath();
+      ctx.moveTo(mapped[0].x,PAD.t+cH);
+      ctx.lineTo(mapped[0].x,mapped[0].y);
+      if(mapped.length>2){
+        for(let i=1;i<mapped.length-1;i++){
+          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
+          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
+        }
+      }
+      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
+      ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
+      ctx.closePath();
+      ctx.fillStyle=grad;
+      ctx.fill();
+
+      // Subtle grid lines
+      ctx.strokeStyle='rgba(255,255,255,0.06)';
+      ctx.lineWidth=1;
+      const gridCount=4;
+      for(let i=0;i<=gridCount;i++){
+        const y=PAD.t+(cH/gridCount)*i;
+        ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
+        const val=hi-((hi-lo)/gridCount)*i;
+        ctx.fillStyle='rgba(255,255,255,0.38)';
+        ctx.font='10px system-ui';
+        ctx.textAlign='right';
+        ctx.fillText((h.exchange==='VFSE'?'$':'')+val.toFixed(2),PAD.l-6,y+3.5);
+      }
+
+      // Stroke line
+      const lineGrad=ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);
+      lineGrad.addColorStop(0,isUp?'#1a6fd4':'#ef4444');
+      lineGrad.addColorStop(1,isUp?'#5098e8':'#f87171');
+      ctx.beginPath();
+      ctx.moveTo(mapped[0].x,mapped[0].y);
+      if(mapped.length>2){
+        for(let i=1;i<mapped.length-1;i++){
+          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
+          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
+        }
+      }
+      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
+      ctx.strokeStyle=lineGrad;
+      ctx.lineWidth=2.5;
+      ctx.lineJoin='round';
+      ctx.stroke();
+
+      // Dots on each data point
+      mapped.forEach((p,i)=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,i===0||i===mapped.length-1?5:3,0,Math.PI*2);
+        ctx.fillStyle=i===0||i===mapped.length-1?(isUp?'#5098e8':'#f87171'):'rgba(255,255,255,0.5)';
+        ctx.fill();
+        ctx.strokeStyle='#fff';
+        ctx.lineWidth=1.5;
+        ctx.stroke();
+      });
+
+      // Glow dot on latest point
+      const last=mapped[mapped.length-1];
+      ctx.beginPath(); ctx.arc(last.x,last.y,9,0,Math.PI*2);
+      ctx.fillStyle=isUp?'rgba(80,152,232,0.22)':'rgba(248,113,113,0.22)'; ctx.fill();
+
+      // Header area — symbol, exchange badge, % change
+      const pctChg=prices.length>1?((prices[prices.length-1]-prices[0])/prices[0]*100):0;
+      const ccy=h.exchange==='VFSE'?'$':'';
+      ctx.fillStyle='rgba(255,255,255,0.92)';
+      ctx.font='bold 14px system-ui'; ctx.textAlign='left';
+      ctx.fillText(h.symbol,14,22);
+
+      // Exchange badge
+      const badgeTxt=h.exchange; const badgeX=14+ctx.measureText(h.symbol).width+8;
+      ctx.font='bold 9px system-ui';
+      const bw=ctx.measureText(badgeTxt).width+10;
+      ctx.fillStyle=h.exchange==='ZSE'?'rgba(26,111,212,0.35)':'rgba(16,185,129,0.30)';
+      ctx.beginPath(); ctx.roundRect(badgeX,10,bw,14,4); ctx.fill();
+      ctx.fillStyle=h.exchange==='ZSE'?'#5098e8':'#34d399';
+      ctx.fillText(badgeTxt,badgeX+5,21);
+
+      // Current price top right
+      ctx.font='bold 14px system-ui'; ctx.textAlign='right';
+      ctx.fillStyle='rgba(255,255,255,0.92)';
+      ctx.fillText(ccy+fmtNum(prices[prices.length-1]),W-14,22);
+
+      // % change
+      ctx.font='11px system-ui'; ctx.textAlign='right';
+      ctx.fillStyle=pctChg>=0?'#34d399':'#f87171';
+      ctx.fillText((pctChg>=0?'▲ +':'▼ ')+Math.abs(pctChg).toFixed(2)+'%',W-14,36);
+
+      // Date labels on x-axis
+      ctx.font='9px system-ui'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,0.35)';
+      const labelEvery=Math.max(1,Math.floor(pts.length/4));
+      pts.forEach((p,i)=>{
+        if(i%labelEvery===0||i===pts.length-1){
+          const d=new Date(p.date); const lbl=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+          ctx.fillText(lbl,xOf(i),PAD.t+cH+14);
+        }
+      });
+
+      // Points: 1 point = just show "no history yet"
+      if(pts.length<2){
+        ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='12px system-ui'; ctx.textAlign='center';
+        ctx.fillText('Update price to build history',W/2,PAD.t+cH/2+4);
+      }
+    });
+  });
+}
+
 function renderZse(){
   const holdings = loadZseHoldings();
   const charges  = loadZseCharges();
@@ -5272,6 +5475,7 @@ function renderZse(){
         </tbody>
       </table></div>`;
   }
+  renderZsePriceCharts();
 }
 
 // ═══════════════════════════════════════════════════════════════════

@@ -5117,178 +5117,171 @@ function calcNetProceeds(grossValue, charges){
   return { afterSell, afterWithdraw, totalPct, withdrawPct: charges.withdraw||0 };
 }
 
+function drawZseChart(canvas, h, pts){
+  try {
+    const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 340;
+    const H = 210;
+    canvas.width  = W * (window.devicePixelRatio||1);
+    canvas.height = H * (window.devicePixelRatio||1);
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
+
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const PAD = {t:52, r:18, b:38, l:56};
+    const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+
+    const prices = pts.map(p => p.price);
+    const first = prices[0], last = prices[prices.length-1];
+    const isUp  = last >= first;
+    const minP  = Math.min(...prices), maxP = Math.max(...prices);
+    const span  = maxP - minP || Math.max(maxP * 0.05, 0.01);
+    const lo = minP - span*0.25, hi = maxP + span*0.25;
+
+    const xOf = i => PAD.l + (pts.length < 2 ? cW/2 : (i/(pts.length-1))*cW);
+    const yOf = v => PAD.t + cH - ((v-lo)/(hi-lo))*cH;
+    const mapped = pts.map((p,i) => ({x:xOf(i), y:yOf(p.price), ...p}));
+
+    // Background
+    const bgG = ctx.createLinearGradient(0,0,0,H);
+    if(isDark){ bgG.addColorStop(0,'#0d1f3c'); bgG.addColorStop(1,'#050d1f'); }
+    else       { bgG.addColorStop(0,'#f0f5ff'); bgG.addColorStop(1,'#e8eeff'); }
+    ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    for(let i=0;i<=4;i++){
+      const y = PAD.t+(cH/4)*i, val = hi-((hi-lo)/4)*i;
+      ctx.strokeStyle = isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.07)';
+      ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
+      ctx.fillStyle = isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.45)';
+      ctx.font='10px system-ui'; ctx.textAlign='right';
+      ctx.fillText((h.exchange==='VFSE'?'$':'')+val.toFixed(2), PAD.l-5, y+3.5);
+    }
+
+    if(pts.length>=2){
+      // Area fill
+      const aG = ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
+      aG.addColorStop(0, isUp?'rgba(0,74,173,0.50)':'rgba(239,68,68,0.40)');
+      aG.addColorStop(1, isUp?'rgba(0,74,173,0.03)':'rgba(239,68,68,0.03)');
+      ctx.beginPath();
+      ctx.moveTo(mapped[0].x, PAD.t+cH);
+      ctx.lineTo(mapped[0].x, mapped[0].y);
+      for(let i=1;i<mapped.length-1;i++){
+        const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
+        ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
+      }
+      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
+      ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
+      ctx.closePath(); ctx.fillStyle=aG; ctx.fill();
+
+      // Line
+      const lG = ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);
+      lG.addColorStop(0, isUp?'#1a6fd4':'#ef4444');
+      lG.addColorStop(1, isUp?'#5098e8':'#f87171');
+      ctx.beginPath(); ctx.moveTo(mapped[0].x,mapped[0].y);
+      for(let i=1;i<mapped.length-1;i++){
+        const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
+        ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
+      }
+      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
+      ctx.strokeStyle=lG; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+    }
+
+    // Dots
+    mapped.forEach((p,i)=>{
+      const isEdge=(i===0||i===mapped.length-1), r=isEdge?5:3.5;
+      if(i===mapped.length-1){
+        ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2);
+        ctx.fillStyle=isUp?'rgba(80,152,232,0.18)':'rgba(248,113,113,0.18)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2);
+        ctx.fillStyle=isUp?'rgba(80,152,232,0.28)':'rgba(248,113,113,0.28)'; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+      ctx.fillStyle=isEdge?(isUp?'#5098e8':'#f87171'):(isDark?'rgba(255,255,255,0.55)':'rgba(26,111,212,0.7)');
+      ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+
+    // Header
+    const ccy=h.exchange==='VFSE'?'$':'ZiG ';
+    const pctChg=prices.length>1?((last-first)/first*100):null;
+    ctx.font='bold 15px system-ui'; ctx.textAlign='left';
+    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
+    ctx.fillText(h.symbol,14,24);
+    // Exchange badge (plain rect, no roundRect)
+    ctx.font='bold 9px system-ui';
+    const symW=ctx.measureText(h.symbol).width;
+    const bx=14+symW+8, by=12, bw=ctx.measureText(h.exchange).width+10, bh=14;
+    ctx.fillStyle=h.exchange==='ZSE'?'rgba(26,111,212,0.4)':'rgba(16,185,129,0.35)';
+    ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle=h.exchange==='ZSE'?'#5098e8':'#34d399';
+    ctx.fillText(h.exchange,bx+5,by+10);
+    // Price + %
+    ctx.font='bold 15px system-ui'; ctx.textAlign='right';
+    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
+    ctx.fillText(ccy+fmtNum(last),W-14,24);
+    if(pctChg!==null){
+      ctx.font='11px system-ui';
+      ctx.fillStyle=pctChg>=0?'#34d399':'#f87171';
+      ctx.fillText((pctChg>=0?'\u25b2 +':'\u25bc ')+Math.abs(pctChg).toFixed(2)+'%',W-14,38);
+    }
+    // Hold duration
+    if(h.buyDate){
+      const days=Math.floor((new Date()-new Date(h.buyDate))/86400000);
+      const hl=days>=365?(days/365).toFixed(1)+'y':days>=30?Math.floor(days/30)+'mo':days+'d';
+      ctx.font='10px system-ui'; ctx.textAlign='left';
+      ctx.fillStyle=isDark?'rgba(255,255,255,0.38)':'rgba(0,0,0,0.38)';
+      ctx.fillText('Held '+hl,14,38);
+    }
+    // X-axis labels
+    if(pts.length>=2){
+      ctx.font='9px system-ui'; ctx.textAlign='center';
+      ctx.fillStyle=isDark?'rgba(255,255,255,0.32)':'rgba(0,0,0,0.35)';
+      const step=Math.max(1,Math.floor(pts.length/4));
+      pts.forEach((p,i)=>{ if(i%step===0||i===pts.length-1){ ctx.fillText(new Date(p.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}),xOf(i),PAD.t+cH+14); }});
+    } else {
+      ctx.font='10px system-ui'; ctx.textAlign='center';
+      ctx.fillStyle=isDark?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.45)';
+      ctx.fillText(new Date(pts[0].date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),mapped[0].x,PAD.t+cH+14);
+      ctx.fillStyle=isDark?'rgba(255,255,255,0.28)':'rgba(0,0,0,0.30)';
+      ctx.font='11px system-ui';
+      ctx.fillText('Update price to grow this chart',W/2,PAD.t+cH/2+18);
+    }
+  } catch(e){ console.warn('[Tsoro] chart draw error:',e); }
+}
+
 function renderZsePriceCharts(){
   const el=document.getElementById('zse-price-charts'); if(!el) return;
   const holdings=loadZseHoldings();
   if(!holdings.length){ el.innerHTML=''; return; }
 
-  // Group history by symbol
   const bySymbol={};
-  zsePriceHistory.forEach(r=>{ (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push(r); });
+  zsePriceHistory.forEach(r=>{ (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:r.note||''}); });
   holdings.forEach(h=>{
     if(!bySymbol[h.symbol]) bySymbol[h.symbol]=[];
-    // Always ensure buy price is the baseline point
-    if(h.buyDate&&h.buyPrice>0&&!bySymbol[h.symbol].find(r=>r.recorded_date===h.buyDate)){
-      bySymbol[h.symbol].push({symbol:h.symbol,exchange:h.exchange,price:h.buyPrice,recorded_date:h.buyDate,note:'Buy price'});
-    }
-    // Ensure current price appears
-    const today=new Date().toISOString().slice(0,10);
-    if(h.currentPrice>0&&!bySymbol[h.symbol].find(r=>r.recorded_date===today)){
-      bySymbol[h.symbol].push({symbol:h.symbol,exchange:h.exchange,price:h.currentPrice,recorded_date:h.priceDate||today,note:'Latest'});
-    }
-    bySymbol[h.symbol].sort((a,b)=>a.recorded_date.localeCompare(b.recorded_date));
+    if(h.buyDate&&h.buyPrice>0&&!bySymbol[h.symbol].find(r=>r.date===h.buyDate))
+      bySymbol[h.symbol].push({date:h.buyDate,price:Number(h.buyPrice),note:'Buy price'});
+    const pd=h.priceDate||new Date().toISOString().slice(0,10);
+    if(h.currentPrice>0&&!bySymbol[h.symbol].find(r=>r.date===pd))
+      bySymbol[h.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
+    bySymbol[h.symbol].sort((a,b)=>a.date.localeCompare(b.date));
+    bySymbol[h.symbol]=bySymbol[h.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
   });
 
   el.innerHTML=`
-    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
+    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">&#128200; Price History</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-      ${holdings.map(h=>`<div class="card" style="padding:0;overflow:hidden" id="zph-wrap-${h.id}">
-        <canvas id="zph-${h.id}" height="180" style="display:block;width:100%"></canvas>
-      </div>`).join('')}
+      ${holdings.map(h=>`<div style="border-radius:var(--r);overflow:hidden;box-shadow:0 4px 24px rgba(0,74,173,.18)"><canvas id="zph-${h.id}" style="display:block;width:100%"></canvas></div>`).join('')}
     </div>`;
 
-  // Draw each chart after DOM is ready
-  requestAnimationFrame(()=>{
+  setTimeout(()=>{
     holdings.forEach(h=>{
-      const pts=(bySymbol[h.symbol]||[]).map(r=>({date:r.recorded_date,price:Number(r.price),note:r.note||''}));
-      if(!pts.length) return;
       const canvas=document.getElementById('zph-'+h.id); if(!canvas) return;
-      const W=canvas.parentElement.offsetWidth||340;
-      canvas.width=W; canvas.height=180;
-      const ctx=canvas.getContext('2d');
-      const PAD={t:48,r:20,b:36,l:58};
-      const cW=W-PAD.l-PAD.r, cH=180-PAD.t-PAD.b;
-
-      const prices=pts.map(p=>p.price);
-      const minP=Math.min(...prices), maxP=Math.max(...prices);
-      const range=maxP-minP||maxP*0.1||1;
-      const padR=range*0.18;
-      const lo=minP-padR, hi=maxP+padR;
-
-      const xOf=i=>PAD.l+(i/(pts.length-1||1))*cW;
-      const yOf=v=>PAD.t+cH-(((v-lo)/(hi-lo))*cH);
-      const mapped=pts.map((p,i)=>({x:xOf(i),y:yOf(p.price),price:p.price,date:p.date,note:p.note}));
-
-      // Background
-      ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#0a1628';
-      ctx.fillRect(0,0,W,180);
-
-      // Gradient fill under curve
-      const isUp=prices[prices.length-1]>=prices[0];
-      const grad=ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
-      if(isUp){
-        grad.addColorStop(0,'rgba(0,74,173,0.45)');
-        grad.addColorStop(1,'rgba(0,74,173,0.02)');
-      } else {
-        grad.addColorStop(0,'rgba(239,68,68,0.35)');
-        grad.addColorStop(1,'rgba(239,68,68,0.02)');
-      }
-      ctx.beginPath();
-      ctx.moveTo(mapped[0].x,PAD.t+cH);
-      ctx.lineTo(mapped[0].x,mapped[0].y);
-      if(mapped.length>2){
-        for(let i=1;i<mapped.length-1;i++){
-          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
-          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
-        }
-      }
-      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
-      ctx.closePath();
-      ctx.fillStyle=grad;
-      ctx.fill();
-
-      // Subtle grid lines
-      ctx.strokeStyle='rgba(255,255,255,0.06)';
-      ctx.lineWidth=1;
-      const gridCount=4;
-      for(let i=0;i<=gridCount;i++){
-        const y=PAD.t+(cH/gridCount)*i;
-        ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
-        const val=hi-((hi-lo)/gridCount)*i;
-        ctx.fillStyle='rgba(255,255,255,0.38)';
-        ctx.font='10px system-ui';
-        ctx.textAlign='right';
-        ctx.fillText((h.exchange==='VFSE'?'$':'')+val.toFixed(2),PAD.l-6,y+3.5);
-      }
-
-      // Stroke line
-      const lineGrad=ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);
-      lineGrad.addColorStop(0,isUp?'#1a6fd4':'#ef4444');
-      lineGrad.addColorStop(1,isUp?'#5098e8':'#f87171');
-      ctx.beginPath();
-      ctx.moveTo(mapped[0].x,mapped[0].y);
-      if(mapped.length>2){
-        for(let i=1;i<mapped.length-1;i++){
-          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
-          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
-        }
-      }
-      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.strokeStyle=lineGrad;
-      ctx.lineWidth=2.5;
-      ctx.lineJoin='round';
-      ctx.stroke();
-
-      // Dots on each data point
-      mapped.forEach((p,i)=>{
-        ctx.beginPath();
-        ctx.arc(p.x,p.y,i===0||i===mapped.length-1?5:3,0,Math.PI*2);
-        ctx.fillStyle=i===0||i===mapped.length-1?(isUp?'#5098e8':'#f87171'):'rgba(255,255,255,0.5)';
-        ctx.fill();
-        ctx.strokeStyle='#fff';
-        ctx.lineWidth=1.5;
-        ctx.stroke();
-      });
-
-      // Glow dot on latest point
-      const last=mapped[mapped.length-1];
-      ctx.beginPath(); ctx.arc(last.x,last.y,9,0,Math.PI*2);
-      ctx.fillStyle=isUp?'rgba(80,152,232,0.22)':'rgba(248,113,113,0.22)'; ctx.fill();
-
-      // Header area — symbol, exchange badge, % change
-      const pctChg=prices.length>1?((prices[prices.length-1]-prices[0])/prices[0]*100):0;
-      const ccy=h.exchange==='VFSE'?'$':'';
-      ctx.fillStyle='rgba(255,255,255,0.92)';
-      ctx.font='bold 14px system-ui'; ctx.textAlign='left';
-      ctx.fillText(h.symbol,14,22);
-
-      // Exchange badge
-      const badgeTxt=h.exchange; const badgeX=14+ctx.measureText(h.symbol).width+8;
-      ctx.font='bold 9px system-ui';
-      const bw=ctx.measureText(badgeTxt).width+10;
-      ctx.fillStyle=h.exchange==='ZSE'?'rgba(26,111,212,0.35)':'rgba(16,185,129,0.30)';
-      ctx.beginPath(); ctx.roundRect(badgeX,10,bw,14,4); ctx.fill();
-      ctx.fillStyle=h.exchange==='ZSE'?'#5098e8':'#34d399';
-      ctx.fillText(badgeTxt,badgeX+5,21);
-
-      // Current price top right
-      ctx.font='bold 14px system-ui'; ctx.textAlign='right';
-      ctx.fillStyle='rgba(255,255,255,0.92)';
-      ctx.fillText(ccy+fmtNum(prices[prices.length-1]),W-14,22);
-
-      // % change
-      ctx.font='11px system-ui'; ctx.textAlign='right';
-      ctx.fillStyle=pctChg>=0?'#34d399':'#f87171';
-      ctx.fillText((pctChg>=0?'▲ +':'▼ ')+Math.abs(pctChg).toFixed(2)+'%',W-14,36);
-
-      // Date labels on x-axis
-      ctx.font='9px system-ui'; ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,0.35)';
-      const labelEvery=Math.max(1,Math.floor(pts.length/4));
-      pts.forEach((p,i)=>{
-        if(i%labelEvery===0||i===pts.length-1){
-          const d=new Date(p.date); const lbl=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-          ctx.fillText(lbl,xOf(i),PAD.t+cH+14);
-        }
-      });
-
-      // Points: 1 point = just show "no history yet"
-      if(pts.length<2){
-        ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='12px system-ui'; ctx.textAlign='center';
-        ctx.fillText('Update price to build history',W/2,PAD.t+cH/2+4);
-      }
+      const pts=bySymbol[h.symbol]||[];
+      const fallback=[{date:h.buyDate||new Date().toISOString().slice(0,10),price:Number(h.buyPrice)||0,note:'Buy price'}];
+      drawZseChart(canvas,h,pts.length?pts:fallback);
     });
-  });
+  },60);
 }
 
 function renderZse(){

@@ -404,10 +404,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
       <span>Goals</span>
     </button>
-    <button class="nav-item" data-page="loans">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-      <span>Loans</span>
-    </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar" onclick="triggerProfilePicUpload()" title="Change profile picture" style="cursor:pointer;overflow:hidden;padding:0">
@@ -689,6 +685,30 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           </button>
         </div>
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div></div>
+
+        <!-- Loans & Debts (embedded in Portfolio & Wallet) -->
+        <div style="margin-top:28px">
+          <div id="loans-summary" style="margin-bottom:20px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Loans &amp; Debts</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Track money you've lent out and repayment with interest</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <select class="form-select" id="loan-filter" onchange="renderLoans()" style="padding:7px 10px;font-size:12px;width:auto">
+                <option value="all">All Loans</option>
+                <option value="active">Active</option>
+                <option value="overdue">Overdue</option>
+                <option value="paid">Paid Off</option>
+              </select>
+              <button class="btn btn-primary btn-sm" onclick="openLoanModal()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Loan
+              </button>
+            </div>
+          </div>
+          <div id="loans-list"></div>
+        </div>
       </div>
 
       <!-- Rates -->
@@ -764,29 +784,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="goals-list"></div>
       </div>
 
-      <!-- Loans & Debts -->
-      <div class="page" id="page-loans">
-        <div id="loans-summary" style="margin-bottom:20px"></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:15px;font-weight:600;letter-spacing:-.2px">Loans & Debts</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Track money you've lent out and repayment with interest</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <select class="form-select" id="loan-filter" onchange="renderLoans()" style="padding:7px 10px;font-size:12px;width:auto">
-              <option value="all">All Loans</option>
-              <option value="active">Active</option>
-              <option value="overdue">Overdue</option>
-              <option value="paid">Paid Off</option>
-            </select>
-            <button class="btn btn-primary btn-sm" onclick="openLoanModal()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Loan
-            </button>
-          </div>
-        </div>
-        <div id="loans-list"></div>
-      </div>
 
     </div>
   </div>
@@ -1969,7 +1966,7 @@ async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be u
 
 // ── Navigation ─────────────────────────────────────────────────────
 const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts'};
-function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; renderPage(page); }
+function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c) c.scrollTop=0; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 
@@ -2814,6 +2811,7 @@ function renderWallet(){
   try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
   try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
+  try { renderLoans(); } catch(e){ console.error('loans section:',e); }
 }
 
 // ── Wallet performance chart ───────────────────────────────────────

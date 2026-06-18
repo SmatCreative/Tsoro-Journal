@@ -410,7 +410,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="user-avatar" id="user-avatar">T</div>
+        <div class="user-avatar" id="user-avatar" onclick="triggerProfilePicUpload()" title="Change profile picture" style="cursor:pointer;overflow:hidden;padding:0">
+          <img id="sidebar-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
+          <span id="sidebar-avatar-init">T</span>
+        </div>
         <div class="user-info">
           <div class="user-name" id="user-email-display">—</div>
           <div class="user-sub">Personal account</div>
@@ -608,18 +611,43 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div id="wh-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
           <canvas id="wallet-perf-chart" height="220"></canvas>
         </div>
-        <div style="display:grid;grid-template-columns:minmax(340px,420px) 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
-          <div class="card" id="wallet-donut-card">
-            <div class="card-header"><div class="card-title">Allocation</div><div id="wallet-donut-total" style="font-size:12px;font-weight:600;color:var(--accent2);background:rgba(26,111,212,.1);border:1px solid rgba(26,111,212,.25);padding:3px 10px;border-radius:6px"></div></div>
-            <canvas id="wallet-donut" width="380" height="380" style="display:block;margin:0 auto;max-width:100%"></canvas>
-            <div id="wallet-legend" style="margin-top:14px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
+          <!-- Holdings Breakdown Card (replaces donut) -->
+          <div class="card" id="wallet-donut-card" style="padding:0;overflow:hidden">
+            <!-- Header hero -->
+            <div style="background:var(--hero-grad);padding:20px 22px 18px;position:relative;overflow:hidden">
+              <div style="position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07)"></div>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;position:relative">
+                <div id="portfolio-avatar-wrap" onclick="triggerProfilePicUpload()" title="Click to change profile picture"
+                     style="width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.4);overflow:hidden;cursor:pointer;flex-shrink:0;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center">
+                  <img id="portfolio-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
+                  <span id="portfolio-avatar-init" style="font-size:20px;font-weight:700;color:#fff">T</span>
+                </div>
+                <div>
+                  <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px" id="portfolio-name-display">My Portfolio</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,.65);margin-top:1px">Trading &amp; Investment Journal</div>
+                </div>
+              </div>
+              <div id="wallet-donut-total" style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1"></div>
+              <div id="portfolio-breakdown-change" style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px"></div>
+            </div>
+            <!-- Holdings list -->
+            <div style="padding:14px 0">
+              <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;padding:0 16px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)">
+                <span>Holding</span><span style="text-align:right;padding-right:20px">Value</span><span style="text-align:right">Share</span>
+              </div>
+              <div id="wallet-legend"></div>
+            </div>
           </div>
+          <!-- Open Positions card -->
           <div class="card" style="align-self:start">
             <div class="card-header"><div class="card-title">Open Positions vs Available Cash</div><div id="wallet-deployed-meta" style="font-size:12px;color:var(--muted)"></div></div>
             <canvas id="wallet-bar-chart" height="70"></canvas>
             <div id="wallet-open-list" style="margin-top:16px"></div>
           </div>
         </div>
+        <!-- Hidden donut canvas kept for compat (not displayed) -->
+        <canvas id="wallet-donut" style="display:none"></canvas>
 
         <!-- Private / unlisted investments -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
@@ -1847,7 +1875,32 @@ async function signOut(){
   window.location.reload();
 }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
-function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; document.getElementById('user-avatar').textContent=email[0]?.toUpperCase()||'T'; }
+function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; const init=email[0]?.toUpperCase()||'T'; const initEl=document.getElementById('sidebar-avatar-init'); if(initEl) initEl.textContent=init; const portInit=document.getElementById('portfolio-avatar-init'); if(portInit) portInit.textContent=init; syncProfileAvatar(); }
+
+// --- Profile picture ---
+function syncProfileAvatar(){
+  const pic=localStorage.getItem('tj_profile_pic');
+  // Sidebar
+  const sImg=document.getElementById('sidebar-avatar-img');
+  const sInit=document.getElementById('sidebar-avatar-init');
+  if(sImg){ if(pic){ sImg.src=pic; sImg.style.display='block'; if(sInit) sInit.style.display='none'; } else { sImg.style.display='none'; if(sInit) sInit.style.display=''; } }
+  // Portfolio card
+  const pImg=document.getElementById('portfolio-avatar-img');
+  const pInit=document.getElementById('portfolio-avatar-init');
+  if(pImg){ if(pic){ pImg.src=pic; pImg.style.display='block'; if(pInit) pInit.style.display='none'; } else { pImg.style.display='none'; if(pInit) pInit.style.display=''; } }
+}
+function triggerProfilePicUpload(){
+  let inp=document.getElementById('_profile-pic-input');
+  if(!inp){ inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.id='_profile-pic-input'; inp.style.display='none'; document.body.appendChild(inp);
+    inp.addEventListener('change',()=>{
+      const file=inp.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=e=>{ localStorage.setItem('tj_profile_pic',e.target.result); syncProfileAvatar(); inp.value=''; };
+      reader.readAsDataURL(file);
+    });
+  }
+  inp.click();
+}
 function showAuthScreen(){ currentUser=null; trades=[]; document.getElementById('app').classList.remove('show'); document.getElementById('auth-screen').classList.add('show'); }
 // NOTE: never await supabase queries directly inside onAuthStateChange —
 // supabase-js holds an internal lock during this callback and the queries
@@ -3072,107 +3125,54 @@ function _renderWallet(){
   drawDeployedBar(totalCashUSD, deployedUSD, openTrades);
 }
 
-// Monochromatic brand-blue ramp, largest holding gets the lightest shade
-const DONUT_BLUES=['#93c5fd','#5098e8','#1a6fd4','#004aad','#003a8c','#1e40af','#1e3a8a','#172554'];
+// Brand-blue palette for holdings list dots
+const DONUT_BLUES=['#93c5fd','#5098e8','#1a6fd4','#004aad','#003a8c','#1e40af','#6366f1','#f59e0b','#10b981','#ef4444'];
 
 function drawWalletDonut(cashUSD, deployedUSD){
-  const canvas=document.getElementById('wallet-donut'); if(!canvas) return;
-  const W=380, H=380, cx=W/2, cy=H/2, R=118, r=66;
-  canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
-
   let segments=[];
-  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd}); });
-  if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD});
-  privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v}); });
+  wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd,type:'wallet'}); });
+  if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,type:'trades'});
+  privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v,type:'invest'}); });
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
-  const totalEl=document.getElementById('wallet-donut-total');
-  if(totalEl) totalEl.textContent=total?('Total: $'+fmtMoney(total)):'';
-  if(!total){ ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='12px Inter,system-ui'; ctx.textAlign='center'; ctx.fillText('No data',cx,cy); return; }
 
-  // biggest first, assign blue shades
+  // Update hero total
+  const totalEl=document.getElementById('wallet-donut-total');
+  if(totalEl) totalEl.textContent=total?'$'+fmtMoney(total):'$0.00';
+
+  // Breakdown change line (placeholder — can wire to historical data later)
+  const changeEl=document.getElementById('portfolio-breakdown-change');
+  if(changeEl) changeEl.textContent=total?'Total tracked portfolio':'No holdings yet — add wallets to get started';
+
   segments.sort((a,b)=>b.val-a.val);
   segments.forEach((sg,i)=>{ sg.color=DONUT_BLUES[i%DONUT_BLUES.length]; sg.pct=sg.val/total*100; });
 
-  const bgCol=themeVal('#101726','#ffffff');
-  let angle=-Math.PI/2;
-  segments.forEach(sg=>{
-    const slice=sg.val/total*Math.PI*2;
-    sg.mid=angle+slice/2;
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
-    ctx.fillStyle=sg.color; ctx.fill();
-    ctx.strokeStyle=bgCol; ctx.lineWidth=3; ctx.stroke();
-    angle+=slice;
-  });
-
-  // Hole
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=bgCol; ctx.fill();
-
-  // Center total
-  ctx.textAlign='center';
-  ctx.fillStyle=themeVal('#e2e8f0','#0f172a'); ctx.font='600 17px Inter,system-ui';
-  ctx.fillText('$'+Math.round(total).toLocaleString(),cx,cy-2);
-  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px Inter,system-ui';
-  ctx.fillText('TOTAL TRACKED',cx,cy+14);
-
-  // Logo badges inside segments (initials; custom logos supported via wallet colour field later)
-  segments.forEach(sg=>{
-    if(sg.pct<4) return; // too thin for a badge
-    const bx=cx+Math.cos(sg.mid)*((R+r)/2), by=cy+Math.sin(sg.mid)*((R+r)/2);
-    const s=Math.min(15+sg.pct*0.35,22); // badge half-size scales with slice
-    ctx.save();
-    ctx.shadowColor='rgba(0,0,0,.25)'; ctx.shadowBlur=6;
-    roundRect(ctx,bx-s,by-s,s*2,s*2,7); ctx.fillStyle=bgCol; ctx.fill();
-    ctx.restore();
-    ctx.fillStyle=themeVal('#e2e8f0','#1e3a8a');
-    ctx.font='600 '+Math.round(s*0.62)+'px Inter,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(initialsOf(sg.label),bx,by+1);
-    ctx.textBaseline='alphabetic';
-  });
-
-  // Outside ticker-style labels — only for slices big enough to matter
-  // (small slivers live in the legend), with per-side collision stacking
-  const labeled=segments.filter(sg=>sg.pct>=3.5).map(sg=>({
-    sg,
-    right:Math.cos(sg.mid)>=0,
-    ly:cy+Math.sin(sg.mid)*(R+20)
-  }));
-  ['left','right'].forEach(side=>{
-    const group=labeled.filter(l=>side==='right'?l.right:!l.right).sort((a,b)=>a.ly-b.ly);
-    const MIN=30;
-    for(let i=1;i<group.length;i++) if(group[i].ly-group[i-1].ly<MIN) group[i].ly=group[i-1].ly+MIN;
-    // keep inside canvas
-    for(let i=group.length-1;i>=0;i--){
-      const maxY=H-20-(group.length-1-i)*MIN;
-      if(group[i].ly>maxY) group[i].ly=maxY;
-    }
-    group.forEach(l=>{ if(l.ly<18) l.ly=18; });
-  });
-  labeled.forEach(l=>{
-    const {sg,right}=l;
-    let lx=cx+Math.cos(sg.mid)*(R+14);
-    ctx.textAlign=right?'left':'right';
-    const name=(sg.label.length>11?sg.label.slice(0,10)+'…':sg.label).toUpperCase();
-    ctx.font='600 11px Inter,system-ui';
-    const tw=Math.max(ctx.measureText(name).width, 44);
-    if(right) lx=Math.min(lx, W-tw-4); else lx=Math.max(lx, tw+4);
-    ctx.fillStyle=themeVal('#5098e8','#004aad');
-    ctx.fillText(name,lx,l.ly-2);
-    ctx.fillStyle=themeVal('#e2e8f0','#0f172a'); ctx.font='500 11px Inter,system-ui';
-    ctx.fillText(sg.pct.toFixed(2)+'%',lx,l.ly+12);
-  });
-
-  // Legend
+  // Holdings list
   const legendEl=document.getElementById('wallet-legend');
-  legendEl.innerHTML=segments.map(sg=>`
-    <div class="wallet-legend-row">
-      <div style="display:flex;align-items:center;gap:7px">
-        <div class="wallet-legend-dot" style="background:${sg.color}"></div>
-        <span style="color:var(--muted2)">${sg.label}</span>
+  if(!legendEl) return;
+  if(!total){
+    legendEl.innerHTML='<div style="padding:20px 22px;color:var(--muted);font-size:13px">No holdings yet</div>';
+    return;
+  }
+
+  // Bar width for the inline share bar
+  legendEl.innerHTML=segments.map((sg,i)=>`
+    <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0;padding:9px 18px;border-top:${i>0?'1px solid var(--border)':'none'};transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${sg.color}"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
       </div>
-      <span style="font-weight:600">$${fmtMoney(sg.val)} <span style="color:var(--muted);font-weight:400">· ${sg.pct.toFixed(1)}%</span></span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);padding-right:16px;white-space:nowrap">$${fmtMoney(sg.val)}</span>
+      <div style="width:56px;text-align:right">
+        <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:3px">
+          <div style="height:100%;border-radius:2px;background:${sg.color};width:${sg.pct.toFixed(1)}%"></div>
+        </div>
+        <span style="font-size:10px;font-weight:600;color:var(--muted)">${sg.pct.toFixed(1)}%</span>
+      </div>
     </div>`).join('');
+
+  // Sync profile avatar in this card
+  syncProfileAvatar();
 }
 function roundRect(ctx,x,y,w,h,rad){ ctx.beginPath(); ctx.moveTo(x+rad,y); ctx.arcTo(x+w,y,x+w,y+h,rad); ctx.arcTo(x+w,y+h,x,y+h,rad); ctx.arcTo(x,y+h,x,y,rad); ctx.arcTo(x,y,x+w,y,rad); ctx.closePath(); }
 function initialsOf(name){

@@ -1418,6 +1418,41 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Wallet Flow Modal (Deposit / Withdraw) -->
+<div class="overlay" id="flow-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" id="flow-modal-title">Deposit</div>
+      <button class="modal-close" onclick="closeFlowModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <!-- Type toggle -->
+    <div class="type-toggle" style="margin-bottom:18px">
+      <button class="type-btn active" id="flow-btn-in" onclick="setFlowType('in')">⬇ Deposit / Inflow</button>
+      <button class="type-btn" id="flow-btn-out" onclick="setFlowType('out')">⬆ Withdraw / Outflow</button>
+    </div>
+    <div id="flow-wallet-label" style="font-size:13px;color:var(--muted2);background:var(--surface2);border-radius:var(--r-sm);padding:8px 12px;margin-bottom:16px"></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Amount</label>
+        <input class="form-input" type="number" step="any" min="0" id="flow-amount" placeholder="e.g. 50.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="flow-date">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="flow-notes" placeholder="e.g. Client payment, ATM withdrawal…">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:8px">
+      <button type="button" class="btn btn-primary" id="flow-save-btn" onclick="saveFlow()">Save</button>
+      <button type="button" class="btn btn-ghost" onclick="closeFlowModal()">Cancel</button>
+    </div>
+    <div id="flow-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
+  </div>
+</div>
+
 <!-- Loan Modal -->
 <div class="overlay" id="loan-modal">
   <div class="modal" style="max-width:540px">
@@ -2664,6 +2699,67 @@ function openTransferModal(){
 function closeTransferModal(){ document.getElementById('transfer-modal').classList.remove('open'); }
 document.getElementById('transfer-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTransferModal();});
 
+// Pre-select "from" wallet and open transfer modal
+function openTransferFrom(walletId){
+  openTransferModal();
+  const fromSel=document.getElementById('tr-from');
+  if(walletId) fromSel.value=walletId;
+  // Auto-select a different wallet for "to"
+  const toSel=document.getElementById('tr-to');
+  const opts=[...fromSel.options];
+  const other=opts.find(o=>o.value!==walletId);
+  if(other) toSel.value=other.value;
+}
+
+// --- Deposit / Withdraw modal ---
+let _flowWalletId=null, _flowType='in';
+function openFlowModal(walletId, type='in'){
+  _flowWalletId=walletId; _flowType=type;
+  const w=wallets.find(x=>x.id===walletId);
+  document.getElementById('flow-modal-title').textContent=type==='in'?'Deposit / Inflow':'Withdraw / Outflow';
+  document.getElementById('flow-wallet-label').innerHTML=
+    `<strong>${w?.wallet_name||w?.platform||'Wallet'}</strong> &nbsp;·&nbsp; Current balance: <strong>${ccySym(w?.currency||'USD')}${fmtMoney(w?.balance||0)}</strong>`;
+  document.getElementById('flow-amount').value='';
+  document.getElementById('flow-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('flow-notes').value='';
+  showModalErr('flow-error','');
+  setFlowType(type);
+  document.getElementById('flow-modal').classList.add('open');
+}
+function closeFlowModal(){ document.getElementById('flow-modal').classList.remove('open'); }
+document.getElementById('flow-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFlowModal();});
+function setFlowType(type){
+  _flowType=type;
+  document.getElementById('flow-btn-in').classList.toggle('active',type==='in');
+  document.getElementById('flow-btn-out').classList.toggle('active',type==='out');
+  document.getElementById('flow-modal-title').textContent=type==='in'?'Deposit / Inflow':'Withdraw / Outflow';
+}
+async function saveFlow(){
+  showModalErr('flow-error','');
+  const amount=parseFloat(document.getElementById('flow-amount').value);
+  const date=document.getElementById('flow-date').value;
+  const notes=document.getElementById('flow-notes').value.trim();
+  if(isNaN(amount)||amount<=0){ showModalErr('flow-error','Enter a valid amount greater than 0.'); return; }
+  if(!date){ showModalErr('flow-error','Please set a date.'); return; }
+  const w=wallets.find(x=>x.id===_flowWalletId);
+  if(!w){ showModalErr('flow-error','Wallet not found.'); return; }
+  const delta=_flowType==='in'?amount:-amount;
+  const newBal=Math.max(0,(w.balance||0)+delta);
+  const autoNote=(_flowType==='in'?'Deposit':'Withdrawal')+(notes?' — '+notes:'');
+  const btn=document.getElementById('flow-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  try {
+    const{error}=await sb.from('wallets').update({balance:newBal,updated_at:new Date().toISOString()}).eq('id',_flowWalletId);
+    if(error) throw error;
+    await sb.from('wallet_history').insert([{user_id:currentUser.id,wallet_id:_flowWalletId,balance:newBal,currency:w.currency||'USD',recorded_at:date+'T12:00:00',notes:autoNote}]);
+    const idx=wallets.findIndex(x=>x.id===_flowWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
+    await loadWalletHistory();
+    closeFlowModal();
+    showToast(`${_flowType==='in'?'Deposit':'Withdrawal'} of ${ccySym(w.currency||'USD')}${fmtMoney(amount)} recorded. New balance: ${ccySym(w.currency||'USD')}${fmtMoney(newBal)}`,'success');
+    renderWallet();
+  } catch(err){ showModalErr('flow-error','Save failed: '+err.message); }
+  finally { btn.disabled=false; btn.textContent='Save'; }
+}
+
 function calcTransferCharge(){
   const sent=parseFloat(document.getElementById('tr-sent').value);
   const recv=parseFloat(document.getElementById('tr-received').value);
@@ -3106,9 +3202,12 @@ function _renderWallet(){
         +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Recent Trades</div>'
         +tradeRows
         +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
-        +'<div class="wallet-actions">'
+        +'<div class="wallet-actions" style="flex-wrap:wrap;gap:6px">'
+          +'<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.3);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'in\')">⬇ Deposit</button>'
+          +'<button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'out\')">⬆ Withdraw</button>'
+          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:80px" onclick="openTransferFrom(\''+w.id+'\')">⇄ Transfer</button>'
           +'<button class="btn btn-sm btn-ghost" onclick="openWalletModal(\''+w.id+'\')">Edit</button>'
-          +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+' Remove</button>'
+          +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+'</button>'
         +'</div>'
         +'</div>';
     }).join('');

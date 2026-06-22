@@ -3157,21 +3157,37 @@ function _renderWallet(){
       const subLine=subParts.join(' · ')||(CURRENCIES_FULL[w.currency]||w.currency);
       const typeLabel=w.account_type||'';
 
-      // Recent closed trades linked to this wallet (last 5)
-      const linked=trades.filter(function(t){
+      // Only show trades on broker wallets (those with an exchange field)
+      const isBroker=!!(w.exchange&&w.exchange.trim());
+      const linked=isBroker?trades.filter(function(t){
         if(t.status!=='closed') return false;
-        if(w.exchange&&t.exchange&&t.exchange.toUpperCase()===w.exchange.toUpperCase()) return true;
-        if(!w.exchange&&t.currency===w.currency) return true;
-        return false;
-      }).slice(0,5);
+        return t.exchange&&t.exchange.toUpperCase()===w.exchange.toUpperCase();
+      }).slice(0,5):[];
 
-      const tradeRows=linked.length?linked.map(function(t){
-        const p=calcPnL(t)||0;
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">'
-          +'<span style="color:var(--muted2)">'+t.symbol+'</span>'
-          +'<span class="'+(p>=0?'pnl-pos':'pnl-neg')+'" style="font-weight:600">'+(p>=0?'+':'')+ccySym(w.currency)+Math.abs(p).toFixed(2)+'</span>'
-          +'</div>';
-      }).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">No closed trades linked yet</div>';
+      // For non-broker wallets show recent deposit/withdrawal history instead
+      const recentFlow=(!isBroker)?[...walletHistory]
+        .filter(h=>h.wallet_id===w.id&&h.notes)
+        .sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at))
+        .slice(0,5):[];
+
+      let tradeRows='';
+      if(isBroker){
+        tradeRows=linked.length?linked.map(function(t){
+          const p=calcPnL(t)||0;
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">'
+            +'<span style="color:var(--muted2)">'+t.symbol+'</span>'
+            +'<span class="'+(p>=0?'pnl-pos':'pnl-neg')+'" style="font-weight:600">'+(p>=0?'+':'')+ccySym(w.currency)+Math.abs(p).toFixed(2)+'</span>'
+            +'</div>';
+        }).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">No closed trades linked yet</div>';
+      } else {
+        tradeRows=recentFlow.length?recentFlow.map(function(h){
+          const isIn=h.notes&&h.notes.toLowerCase().startsWith('deposit');
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">'
+            +'<span style="color:var(--muted2);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h.notes+'</span>'
+            +'<span style="font-weight:600;color:'+(isIn?'#10b981':'var(--red)')+'">'+new Date(h.recorded_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>'
+            +'</div>';
+        }).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">No transactions yet — use Deposit / Withdraw</div>';
+      }
 
       const usdLine=w.currency==='USD'||w.currency==='USDT'?''
         :getLatestRate(w.currency)?'<span style="font-size:13px;color:var(--muted2);font-weight:600">≈ $'+fmtMoney(usd)+' USD</span>'
@@ -3199,7 +3215,7 @@ function _renderWallet(){
           +'</div>'
           :'')
         +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+w.notes+'</div>':'')
-        +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Recent Trades</div>'
+        +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">'+(isBroker?'Recent Trades':'Recent Transactions')+'</div>'
         +tradeRows
         +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
         +'<div class="wallet-actions" style="flex-wrap:wrap;gap:6px">'

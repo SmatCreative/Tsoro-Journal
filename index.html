@@ -1453,6 +1453,43 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Wallet Transactions Modal -->
+<div class="overlay" id="wallet-tx-modal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="wtx-title">Transactions</div>
+        <div id="wtx-subtitle" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <button class="modal-close" onclick="closeWalletTxModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="wtx-list"></div>
+    <!-- Inline edit form (hidden until Edit clicked) -->
+    <div id="wtx-edit-form" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-top:14px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Edit Transaction</div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr">
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <input class="form-input" type="number" step="any" min="0" id="wtx-edit-amount" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" type="date" id="wtx-edit-date">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Notes</label>
+          <input class="form-input" id="wtx-edit-notes" placeholder="Description">
+        </div>
+      </div>
+      <div class="form-row">
+        <button class="btn btn-primary btn-sm" onclick="saveWalletTxEdit()">Save Changes</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelWalletTxEdit()">Cancel</button>
+      </div>
+      <div id="wtx-edit-error" style="display:none;color:var(--red);font-size:12px;margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Loan Modal -->
 <div class="overlay" id="loan-modal">
   <div class="modal" style="max-width:540px">
@@ -2750,7 +2787,7 @@ async function saveFlow(){
   try {
     const{error}=await sb.from('wallets').update({balance:newBal,updated_at:new Date().toISOString()}).eq('id',_flowWalletId);
     if(error) throw error;
-    await sb.from('wallet_history').insert([{user_id:currentUser.id,wallet_id:_flowWalletId,balance:newBal,currency:w.currency||'USD',recorded_at:date+'T12:00:00',notes:autoNote}]);
+    await sb.from('wallet_history').insert([{user_id:currentUser.id,wallet_id:_flowWalletId,balance:newBal,currency:w.currency||'USD',recorded_at:date+'T12:00:00',notes:autoNote,amount,tx_type:_flowType==='in'?'deposit':'withdrawal'}]);
     const idx=wallets.findIndex(x=>x.id===_flowWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
     await loadWalletHistory();
     closeFlowModal();
@@ -2758,6 +2795,139 @@ async function saveFlow(){
     renderWallet();
   } catch(err){ showModalErr('flow-error','Save failed: '+err.message); }
   finally { btn.disabled=false; btn.textContent='Save'; }
+}
+
+// ── Wallet Transaction History Modal ──────────────────────────────────────────
+let _wtxWalletId=null, _wtxEditId=null;
+
+const TX_ICONS={deposit:'⬇',withdrawal:'⬆',transfer_in:'⇄',transfer_out:'⇄'};
+const TX_COLORS={deposit:'#10b981',withdrawal:'var(--red)',transfer_in:'#6366f1',transfer_out:'#f59e0b'};
+const TX_LABELS={deposit:'Deposit',withdrawal:'Withdrawal',transfer_in:'Transfer In',transfer_out:'Transfer Out'};
+
+function openWalletTxModal(walletId){
+  _wtxWalletId=walletId; _wtxEditId=null;
+  const w=wallets.find(x=>x.id===walletId);
+  document.getElementById('wtx-title').textContent=(w?.wallet_name||w?.platform||'Wallet')+' — Transactions';
+  document.getElementById('wtx-subtitle').textContent=`${w?.currency||'USD'} · Current balance: ${ccySym(w?.currency||'USD')}${fmtMoney(w?.balance||0)}`;
+  document.getElementById('wtx-edit-form').style.display='none';
+  renderWalletTxList();
+  document.getElementById('wallet-tx-modal').classList.add('open');
+}
+function closeWalletTxModal(){ document.getElementById('wallet-tx-modal').classList.remove('open'); }
+document.getElementById('wallet-tx-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeWalletTxModal();});
+
+function renderWalletTxList(){
+  const entries=[...walletHistory]
+    .filter(h=>h.wallet_id===_wtxWalletId)
+    .sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at));
+  const w=wallets.find(x=>x.id===_wtxWalletId);
+  const ccy=w?.currency||'USD';
+  const el=document.getElementById('wtx-list');
+  if(!entries.length){
+    el.innerHTML='<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">No transactions yet.<br>Use Deposit, Withdraw or Transfer to record activity.</div>';
+    return;
+  }
+  el.innerHTML='<div style="max-height:420px;overflow-y:auto">'
+    +entries.map(h=>{
+      const type=h.tx_type||'deposit';
+      const icon=TX_ICONS[type]||'•';
+      const color=TX_COLORS[type]||'var(--muted2)';
+      const label=TX_LABELS[type]||type;
+      const amt=h.amount!=null?h.amount:null;
+      const date=new Date(h.recorded_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+      const sign=type==='withdrawal'||type==='transfer_out'?'−':'+';
+      const amtStr=amt!=null?(sign+ccySym(ccy)+fmtMoney(amt)):'—';
+      const noteText=(h.notes||'').replace(/^(Deposit|Withdrawal|Transfer (to|from) [^·]+)\s*[·—-]?\s*/i,'').trim();
+      return `<div style="display:grid;grid-template-columns:36px 1fr auto auto;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border)" id="wtx-row-${h.id}">
+        <div style="width:34px;height:34px;border-radius:50%;background:${color}20;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">${icon}</div>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">${date}${noteText?' · '+noteText:''}</div>
+          <div style="font-size:11px;color:var(--muted2);margin-top:1px">Balance after: ${ccySym(ccy)}${fmtMoney(h.balance)}</div>
+        </div>
+        <div style="font-size:15px;font-weight:700;color:${color};white-space:nowrap">${amtStr}</div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm btn-ghost" style="padding:4px 8px;font-size:11px" onclick="startWalletTxEdit('${h.id}')">Edit</button>
+          <button class="btn btn-sm" style="padding:4px 8px;font-size:11px;background:transparent;color:var(--red);border:1px solid var(--border)" onclick="deleteWalletTx('${h.id}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('')
+    +'</div>';
+}
+
+function startWalletTxEdit(txId){
+  _wtxEditId=txId;
+  const h=walletHistory.find(x=>x.id===txId); if(!h) return;
+  document.getElementById('wtx-edit-amount').value=h.amount!=null?h.amount:'';
+  document.getElementById('wtx-edit-date').value=h.recorded_at.slice(0,10);
+  const noteText=(h.notes||'').replace(/^(Deposit|Withdrawal|Transfer (to|from) [^·]+)\s*[·—-]?\s*/i,'').trim();
+  document.getElementById('wtx-edit-notes').value=noteText;
+  document.getElementById('wtx-edit-error').style.display='none';
+  document.getElementById('wtx-edit-form').style.display='block';
+  document.getElementById('wtx-edit-form').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function cancelWalletTxEdit(){
+  _wtxEditId=null;
+  document.getElementById('wtx-edit-form').style.display='none';
+}
+
+async function saveWalletTxEdit(){
+  const errEl=document.getElementById('wtx-edit-error');
+  errEl.style.display='none';
+  const h=walletHistory.find(x=>x.id===_wtxEditId); if(!h){errEl.textContent='Entry not found.';errEl.style.display='block';return;}
+  const amount=parseFloat(document.getElementById('wtx-edit-amount').value);
+  const date=document.getElementById('wtx-edit-date').value;
+  const userNote=document.getElementById('wtx-edit-notes').value.trim();
+  if(isNaN(amount)||amount<=0){errEl.textContent='Enter a valid amount.';errEl.style.display='block';return;}
+  if(!date){errEl.textContent='Select a date.';errEl.style.display='block';return;}
+  const w=wallets.find(x=>x.id===_wtxWalletId);
+  const type=h.tx_type||'deposit';
+  const prefix=TX_LABELS[type]||type;
+  const newNote=prefix+(userNote?' — '+userNote:'');
+  // Recalculate wallet balance delta: new amount vs old amount
+  const oldAmt=h.amount||0;
+  const sign=(type==='deposit'||type==='transfer_in')?1:-1;
+  const balDiff=(amount-oldAmt)*sign;
+  const newBal=Math.max(0,(w?.balance||0)+balDiff);
+  try {
+    const{error}=await sb.from('wallet_history').update({amount,recorded_at:date+'T12:00:00',notes:newNote,balance:h.balance+balDiff}).eq('id',_wtxEditId);
+    if(error) throw error;
+    if(balDiff!==0){
+      await sb.from('wallets').update({balance:newBal}).eq('id',_wtxWalletId);
+      const idx=wallets.findIndex(x=>x.id===_wtxWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
+    }
+    await loadWalletHistory();
+    cancelWalletTxEdit();
+    renderWalletTxList();
+    // Update subtitle
+    const wNow=wallets.find(x=>x.id===_wtxWalletId);
+    document.getElementById('wtx-subtitle').textContent=`${wNow?.currency||'USD'} · Current balance: ${ccySym(wNow?.currency||'USD')}${fmtMoney(wNow?.balance||0)}`;
+    showToast('Transaction updated.','success');
+    renderWallet();
+  } catch(err){errEl.textContent='Save failed: '+err.message;errEl.style.display='block';}
+}
+
+async function deleteWalletTx(txId){
+  if(!confirm('Delete this transaction? The wallet balance will be adjusted.')) return;
+  const h=walletHistory.find(x=>x.id===txId); if(!h) return;
+  const w=wallets.find(x=>x.id===_wtxWalletId);
+  const type=h.tx_type||'deposit';
+  const sign=(type==='deposit'||type==='transfer_in')?1:-1;
+  const amt=h.amount||0;
+  const newBal=Math.max(0,(w?.balance||0)-(amt*sign));
+  try {
+    const{error}=await sb.from('wallet_history').delete().eq('id',txId);
+    if(error) throw error;
+    if(amt>0){
+      await sb.from('wallets').update({balance:newBal}).eq('id',_wtxWalletId);
+      const idx=wallets.findIndex(x=>x.id===_wtxWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
+    }
+    walletHistory=walletHistory.filter(x=>x.id!==txId);
+    renderWalletTxList();
+    document.getElementById('wtx-subtitle').textContent=`${w?.currency||'USD'} · Current balance: ${ccySym(w?.currency||'USD')}${fmtMoney(newBal)}`;
+    showToast('Transaction deleted.','success');
+    renderWallet();
+  } catch(err){ alert('Delete failed: '+err.message); }
 }
 
 function calcTransferCharge(){
@@ -2803,8 +2973,8 @@ async function saveTransfer(){
     if(e2) throw e2;
     // Record history snapshots for both
     await sb.from('wallet_history').insert([
-      {user_id:currentUser.id,wallet_id:fromId,balance:newFromBal,currency:fromW.currency||'USD',recorded_at:date+'T12:00:00'},
-      {user_id:currentUser.id,wallet_id:toId,balance:newToBal,currency:toW.currency||'USD',recorded_at:date+'T12:00:01'},
+      {user_id:currentUser.id,wallet_id:fromId,balance:newFromBal,currency:fromW.currency||'USD',recorded_at:date+'T12:00:00',amount:sent,tx_type:'transfer_out',notes:noteFrom},
+      {user_id:currentUser.id,wallet_id:toId,balance:newToBal,currency:toW.currency||'USD',recorded_at:date+'T12:00:01',amount:received,tx_type:'transfer_in',notes:noteTo},
     ]);
     // Sync local state
     const fi=wallets.findIndex(w=>w.id===fromId); if(fi>=0) wallets[fi]={...wallets[fi],balance:newFromBal};
@@ -3222,6 +3392,7 @@ function _renderWallet(){
           +'<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.3);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'in\')">⬇ Deposit</button>'
           +'<button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'out\')">⬆ Withdraw</button>'
           +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:80px" onclick="openTransferFrom(\''+w.id+'\')">⇄ Transfer</button>'
+          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:80px" onclick="openWalletTxModal(\''+w.id+'\')">📋 History</button>'
           +'<button class="btn btn-sm btn-ghost" onclick="openWalletModal(\''+w.id+'\')">Edit</button>'
           +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+'</button>'
         +'</div>'

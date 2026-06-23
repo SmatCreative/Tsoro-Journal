@@ -5649,22 +5649,6 @@ function drawZseChart(canvas, h, pts){
   } catch(e){ console.warn('[Tsoro] chart draw error:',e); }
 }
 
-function fillDailyPriceGaps(pts){
-  if(pts.length<2) return pts;
-  const result=[pts[0]];
-  for(let i=1;i<pts.length;i++){
-    const prev=result[result.length-1];
-    const prevDate=new Date(prev.date), nextDate=new Date(pts[i].date);
-    let cur=new Date(prevDate); cur.setDate(cur.getDate()+1);
-    while(cur<nextDate){
-      result.push({date:cur.toISOString().slice(0,10),price:prev.price,note:'carry-forward'});
-      cur.setDate(cur.getDate()+1);
-    }
-    result.push(pts[i]);
-  }
-  return result;
-}
-
 function renderZsePriceCharts(){
   const el=document.getElementById('zse-price-charts'); if(!el) return;
   const holdings=loadZseHoldings();
@@ -5681,8 +5665,6 @@ function renderZsePriceCharts(){
       bySymbol[h.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
     bySymbol[h.symbol].sort((a,b)=>a.date.localeCompare(b.date));
     bySymbol[h.symbol]=bySymbol[h.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
-    // Fill daily gaps: carry forward previous day's price for missing days
-    bySymbol[h.symbol]=fillDailyPriceGaps(bySymbol[h.symbol]);
   });
 
   el.innerHTML=`

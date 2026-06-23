@@ -686,6 +686,30 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         </div>
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div></div>
 
+        <!-- Money Flow Report -->
+        <div style="margin-top:28px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Money Flow Report</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">All deposits, withdrawals and transfers across every wallet</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select class="form-select" id="mfr-wallet-filter" onchange="renderMoneyFlowReport()" style="padding:7px 10px;font-size:12px;width:auto">
+                <option value="all">All Wallets</option>
+              </select>
+              <select class="form-select" id="mfr-type-filter" onchange="renderMoneyFlowReport()" style="padding:7px 10px;font-size:12px;width:auto">
+                <option value="all">All Types</option>
+                <option value="deposit">Deposits</option>
+                <option value="withdrawal">Withdrawals</option>
+                <option value="transfer_in">Transfers In</option>
+                <option value="transfer_out">Transfers Out</option>
+              </select>
+            </div>
+          </div>
+          <div id="mfr-summary" style="margin-bottom:16px"></div>
+          <div class="card" style="padding:0;overflow:hidden"><div id="mfr-table"></div></div>
+        </div>
+
         <!-- Loans & Debts (embedded in Portfolio & Wallet) -->
         <div style="margin-top:28px">
           <div id="loans-summary" style="margin-bottom:20px"></div>
@@ -2930,6 +2954,96 @@ async function deleteWalletTx(txId){
   } catch(err){ alert('Delete failed: '+err.message); }
 }
 
+// ── Money Flow Report ─────────────────────────────────────────────────────────
+function renderMoneyFlowReport(){
+  // Populate wallet filter
+  const wSel=document.getElementById('mfr-wallet-filter');
+  if(wSel){
+    const cur=wSel.value;
+    wSel.innerHTML='<option value="all">All Wallets</option>'
+      +wallets.map(w=>`<option value="${w.id}">${w.wallet_name||w.platform}</option>`).join('');
+    if(cur) wSel.value=cur;
+  }
+
+  const walletFilter=wSel?.value||'all';
+  const typeFilter=document.getElementById('mfr-type-filter')?.value||'all';
+
+  // Get entries with wallet info
+  let entries=[...walletHistory]
+    .filter(h=>h.tx_type) // only tagged entries (deposit/withdrawal/transfer)
+    .map(h=>{
+      const w=wallets.find(x=>x.id===h.wallet_id);
+      return {...h,walletName:w?.wallet_name||w?.platform||'Unknown',currency:h.currency||w?.currency||'USD'};
+    });
+
+  if(walletFilter!=='all') entries=entries.filter(h=>h.wallet_id===walletFilter);
+  if(typeFilter!=='all') entries=entries.filter(h=>h.tx_type===typeFilter);
+  entries.sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at));
+
+  // Summary totals (unfiltered by type for accuracy)
+  const all=walletHistory.filter(h=>h.tx_type&&(walletFilter==='all'||h.wallet_id===walletFilter));
+  const totalIn  =all.filter(h=>h.tx_type==='deposit'||h.tx_type==='transfer_in').reduce((s,h)=>s+(h.amount||0),0);
+  const totalOut =all.filter(h=>h.tx_type==='withdrawal'||h.tx_type==='transfer_out').reduce((s,h)=>s+(h.amount||0),0);
+  const net=totalIn-totalOut;
+
+  const summaryEl=document.getElementById('mfr-summary');
+  if(summaryEl) summaryEl.innerHTML=`
+    <div class="wallet-summary-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="wallet-sum-card" style="border-top:2px solid #10b981">
+        <div class="wallet-sum-lbl">Total Inflow</div>
+        <div class="wallet-sum-val pnl-pos">$${fmtMoney(toUSD(totalIn,'USD'))}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">deposits + transfers in</div>
+      </div>
+      <div class="wallet-sum-card" style="border-top:2px solid var(--red)">
+        <div class="wallet-sum-lbl">Total Outflow</div>
+        <div class="wallet-sum-val pnl-neg">$${fmtMoney(toUSD(totalOut,'USD'))}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">withdrawals + transfers out</div>
+      </div>
+      <div class="wallet-sum-card" style="border-top:2px solid ${net>=0?'var(--accent)':'var(--red)'}">
+        <div class="wallet-sum-lbl">Net Flow</div>
+        <div class="wallet-sum-val" style="color:${net>=0?'var(--accent2)':'var(--red)'}">${net>=0?'+':''}$${fmtMoney(Math.abs(net))}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">inflow minus outflow</div>
+      </div>
+    </div>`;
+
+  const tableEl=document.getElementById('mfr-table');
+  if(!tableEl) return;
+  if(!entries.length){
+    tableEl.innerHTML='<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">No transactions recorded yet.<br>Use Deposit, Withdraw or Transfer on any wallet card.</div>';
+    return;
+  }
+
+  const typeColor={deposit:'#10b981',withdrawal:'var(--red)',transfer_in:'#6366f1',transfer_out:'#f59e0b'};
+  const typeLabel={deposit:'Deposit',withdrawal:'Withdrawal',transfer_in:'Transfer In',transfer_out:'Transfer Out'};
+  const typeIcon={deposit:'⬇',withdrawal:'⬆',transfer_in:'⇄',transfer_out:'⇄'};
+
+  tableEl.innerHTML=`
+    <div style="display:grid;grid-template-columns:32px 1fr 140px 110px 100px;align-items:center;padding:9px 18px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">
+      <div></div><div>Description</div><div>Wallet</div><div style="text-align:right">Amount</div><div style="text-align:right">Date</div>
+    </div>
+    `+entries.map(h=>{
+      const type=h.tx_type||'deposit';
+      const color=typeColor[type]||'var(--muted2)';
+      const label=typeLabel[type]||type;
+      const icon=typeIcon[type]||'•';
+      const sign=(type==='withdrawal'||type==='transfer_out')?'−':'+';
+      const amt=h.amount!=null?`${sign}${ccySym(h.currency)}${fmtMoney(h.amount)}`:'—';
+      const noteRaw=(h.notes||'').replace(/^(Deposit|Withdrawal|Transfer (to|from) [^·—]+)\s*[·—]\s*/i,'').trim();
+      const note=noteRaw||label;
+      const date=new Date(h.recorded_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      return `<div style="display:grid;grid-template-columns:32px 1fr 140px 110px 100px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <div style="font-size:16px">${icon}</div>
+        <div>
+          <div style="font-weight:600;color:var(--text)">${label}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">${note}</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted2)">${h.walletName}</div>
+        <div style="text-align:right;font-weight:700;color:${color}">${amt}</div>
+        <div style="text-align:right;font-size:12px;color:var(--muted)">${date}</div>
+      </div>`;
+    }).join('');
+}
+
 function calcTransferCharge(){
   const sent=parseFloat(document.getElementById('tr-sent').value);
   const recv=parseFloat(document.getElementById('tr-received').value);
@@ -3078,6 +3192,7 @@ function renderWallet(){
   try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
   try { renderLoans(); } catch(e){ console.error('loans section:',e); }
+  try { renderMoneyFlowReport(); } catch(e){ console.error('money flow report:',e); }
 }
 
 // ── Wallet performance chart ───────────────────────────────────────
@@ -5534,6 +5649,22 @@ function drawZseChart(canvas, h, pts){
   } catch(e){ console.warn('[Tsoro] chart draw error:',e); }
 }
 
+function fillDailyPriceGaps(pts){
+  if(pts.length<2) return pts;
+  const result=[pts[0]];
+  for(let i=1;i<pts.length;i++){
+    const prev=result[result.length-1];
+    const prevDate=new Date(prev.date), nextDate=new Date(pts[i].date);
+    let cur=new Date(prevDate); cur.setDate(cur.getDate()+1);
+    while(cur<nextDate){
+      result.push({date:cur.toISOString().slice(0,10),price:prev.price,note:'carry-forward'});
+      cur.setDate(cur.getDate()+1);
+    }
+    result.push(pts[i]);
+  }
+  return result;
+}
+
 function renderZsePriceCharts(){
   const el=document.getElementById('zse-price-charts'); if(!el) return;
   const holdings=loadZseHoldings();
@@ -5550,6 +5681,8 @@ function renderZsePriceCharts(){
       bySymbol[h.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
     bySymbol[h.symbol].sort((a,b)=>a.date.localeCompare(b.date));
     bySymbol[h.symbol]=bySymbol[h.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
+    // Fill daily gaps: carry forward previous day's price for missing days
+    bySymbol[h.symbol]=fillDailyPriceGaps(bySymbol[h.symbol]);
   });
 
   el.innerHTML=`

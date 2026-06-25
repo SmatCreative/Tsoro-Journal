@@ -6296,7 +6296,7 @@ function buildSecurityCard(sec, exchange){
         </div>
         <div style="text-align:right">
           <div style="font-size:16px;font-weight:800;color:var(--text)">${last?sym+fmtNum(last.close):'—'}</div>
-          ${changePct!=null?`<div style="font-size:11px;font-weight:600;color:${isUp?'#10b981':'#ef4444'}">${isUp?'▲':'▼'} ${Math.abs(changePct).toFixed(2)}%</div>`:'<div style="font-size:11px;color:var(--muted)">${candles.length} day${candles.length!==1?'s':''}</div>'}
+          ${changePct!=null?('<div style="font-size:11px;font-weight:600;color:'+(isUp?'#10b981':'#ef4444')+'">'+(isUp?'▲':'▼')+' '+Math.abs(changePct).toFixed(2)+'%</div>'):'<div style="font-size:11px;color:var(--muted)">'+candles.length+' day'+(candles.length!==1?'s':'')+'</div>'}
         </div>
       </div>
       ${sec.sector?`<span style="font-size:10px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:6px">${sec.sector}</span>`:''}

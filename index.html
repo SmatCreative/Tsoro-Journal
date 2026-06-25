@@ -404,6 +404,15 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
       <span>Goals</span>
     </button>
+    <div class="nav-section">Markets</div>
+    <button class="nav-item" data-page="zse-market">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18"/><rect x="9" y="8" width="6" height="13"/><rect x="16" y="13" width="6" height="8"/></svg></span>
+      <span>ZSE Market</span>
+    </button>
+    <button class="nav-item" data-page="vfex-market">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><rect x="16" y="3" width="6" height="6"/><rect x="2" y="3" width="6" height="6"/></svg></span>
+      <span>VFEX Market</span>
+    </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar" onclick="triggerProfilePicUpload()" title="Change profile picture" style="cursor:pointer;overflow:hidden;padding:0">
@@ -808,8 +817,150 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="goals-list"></div>
       </div>
 
+      <!-- ZSE Market -->
+      <div class="page" id="page-zse-market">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.3px">ZSE Market</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:3px">Zimbabwe Stock Exchange — daily OHLC candle data</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('ZSE')">+ Add Security</button>
+            <button class="btn btn-primary btn-sm" onclick="openOhlcModal(null,'ZSE')">+ Add Candle Data</button>
+          </div>
+        </div>
+        <div id="zse-market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+      </div>
+
+      <!-- VFEX Market -->
+      <div class="page" id="page-vfex-market">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.3px">VFEX Market</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:3px">Victoria Falls Stock Exchange — daily OHLC candle data</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('VFEX')">+ Add Security</button>
+            <button class="btn btn-primary btn-sm" onclick="openOhlcModal(null,'VFEX')">+ Add Candle Data</button>
+          </div>
+        </div>
+        <div id="vfex-market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+      </div>
 
     </div>
+  </div>
+</div>
+
+<!-- Add Security Modal -->
+<div class="overlay" id="add-security-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" id="add-sec-title">Add Security</div>
+      <button class="modal-close" onclick="closeAddSecurityModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="add-sec-exchange">
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Ticker Symbol</label>
+        <input class="form-input" id="add-sec-symbol" placeholder="e.g. DELTA, INN.VX" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-select" id="add-sec-currency">
+          <option value="ZiG">ZiG</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Company Name</label>
+        <input class="form-input" id="add-sec-name" placeholder="e.g. Delta Corporation">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Sector <span class="opt">(optional)</span></label>
+        <input class="form-input" id="add-sec-sector" placeholder="e.g. Consumer Staples">
+      </div>
+    </div>
+    <div class="form-row">
+      <button class="btn btn-primary" onclick="saveAddSecurity()">Add Security</button>
+      <button class="btn btn-ghost" onclick="closeAddSecurityModal()">Cancel</button>
+    </div>
+    <div id="add-sec-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- OHLC Entry Modal -->
+<div class="overlay" id="ohlc-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="ohlc-modal-title">Add Candle Data</div>
+      <button class="modal-close" onclick="closeOhlcModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="ohlc-edit-id">
+    <input type="hidden" id="ohlc-exchange">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Security</label>
+        <select class="form-select" id="ohlc-symbol"></select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Date</label>
+        <input class="form-input" type="date" id="ohlc-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Open</label>
+        <input class="form-input" type="number" step="any" min="0" id="ohlc-open" placeholder="0.00" oninput="ohlcAutoHiLo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Close</label>
+        <input class="form-input" type="number" step="any" min="0" id="ohlc-close" placeholder="0.00" oninput="ohlcAutoHiLo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">High</label>
+        <input class="form-input" type="number" step="any" min="0" id="ohlc-high" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Low</label>
+        <input class="form-input" type="number" step="any" min="0" id="ohlc-low" placeholder="0.00">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Volume <span class="opt">(optional)</span></label>
+        <input class="form-input" type="number" min="0" id="ohlc-volume" placeholder="e.g. 50000">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes <span class="opt">(optional)</span></label>
+        <input class="form-input" id="ohlc-notes" placeholder="e.g. ex-dividend, results day">
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin:0 0 14px">High &amp; Low auto-fill from Open/Close — adjust if you have exact values.</p>
+    <div class="form-row">
+      <button class="btn btn-primary" id="ohlc-save-btn" onclick="saveOhlc()">Save</button>
+      <button class="btn btn-ghost" onclick="closeOhlcModal()">Cancel</button>
+    </div>
+    <div id="ohlc-error" style="display:none;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:var(--r-sm);padding:10px 14px;font-size:13px;margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- Candlestick Chart Detail Modal -->
+<div class="overlay" id="candle-detail-modal">
+  <div class="modal" style="max-width:900px;padding:0;overflow:hidden">
+    <div style="padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:18px;font-weight:700;letter-spacing:-.3px" id="cd-title">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="cd-meta">—</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="openOhlcModal(null,_cdExchange,_cdSymbol)">+ Add Day</button>
+        <button class="modal-close" onclick="document.getElementById('candle-detail-modal').classList.remove('open')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <!-- Candle summary strip -->
+    <div id="cd-stats" style="display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto"></div>
+    <!-- Chart -->
+    <div style="padding:16px 20px 8px;background:var(--surface)">
+      <canvas id="candle-chart" style="display:block;width:100%"></canvas>
+    </div>
+    <!-- Data table -->
+    <div style="max-height:240px;overflow-y:auto;border-top:1px solid var(--border)" id="cd-table"></div>
   </div>
 </div>
 
@@ -2002,7 +2153,8 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadOhlcData()]);
+    await seedDefaultSecurities();
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -2061,7 +2213,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c) c.scrollTop=0; renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -2700,7 +2852,7 @@ document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(
 document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='zse-market')renderZseMarket(); else if(page==='vfex-market')renderVfexMarket(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -5994,6 +6146,381 @@ function viewImage(url){
   }
   overlay.querySelector('img').src=url;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// MARKET PAGES — ZSE & VFEX candlestick charts
+// ═══════════════════════════════════════════════════════════════════
+let ohlcData=[], marketSecurities=[];
+let _cdSymbol=null, _cdExchange=null;
+
+// ── Data loading ──────────────────────────────────────────────────
+async function loadOhlcData(){
+  const[{data:od},{data:ms}]=await Promise.all([
+    sb.from('securities_ohlc').select('*').order('date',{ascending:true}),
+    sb.from('market_securities').select('*').order('symbol',{ascending:true})
+  ]);
+  ohlcData=od||[]; marketSecurities=ms||[];
+}
+
+// Seed well-known ZSE & VFEX tickers for first-time users
+async function seedDefaultSecurities(){
+  if(marketSecurities.length) return;
+  const defaults=[
+    {symbol:'DELTA',name:'Delta Corporation',exchange:'ZSE',currency:'ZiG',sector:'Consumer Staples'},
+    {symbol:'ECONET',name:'Econet Wireless',exchange:'ZSE',currency:'ZiG',sector:'Telecoms'},
+    {symbol:'OK',name:'OK Zimbabwe',exchange:'ZSE',currency:'ZiG',sector:'Retail'},
+    {symbol:'SEEDCO',name:'Seed Co International',exchange:'ZSE',currency:'ZiG',sector:'Agriculture'},
+    {symbol:'HIPPO',name:'Hippo Valley Estates',exchange:'ZSE',currency:'ZiG',sector:'Agriculture'},
+    {symbol:'CBZ',name:'CBZ Holdings',exchange:'ZSE',currency:'ZiG',sector:'Financial'},
+    {symbol:'FBC',name:'FBC Holdings',exchange:'ZSE',currency:'ZiG',sector:'Financial'},
+    {symbol:'INNSCOR',name:'Innscor Africa',exchange:'ZSE',currency:'ZiG',sector:'Consumer Staples'},
+    {symbol:'ZIMPAPERS',name:'Zimbabwe Newspapers',exchange:'ZSE',currency:'ZiG',sector:'Media'},
+    {symbol:'NMB',name:'NMB Holdings',exchange:'ZSE',currency:'ZiG',sector:'Financial'},
+    {symbol:'INN.VX',name:'Innscor Africa (VFEX)',exchange:'VFEX',currency:'USD',sector:'Consumer Staples'},
+    {symbol:'CASLEDGE.VX',name:'Casledge Holdings',exchange:'VFEX',currency:'USD',sector:'Financial'},
+    {symbol:'BRSR.VX',name:'Brainworks',exchange:'VFEX',currency:'USD',sector:'Financial'},
+    {symbol:'PADENGA.VX',name:'Padenga Holdings',exchange:'VFEX',currency:'USD',sector:'Agriculture'},
+    {symbol:'AXIA.VX',name:'Axia Corporation',exchange:'VFEX',currency:'USD',sector:'Consumer'},
+  ];
+  const rows=defaults.map(d=>({...d,user_id:currentUser.id}));
+  const{data}=await sb.from('market_securities').insert(rows).select();
+  if(data) marketSecurities=data;
+}
+
+// ── Candlestick canvas renderer ───────────────────────────────────
+function drawCandleChart(canvas, candles, opts={}){
+  if(!canvas) return;
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement?.clientWidth||700, H=opts.height||340;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+
+  if(!candles||!candles.length){
+    ctx.fillStyle=themeVal('#64748b','#8891a8');
+    ctx.font='13px Inter,system-ui'; ctx.textAlign='center';
+    ctx.fillText('No candle data yet — click "+ Add Day" to begin',W/2,H/2); return;
+  }
+
+  const sorted=[...candles].sort((a,b)=>a.date.localeCompare(b.date));
+  const pad={l:52,r:16,t:24,b:40};
+  const chartW=W-pad.l-pad.r, chartH=H-pad.t-pad.b;
+
+  const highs=sorted.map(c=>c.high??Math.max(c.open,c.close));
+  const lows=sorted.map(c=>c.low??Math.min(c.open,c.close));
+  const maxP=Math.max(...highs), minP=Math.min(...lows);
+  const range=maxP-minP||maxP*0.02||1;
+  const sy=v=>pad.t+chartH-(v-minP)/range*chartH;
+
+  const n=sorted.length;
+  const candleW=Math.max(4,Math.min(24,Math.floor(chartW/n*0.65)));
+  const sx=i=>pad.l+i/n*chartW+(chartW/n/2);
+
+  // Grid lines
+  const gridSteps=5;
+  ctx.strokeStyle=themeVal('rgba(255,255,255,.06)','rgba(0,0,0,.06)');
+  ctx.lineWidth=1;
+  for(let i=0;i<=gridSteps;i++){
+    const v=minP+(range/gridSteps)*i;
+    const y=sy(v);
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    ctx.fillStyle=themeVal('#64748b','#94a3b8');
+    ctx.font='10px Inter,system-ui'; ctx.textAlign='right';
+    ctx.fillText(v.toFixed(v<10?3:2),pad.l-4,y+3);
+  }
+
+  // Candles
+  sorted.forEach((c,i)=>{
+    const x=sx(i);
+    const o=c.open, cl=c.close;
+    const hi=c.high??Math.max(o,cl), lo=c.low??Math.min(o,cl);
+    const bull=cl>=o;
+    const bodyColor=bull?'#10b981':'#ef4444';
+    const wickColor=bull?'#10b981':'#ef4444';
+
+    // Wick
+    ctx.strokeStyle=wickColor; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x,sy(hi)); ctx.lineTo(x,sy(lo)); ctx.stroke();
+
+    // Body
+    const bodyTop=sy(Math.max(o,cl)), bodyBot=sy(Math.min(o,cl));
+    const bodyH=Math.max(2,bodyBot-bodyTop);
+    ctx.fillStyle=bodyColor;
+    if(bull){
+      ctx.fillRect(x-candleW/2,bodyTop,candleW,bodyH);
+    } else {
+      ctx.fillRect(x-candleW/2,bodyTop,candleW,bodyH);
+    }
+    // Outline for doji (open==close)
+    if(Math.abs(cl-o)<range*0.002){
+      ctx.strokeStyle=bodyColor; ctx.lineWidth=1.5;
+      ctx.strokeRect(x-candleW/2,bodyTop,candleW,Math.max(2,bodyH));
+    }
+  });
+
+  // X-axis date labels (show every Nth)
+  const step=Math.max(1,Math.ceil(n/8));
+  ctx.fillStyle=themeVal('#64748b','#94a3b8');
+  ctx.font='9px Inter,system-ui'; ctx.textAlign='center';
+  sorted.forEach((c,i)=>{
+    if(i%step!==0&&i!==n-1) return;
+    const x=sx(i);
+    const d=new Date(c.date);
+    const lbl=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    ctx.fillText(lbl,x,H-pad.b+14);
+  });
+}
+
+// ── Security card (mini chart) ─────────────────────────────────────
+function buildSecurityCard(sec, exchange){
+  const candles=ohlcData.filter(r=>r.symbol===sec.symbol&&r.exchange===exchange)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const last=candles[candles.length-1];
+  const prev=candles[candles.length-2];
+  const change=last&&prev?(last.close-prev.close):null;
+  const changePct=change!=null&&prev?.close?(change/prev.close*100):null;
+  const isUp=changePct>=0;
+  const ccy=sec.currency||'ZiG';
+  const sym=ccySym?.(ccy)||'';
+
+  return `<div class="card" style="padding:0;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s"
+      onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 36px rgba(0,74,173,.18)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''"
+      onclick="openCandleDetail('${sec.symbol}','${exchange}')">
+    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">${sec.symbol}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${sec.name||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:var(--text)">${last?sym+fmtNum(last.close):'—'}</div>
+          ${changePct!=null?`<div style="font-size:11px;font-weight:600;color:${isUp?'#10b981':'#ef4444'}">${isUp?'▲':'▼'} ${Math.abs(changePct).toFixed(2)}%</div>`:'<div style="font-size:11px;color:var(--muted)">${candles.length} day${candles.length!==1?'s':''}</div>'}
+        </div>
+      </div>
+      ${sec.sector?`<span style="font-size:10px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:6px">${sec.sector}</span>`:''}
+    </div>
+    <div style="padding:8px 8px 4px;background:var(--surface)">
+      <canvas id="mini-candle-${sec.symbol.replace(/\./g,'_')}" style="display:block;width:100%;height:80px"></canvas>
+    </div>
+    <div style="padding:6px 16px 10px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+      <span>${candles.length} candle${candles.length!==1?'s':''}</span>
+      ${last?`<span>Last: ${new Date(last.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`:'<span style="color:var(--accent2)">Add candle data →</span>'}
+    </div>
+  </div>`;
+}
+
+// ── Render pages ──────────────────────────────────────────────────
+function renderMarketPage(exchange){
+  const gridId=exchange==='ZSE'?'zse-market-grid':'vfex-market-grid';
+  const grid=document.getElementById(gridId); if(!grid) return;
+  const secs=marketSecurities.filter(s=>s.exchange===exchange);
+  if(!secs.length){
+    grid.innerHTML=`<div class="card" style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted)">
+      <div style="font-size:28px;margin-bottom:10px">📊</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">No securities yet</div>
+      <div style="font-size:13px">Click "+ Add Security" to add ${exchange} tickers, then "+ Add Candle Data" to enter daily OHLC prices.</div>
+    </div>`; return;
+  }
+  grid.innerHTML=secs.map(s=>buildSecurityCard(s,exchange)).join('');
+  // Draw mini charts
+  setTimeout(()=>{
+    secs.forEach(s=>{
+      const id='mini-candle-'+s.symbol.replace(/\./g,'_');
+      const canvas=document.getElementById(id); if(!canvas) return;
+      const candles=ohlcData.filter(r=>r.symbol===s.symbol&&r.exchange===exchange)
+        .sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
+      drawCandleChart(canvas,candles,{height:80});
+    });
+  },60);
+}
+
+function renderZseMarket(){ renderMarketPage('ZSE'); }
+function renderVfexMarket(){ renderMarketPage('VFEX'); }
+
+// ── Candle detail modal ───────────────────────────────────────────
+function openCandleDetail(symbol,exchange){
+  _cdSymbol=symbol; _cdExchange=exchange;
+  const sec=marketSecurities.find(s=>s.symbol===symbol&&s.exchange===exchange);
+  const candles=ohlcData.filter(r=>r.symbol===symbol&&r.exchange===exchange)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const last=candles[candles.length-1];
+  const prev=candles[candles.length-2];
+  const ccy=sec?.currency||'ZiG'; const sym=ccySym?.(ccy)||'';
+
+  document.getElementById('cd-title').textContent=`${symbol} — ${sec?.name||exchange}`;
+  document.getElementById('cd-meta').textContent=`${exchange} · ${ccy} · ${candles.length} trading day${candles.length!==1?'s':''}`;
+
+  // Stats strip
+  const change=last&&prev?(last.close-prev.close):null;
+  const changePct=change!=null&&prev?.close?(change/prev.close*100):null;
+  const stats=[
+    {l:'Last Close',v:last?sym+fmtNum(last.close):'—',c:changePct!=null?(changePct>=0?'#10b981':'#ef4444'):'var(--text)'},
+    {l:'Change',v:changePct!=null?`${changePct>=0?'+':''}${changePct.toFixed(2)}%`:'—',c:changePct!=null?(changePct>=0?'#10b981':'#ef4444'):'var(--muted)'},
+    {l:'Last Open',v:last?sym+fmtNum(last.open):'—'},
+    {l:'High',v:last&&last.high!=null?sym+fmtNum(last.high):'—',c:'#10b981'},
+    {l:'Low',v:last&&last.low!=null?sym+fmtNum(last.low):'—',c:'#ef4444'},
+    {l:'Volume',v:last&&last.volume?Number(last.volume).toLocaleString():'—'},
+  ];
+  document.getElementById('cd-stats').innerHTML=stats.map(s=>`
+    <div style="flex:1;min-width:90px;padding:10px 14px;border-right:1px solid var(--border)">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600">${s.l}</div>
+      <div style="font-size:15px;font-weight:700;margin-top:3px;color:${s.c||'var(--text)'};">${s.v}</div>
+    </div>`).join('');
+
+  // Draw full chart
+  setTimeout(()=>{
+    const canvas=document.getElementById('candle-chart');
+    if(canvas) drawCandleChart(canvas,candles,{height:300});
+  },60);
+
+  // Data table
+  const tbl=document.getElementById('cd-table');
+  tbl.innerHTML=`<div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 1fr 100px 80px;padding:8px 16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)">
+    <div>Date</div><div>Open</div><div>High</div><div>Low</div><div>Close</div><div>Volume</div><div style="text-align:right">Chg%</div>
+  </div>`+[...candles].reverse().map((c,i,arr)=>{
+    const prev2=arr[i+1];
+    const chg=prev2?(c.close-prev2.close)/prev2.close*100:null;
+    const bull=c.close>=c.open;
+    return `<div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 1fr 100px 80px;padding:9px 16px;font-size:12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background .12s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"
+        onclick="openOhlcModal('${c.id}','${exchange}')">
+      <div style="color:var(--muted2)">${new Date(c.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      <div>${sym}${fmtNum(c.open)}</div>
+      <div style="color:#10b981">${c.high!=null?sym+fmtNum(c.high):'—'}</div>
+      <div style="color:#ef4444">${c.low!=null?sym+fmtNum(c.low):'—'}</div>
+      <div style="font-weight:700;color:${bull?'#10b981':'#ef4444'}">${sym}${fmtNum(c.close)}</div>
+      <div style="color:var(--muted)">${c.volume?Number(c.volume).toLocaleString():'—'}</div>
+      <div style="text-align:right;font-weight:600;color:${chg==null?'var(--muted)':chg>=0?'#10b981':'#ef4444'}">${chg!=null?(chg>=0?'+':'')+chg.toFixed(2)+'%':'—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('candle-detail-modal').classList.add('open');
+}
+document.getElementById('candle-detail-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open');});
+
+// ── Add Security modal ────────────────────────────────────────────
+function openAddSecurityModal(exchange){
+  document.getElementById('add-sec-exchange').value=exchange;
+  document.getElementById('add-sec-title').textContent='Add '+exchange+' Security';
+  document.getElementById('add-sec-symbol').value='';
+  document.getElementById('add-sec-name').value='';
+  document.getElementById('add-sec-sector').value='';
+  document.getElementById('add-sec-currency').value=exchange==='VFEX'?'USD':'ZiG';
+  document.getElementById('add-sec-error').style.display='none';
+  document.getElementById('add-security-modal').classList.add('open');
+}
+function closeAddSecurityModal(){ document.getElementById('add-security-modal').classList.remove('open'); }
+document.getElementById('add-security-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAddSecurityModal();});
+async function saveAddSecurity(){
+  const exchange=document.getElementById('add-sec-exchange').value;
+  const symbol=document.getElementById('add-sec-symbol').value.trim().toUpperCase();
+  const name=document.getElementById('add-sec-name').value.trim();
+  const sector=document.getElementById('add-sec-sector').value.trim();
+  const currency=document.getElementById('add-sec-currency').value;
+  const errEl=document.getElementById('add-sec-error');
+  if(!symbol){errEl.textContent='Symbol is required.';errEl.style.display='block';return;}
+  if(marketSecurities.find(s=>s.symbol===symbol&&s.exchange===exchange)){
+    errEl.textContent=symbol+' already exists in '+exchange+'.';errEl.style.display='block';return;
+  }
+  errEl.style.display='none';
+  const{data,error}=await sb.from('market_securities').insert([{user_id:currentUser.id,symbol,name,exchange,currency,sector}]).select().single();
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  marketSecurities.push(data);
+  closeAddSecurityModal();
+  renderMarketPage(exchange);
+  showToast(symbol+' added to '+exchange,'success');
+}
+
+// ── OHLC entry modal ──────────────────────────────────────────────
+function openOhlcModal(editId, exchange, preSymbol){
+  const exch=exchange||_cdExchange||'ZSE';
+  document.getElementById('ohlc-exchange').value=exch;
+  document.getElementById('ohlc-modal-title').textContent=editId?'Edit Candle':'Add Candle Data — '+exch;
+  // Populate symbol selector
+  const sel=document.getElementById('ohlc-symbol');
+  const secs=marketSecurities.filter(s=>s.exchange===exch);
+  sel.innerHTML=secs.map(s=>`<option value="${s.symbol}">${s.symbol}${s.name?' — '+s.name:''}</option>`).join('');
+  if(preSymbol) sel.value=preSymbol;
+  else if(_cdSymbol) sel.value=_cdSymbol;
+
+  if(editId){
+    document.getElementById('ohlc-edit-id').value=editId;
+    const c=ohlcData.find(r=>r.id===editId);
+    if(c){
+      sel.value=c.symbol;
+      document.getElementById('ohlc-date').value=c.date;
+      document.getElementById('ohlc-open').value=c.open??'';
+      document.getElementById('ohlc-close').value=c.close??'';
+      document.getElementById('ohlc-high').value=c.high??'';
+      document.getElementById('ohlc-low').value=c.low??'';
+      document.getElementById('ohlc-volume').value=c.volume??'';
+      document.getElementById('ohlc-notes').value=c.notes??'';
+    }
+  } else {
+    document.getElementById('ohlc-edit-id').value='';
+    document.getElementById('ohlc-date').value=new Date().toISOString().slice(0,10);
+    ['ohlc-open','ohlc-close','ohlc-high','ohlc-low','ohlc-volume','ohlc-notes'].forEach(id=>document.getElementById(id).value='');
+  }
+  document.getElementById('ohlc-error').style.display='none';
+  document.getElementById('ohlc-modal').classList.add('open');
+}
+function closeOhlcModal(){ document.getElementById('ohlc-modal').classList.remove('open'); }
+document.getElementById('ohlc-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOhlcModal();});
+
+function ohlcAutoHiLo(){
+  const o=parseFloat(document.getElementById('ohlc-open').value);
+  const c=parseFloat(document.getElementById('ohlc-close').value);
+  if(!isNaN(o)&&!isNaN(c)){
+    const hiEl=document.getElementById('ohlc-high');
+    const loEl=document.getElementById('ohlc-low');
+    if(!hiEl.value||parseFloat(hiEl.value)<Math.max(o,c)) hiEl.value=Math.max(o,c);
+    if(!loEl.value||parseFloat(loEl.value)>Math.min(o,c)) loEl.value=Math.min(o,c);
+  }
+}
+
+async function saveOhlc(){
+  const errEl=document.getElementById('ohlc-error'); errEl.style.display='none';
+  const exchange=document.getElementById('ohlc-exchange').value;
+  const symbol=document.getElementById('ohlc-symbol').value;
+  const date=document.getElementById('ohlc-date').value;
+  const open=parseFloat(document.getElementById('ohlc-open').value);
+  const close=parseFloat(document.getElementById('ohlc-close').value);
+  const high=parseFloat(document.getElementById('ohlc-high').value)||null;
+  const low=parseFloat(document.getElementById('ohlc-low').value)||null;
+  const volume=parseInt(document.getElementById('ohlc-volume').value)||null;
+  const notes=document.getElementById('ohlc-notes').value.trim()||null;
+  const editId=document.getElementById('ohlc-edit-id').value;
+  if(!symbol){errEl.textContent='Select a security.';errEl.style.display='block';return;}
+  if(!date){errEl.textContent='Date is required.';errEl.style.display='block';return;}
+  if(isNaN(open)||isNaN(close)){errEl.textContent='Open and Close are required.';errEl.style.display='block';return;}
+  const sec=marketSecurities.find(s=>s.symbol===symbol&&s.exchange===exchange);
+  const currency=sec?.currency||'ZiG';
+  const row={symbol,exchange,date,open,close,high,low,volume,notes,currency,user_id:currentUser.id};
+  const btn=document.getElementById('ohlc-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  try{
+    if(editId){
+      const{data,error}=await sb.from('securities_ohlc').update(row).eq('id',editId).select().single();
+      if(error) throw error;
+      ohlcData=ohlcData.map(r=>r.id===editId?data:r);
+    } else {
+      const{data,error}=await sb.from('securities_ohlc').upsert([row],{onConflict:'user_id,symbol,exchange,date'}).select().single();
+      if(error) throw error;
+      ohlcData=ohlcData.filter(r=>!(r.symbol===symbol&&r.exchange===exchange&&r.date===date));
+      ohlcData.push(data);
+    }
+    closeOhlcModal();
+    showToast(`${symbol} ${date} saved.`,'success');
+    renderMarketPage(exchange);
+    // Refresh detail modal if open for same symbol
+    if(_cdSymbol===symbol&&_cdExchange===exchange&&document.getElementById('candle-detail-modal').classList.contains('open')){
+      openCandleDetail(symbol,exchange);
+    }
+  } catch(err){errEl.textContent='Save failed: '+err.message;errEl.style.display='block';}
+  finally{btn.disabled=false; btn.textContent='Save';}
+}
+
 </script>
 <script>
 if('serviceWorker' in navigator){

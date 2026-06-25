@@ -78,6 +78,32 @@ html[data-theme="light"] canvas{filter:none}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0;background:var(--surface)}
 .content{flex:1;overflow-y:auto;padding:28px}
+.content.mkt-mode{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.content.mkt-mode .page.active{flex:1;min-height:0;display:flex;flex-direction:column}
+.content.mkt-mode .mkt-layout{flex:1;min-height:0}
+/* Market TradingView layout */
+.mkt-layout{display:flex;flex-direction:column;height:100%}
+.mkt-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
+.mkt-body{flex:1;display:flex;overflow:hidden}
+.mkt-list{width:280px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;background:var(--surface)}
+.mkt-list-header{padding:10px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px;position:sticky;top:0;background:var(--surface);z-index:1}
+.mkt-row{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .1s;border-left:3px solid transparent}
+.mkt-row:hover{background:var(--surface2)}
+.mkt-row.active{background:var(--surface2);border-left-color:var(--accent)}
+.mkt-row-sym{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.mkt-row-name{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.mkt-row-price{text-align:right;flex-shrink:0}
+.mkt-row-last{font-size:13px;font-weight:700}
+.mkt-row-chg{font-size:10px;font-weight:600;margin-top:1px}
+.mkt-chart-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.mkt-chart-header{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.mkt-stats-strip{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.mkt-stat{padding:10px 16px;border-right:1px solid var(--border)}
+.mkt-stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+.mkt-stat-val{font-size:15px;font-weight:700;margin-top:2px}
+.mkt-canvas-wrap{flex:1;padding:12px;overflow:hidden;min-height:0}
+.mkt-canvas-wrap canvas{display:block;width:100%;height:100%}
+.mkt-table-wrap{height:200px;overflow-y:auto;border-top:1px solid var(--border);flex-shrink:0}
 
 /* ── Sidebar ── */
 .sidebar-brand{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
@@ -818,33 +844,92 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       </div>
 
       <!-- ZSE Market -->
+      <!-- ZSE Market -->
       <div class="page" id="page-zse-market">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:20px;font-weight:700;letter-spacing:-.3px">ZSE Market</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:3px">Zimbabwe Stock Exchange — daily OHLC candle data</div>
+        <div class="mkt-layout">
+          <div class="mkt-header">
+            <div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-.3px">ZSE Market</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Zimbabwe Stock Exchange — daily OHLC</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('ZSE')">+ Security</button>
+              <button class="btn btn-primary btn-sm" id="zse-add-candle-btn" onclick="openOhlcModal(null,'ZSE')">+ Add Data</button>
+            </div>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('ZSE')">+ Add Security</button>
-            <button class="btn btn-primary btn-sm" onclick="openOhlcModal(null,'ZSE')">+ Add Candle Data</button>
+          <div class="mkt-body">
+            <div class="mkt-list" id="zse-sec-list">
+              <div class="mkt-list-header"><span>Symbol</span><span>Price / Chg</span></div>
+            </div>
+            <div class="mkt-chart-area" id="zse-chart-area">
+              <div id="zse-chart-header" class="mkt-chart-header" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div>
+                    <span id="zse-cd-sym" style="font-size:18px;font-weight:800;letter-spacing:-.3px"></span>
+                    <span id="zse-cd-name" style="font-size:13px;color:var(--muted);margin-left:10px"></span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="openOhlcForSelected('ZSE')">+ Add Day</button>
+                </div>
+              </div>
+              <div id="zse-stats-strip" class="mkt-stats-strip" style="display:none"></div>
+              <div id="zse-canvas-wrap" class="mkt-canvas-wrap" style="display:none">
+                <canvas id="zse-main-canvas"></canvas>
+              </div>
+              <div id="zse-table-wrap" class="mkt-table-wrap" style="display:none">
+                <div id="zse-cd-table"></div>
+              </div>
+              <div id="zse-empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)">
+                <div style="font-size:48px;opacity:.3">📊</div>
+                <div style="font-size:14px;font-weight:600">Select a security</div>
+                <div style="font-size:12px">Choose a ticker from the list to view its chart</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="zse-market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
       </div>
 
       <!-- VFEX Market -->
       <div class="page" id="page-vfex-market">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-          <div>
-            <div style="font-size:20px;font-weight:700;letter-spacing:-.3px">VFEX Market</div>
-            <div style="font-size:13px;color:var(--muted);margin-top:3px">Victoria Falls Stock Exchange — daily OHLC candle data</div>
+        <div class="mkt-layout">
+          <div class="mkt-header">
+            <div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-.3px">VFEX Market</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">Victoria Falls Stock Exchange — daily OHLC</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('VFEX')">+ Security</button>
+              <button class="btn btn-primary btn-sm" id="vfex-add-candle-btn" onclick="openOhlcModal(null,'VFEX')">+ Add Data</button>
+            </div>
           </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="openAddSecurityModal('VFEX')">+ Add Security</button>
-            <button class="btn btn-primary btn-sm" onclick="openOhlcModal(null,'VFEX')">+ Add Candle Data</button>
+          <div class="mkt-body">
+            <div class="mkt-list" id="vfex-sec-list">
+              <div class="mkt-list-header"><span>Symbol</span><span>Price / Chg</span></div>
+            </div>
+            <div class="mkt-chart-area" id="vfex-chart-area">
+              <div id="vfex-chart-header" class="mkt-chart-header" style="display:none">
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <div>
+                    <span id="vfex-cd-sym" style="font-size:18px;font-weight:800;letter-spacing:-.3px"></span>
+                    <span id="vfex-cd-name" style="font-size:13px;color:var(--muted);margin-left:10px"></span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="openOhlcForSelected('VFEX')">+ Add Day</button>
+                </div>
+              </div>
+              <div id="vfex-stats-strip" class="mkt-stats-strip" style="display:none"></div>
+              <div id="vfex-canvas-wrap" class="mkt-canvas-wrap" style="display:none">
+                <canvas id="vfex-main-canvas"></canvas>
+              </div>
+              <div id="vfex-table-wrap" class="mkt-table-wrap" style="display:none">
+                <div id="vfex-cd-table"></div>
+              </div>
+              <div id="vfex-empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)">
+                <div style="font-size:48px;opacity:.3">📊</div>
+                <div style="font-size:14px;font-weight:600">Select a security</div>
+                <div style="font-size:12px">Choose a ticker from the list to view its chart</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="vfex-market-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
       </div>
 
     </div>
@@ -2214,7 +2299,7 @@ async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be u
 
 // ── Navigation ─────────────────────────────────────────────────────
 const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
-function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c) c.scrollTop=0; renderPage(page); }
+function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 
@@ -6272,68 +6357,141 @@ function drawCandleChart(canvas, candles, opts={}){
   });
 }
 
-// ── Security card (mini chart) ─────────────────────────────────────
-function buildSecurityCard(sec, exchange){
-  const candles=ohlcData.filter(r=>r.symbol===sec.symbol&&r.exchange===exchange)
-    .sort((a,b)=>a.date.localeCompare(b.date));
-  const last=candles[candles.length-1];
-  const prev=candles[candles.length-2];
-  const change=last&&prev?(last.close-prev.close):null;
-  const changePct=change!=null&&prev?.close?(change/prev.close*100):null;
-  const isUp=changePct>=0;
-  const ccy=sec.currency||'ZiG';
-  const sym=ccySym?.(ccy)||'';
+// ── Market page state ─────────────────────────────────────────────
+const _mktSelected={ZSE:null,VFEX:null};
 
-  return `<div class="card" style="padding:0;overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s"
-      onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 36px rgba(0,74,173,.18)'"
-      onmouseout="this.style.transform='';this.style.boxShadow=''"
-      onclick="openCandleDetail('${sec.symbol}','${exchange}')">
-    <div style="padding:14px 16px 10px;border-bottom:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">${sec.symbol}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${sec.name||''}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:16px;font-weight:800;color:var(--text)">${last?sym+fmtNum(last.close):'—'}</div>
-          ${changePct!=null?('<div style="font-size:11px;font-weight:600;color:'+(isUp?'#10b981':'#ef4444')+'">'+(isUp?'▲':'▼')+' '+Math.abs(changePct).toFixed(2)+'%</div>'):'<div style="font-size:11px;color:var(--muted)">'+candles.length+' day'+(candles.length!==1?'s':'')+'</div>'}
-        </div>
-      </div>
-      ${sec.sector?`<span style="font-size:10px;background:var(--surface2);color:var(--muted2);border-radius:4px;padding:2px 7px;display:inline-block;margin-top:6px">${sec.sector}</span>`:''}
+function renderMarketPage(exchange){
+  const ex=exchange.toLowerCase();
+  const listEl=document.getElementById(ex+'-sec-list'); if(!listEl) return;
+  const secs=marketSecurities.filter(s=>s.exchange===exchange).sort((a,b)=>a.symbol.localeCompare(b.symbol));
+
+  // Build list rows (keep header row)
+  const header=listEl.querySelector('.mkt-list-header');
+  listEl.innerHTML='';
+  if(header) listEl.appendChild(header);
+
+  if(!secs.length){
+    listEl.insertAdjacentHTML('beforeend','<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:13px">No securities yet.<br>Click "+ Security" to add.</div>');
+    return;
+  }
+
+  secs.forEach(sec=>{
+    const candles=ohlcData.filter(r=>r.symbol===sec.symbol&&r.exchange===exchange).sort((a,b)=>a.date.localeCompare(b.date));
+    const last=candles[candles.length-1];
+    const prev=candles[candles.length-2];
+    const change=last&&prev?(last.close-prev.close):null;
+    const changePct=change!=null&&prev&&prev.close?(change/prev.close*100):null;
+    const isUp=changePct==null?null:changePct>=0;
+    const ccy=sec.currency||'ZiG';
+    const sym=ccySym?.(ccy)||'';
+    const chgColor=isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)';
+    const chgStr=changePct!=null?((isUp?'▲':'▼')+' '+Math.abs(changePct).toFixed(2)+'%'):(candles.length?candles.length+' days':'No data');
+
+    const row=document.createElement('div');
+    row.className='mkt-row'+((_mktSelected[exchange]===sec.symbol)?' active':'');
+    row.dataset.sym=sec.symbol;
+    row.innerHTML=`<div style="min-width:0">
+      <div class="mkt-row-sym">${sec.symbol}</div>
+      <div class="mkt-row-name">${sec.name||''}</div>
     </div>
-    <div style="padding:8px 8px 4px;background:var(--surface)">
-      <canvas id="mini-candle-${sec.symbol.replace(/\./g,'_')}" style="display:block;width:100%;height:80px"></canvas>
-    </div>
-    <div style="padding:6px 16px 10px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
-      <span>${candles.length} candle${candles.length!==1?'s':''}</span>
-      ${last?`<span>Last: ${new Date(last.date).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`:'<span style="color:var(--accent2)">Add candle data →</span>'}
-    </div>
-  </div>`;
+    <div class="mkt-row-price">
+      <div class="mkt-row-last">${last?sym+fmtNum(last.close):'—'}</div>
+      <div class="mkt-row-chg" style="color:${chgColor}">${chgStr}</div>
+    </div>`;
+    row.addEventListener('click',()=>selectMarketSec(sec.symbol,exchange));
+    listEl.appendChild(row);
+  });
+
+  // Auto-select first if nothing selected or selected no longer exists
+  if(!_mktSelected[exchange]||!secs.find(s=>s.symbol===_mktSelected[exchange])){
+    selectMarketSec(secs[0].symbol,exchange);
+  } else {
+    selectMarketSec(_mktSelected[exchange],exchange);
+  }
 }
 
-// ── Render pages ──────────────────────────────────────────────────
-function renderMarketPage(exchange){
-  const gridId=exchange==='ZSE'?'zse-market-grid':'vfex-market-grid';
-  const grid=document.getElementById(gridId); if(!grid) return;
-  const secs=marketSecurities.filter(s=>s.exchange===exchange);
-  if(!secs.length){
-    grid.innerHTML=`<div class="card" style="grid-column:1/-1;padding:32px;text-align:center;color:var(--muted)">
-      <div style="font-size:28px;margin-bottom:10px">📊</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">No securities yet</div>
-      <div style="font-size:13px">Click "+ Add Security" to add ${exchange} tickers, then "+ Add Candle Data" to enter daily OHLC prices.</div>
-    </div>`; return;
+function selectMarketSec(symbol,exchange){
+  _mktSelected[exchange]=symbol;
+  const ex=exchange.toLowerCase();
+
+  // Highlight row
+  document.querySelectorAll('#'+ex+'-sec-list .mkt-row').forEach(r=>{
+    r.classList.toggle('active',r.dataset.sym===symbol);
+  });
+
+  const sec=marketSecurities.find(s=>s.symbol===symbol&&s.exchange===exchange);
+  const candles=ohlcData.filter(r=>r.symbol===symbol&&r.exchange===exchange).sort((a,b)=>a.date.localeCompare(b.date));
+  const last=candles[candles.length-1];
+  const prev=candles[candles.length-2];
+  const ccy=sec?.currency||'ZiG';
+  const sym=ccySym?.(ccy)||'';
+  const change=last&&prev?(last.close-prev.close):null;
+  const changePct=change!=null&&prev&&prev.close?(change/prev.close*100):null;
+  const isUp=changePct==null?null:changePct>=0;
+
+  // Show panels
+  const emptyEl=document.getElementById(ex+'-empty-state');
+  const headerEl=document.getElementById(ex+'-chart-header');
+  const statsEl=document.getElementById(ex+'-stats-strip');
+  const canvasWrap=document.getElementById(ex+'-canvas-wrap');
+  const tableWrap=document.getElementById(ex+'-table-wrap');
+  if(emptyEl) emptyEl.style.display='none';
+  if(headerEl){ headerEl.style.display='block';
+    document.getElementById(ex+'-cd-sym').textContent=symbol;
+    document.getElementById(ex+'-cd-name').textContent=sec?.name||'';
   }
-  grid.innerHTML=secs.map(s=>buildSecurityCard(s,exchange)).join('');
-  // Draw mini charts
-  setTimeout(()=>{
-    secs.forEach(s=>{
-      const id='mini-candle-'+s.symbol.replace(/\./g,'_');
-      const canvas=document.getElementById(id); if(!canvas) return;
-      const candles=ohlcData.filter(r=>r.symbol===s.symbol&&r.exchange===exchange)
-        .sort((a,b)=>a.date.localeCompare(b.date)).slice(-30);
-      drawCandleChart(canvas,candles,{height:80});
-    });
-  },60);
+
+  // Stats strip
+  const stats=[
+    {l:'Last Close',v:last?sym+fmtNum(last.close):'—',c:isUp==null?'var(--text)':isUp?'var(--green)':'var(--red)'},
+    {l:'Change',v:changePct!=null?((changePct>=0?'+':'')+changePct.toFixed(2)+'%'):'—',c:isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)'},
+    {l:'Open',v:last?sym+fmtNum(last.open):'—'},
+    {l:'High',v:last&&last.high!=null?sym+fmtNum(last.high):'—',c:'var(--green)'},
+    {l:'Low',v:last&&last.low!=null?sym+fmtNum(last.low):'—',c:'var(--red)'},
+    {l:'Days',v:candles.length||'0'},
+  ];
+  if(statsEl){ statsEl.style.display='flex';
+    statsEl.innerHTML=stats.map(s=>`<div class="mkt-stat"><div class="mkt-stat-lbl">${s.l}</div><div class="mkt-stat-val" style="color:${s.c||'var(--text)'}">${s.v}</div></div>`).join('');
+  }
+
+  // Canvas
+  if(canvasWrap){ canvasWrap.style.display='block';
+    setTimeout(()=>{
+      const canvas=document.getElementById(ex+'-main-canvas');
+      if(!canvas) return;
+      const rect=canvasWrap.getBoundingClientRect();
+      drawCandleChart(canvas,candles,{height:Math.max(200,rect.height-8)});
+    },40);
+  }
+
+  // Data table
+  if(tableWrap){ tableWrap.style.display='block';
+    const tableEl=document.getElementById(ex+'-cd-table');
+    tableEl.innerHTML=`<div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 70px;padding:7px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)">
+      <div>Date</div><div>Open</div><div>High</div><div>Low</div><div>Close</div><div style="text-align:right">Chg%</div>
+    </div>`+[...candles].reverse().map((c,i,arr)=>{
+      const p=arr[i+1];
+      const chg=p&&p.close?(c.close-p.close)/p.close*100:null;
+      const bull=c.close>=c.open;
+      const indicator=bull?'<span style="display:inline-block;width:3px;height:14px;background:var(--green);border-radius:2px;margin-right:6px;vertical-align:middle"></span>':'<span style="display:inline-block;width:3px;height:14px;background:var(--red);border-radius:2px;margin-right:6px;vertical-align:middle"></span>';
+      return `<div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 70px;padding:8px 14px;font-size:12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background .1s"
+          onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"
+          onclick="openOhlcModal('${c.id}','${exchange}')">
+        <div style="color:var(--muted2);font-size:11px">${new Date(c.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})}</div>
+        <div>${indicator}${sym}${fmtNum(c.open)}</div>
+        <div style="color:var(--green)">${c.high!=null?sym+fmtNum(c.high):'—'}</div>
+        <div style="color:var(--red)">${c.low!=null?sym+fmtNum(c.low):'—'}</div>
+        <div style="font-weight:700;color:${bull?'var(--green)':'var(--red)'}">${sym}${fmtNum(c.close)}</div>
+        <div style="text-align:right;font-weight:600;font-size:11px;color:${chg==null?'var(--muted)':chg>=0?'var(--green)':'var(--red)'}">${chg!=null?(chg>=0?'+':'')+chg.toFixed(2)+'%':'—'}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function openOhlcForSelected(exchange){
+  const sym=_mktSelected[exchange];
+  openOhlcModal(null,exchange);
+  if(sym){ setTimeout(()=>{ const sel=document.getElementById('ohlc-symbol'); if(sel) sel.value=sym; },100); }
 }
 
 function renderZseMarket(){ renderMarketPage('ZSE'); }

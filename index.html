@@ -6631,9 +6631,10 @@ function _redrawMktChart(exchange){
     // Build full calendar date range so x-axis always spans the selected period
     const today=new Date(); today.setHours(0,0,0,0);
     const start=new Date(today); start.setDate(today.getDate()-zoom+1);
+    const localDate=d=>{ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
     const dateArr=[];
     for(const d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
-      const ds=d.toISOString().slice(0,10);
+      const ds=localDate(d);
       const found=allCandles.find(c=>c.date===ds)||null;
       dateArr.push(found||{date:ds,open:null,close:null,high:null,low:null,_empty:true});
     }

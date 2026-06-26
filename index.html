@@ -6619,6 +6619,26 @@ function selectMarketSec(symbol,exchange){
   }
 }
 
+function _localDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
+function _buildDateRange(allCandles, rangeDays){
+  // Build a full calendar date array for the range, inserting empty slots for missing days
+  const today=new Date(); today.setHours(0,0,0,0);
+  const start=new Date(today); start.setDate(today.getDate()-rangeDays+1);
+  const dateArr=[];
+  let cur=new Date(start);
+  while(cur<=today){
+    const ds=_localDateStr(cur);
+    const found=allCandles.find(function(c){return c.date===ds;})||null;
+    dateArr.push(found||{date:ds,open:null,close:null,high:null,low:null,_empty:true});
+    cur=new Date(cur); cur.setDate(cur.getDate()+1);
+  }
+  return dateArr;
+}
+
 function _redrawMktChart(exchange){
   const ex=exchange.toLowerCase();
   const canvasWrap=document.getElementById(ex+'-canvas-wrap'); if(!canvasWrap) return;
@@ -6626,19 +6646,12 @@ function _redrawMktChart(exchange){
   const state=_mktState[exchange]; if(!state) return;
   const allCandles=state.candles||[];
   const zoom=state.zoom||0;
+  const wz=state.wheelZoom||0; // wheel-zoom overrides range (number of most-recent candles)
   let candles;
-  if(zoom>0){
-    // Build full calendar date range so x-axis always spans the selected period
-    const today=new Date(); today.setHours(0,0,0,0);
-    const start=new Date(today); start.setDate(today.getDate()-zoom+1);
-    const localDate=d=>{ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; };
-    const dateArr=[];
-    for(const d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
-      const ds=localDate(d);
-      const found=allCandles.find(c=>c.date===ds)||null;
-      dateArr.push(found||{date:ds,open:null,close:null,high:null,low:null,_empty:true});
-    }
-    candles=dateArr;
+  if(wz>0){
+    candles=allCandles.slice(-wz);
+  } else if(zoom>0){
+    candles=_buildDateRange(allCandles,zoom);
   } else {
     candles=allCandles;
   }
@@ -6657,6 +6670,36 @@ function _redrawMktChart(exchange){
       const ov=document.getElementById(ex+'-overlay-canvas');
       if(ov){const ctx=ov.getContext('2d');ctx.clearRect(0,0,ov.width,ov.height);}
     };
+    // Mouse wheel zoom
+    canvas.onwheel=function(e){
+      e.preventDefault();
+      const total=allCandles.length||1;
+      const cur=state.wheelZoom>0?state.wheelZoom:(zoom>0?Math.min(zoom,total):total);
+      const delta=e.deltaY>0?1:-1; // scroll down=zoom out(+candles), up=zoom in(-candles)
+      const step=Math.max(1,Math.round(cur*0.15));
+      state.wheelZoom=Math.max(2,Math.min(total,cur+delta*step));
+      _redrawMktChart(exchange);
+    };
+    // Touch pinch-to-zoom
+    let _pinchDist=null;
+    canvas.ontouchstart=function(e){
+      if(e.touches.length===2){
+        _pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      }
+    };
+    canvas.ontouchmove=function(e){
+      if(e.touches.length===2&&_pinchDist){
+        e.preventDefault();
+        const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        const total=allCandles.length||1;
+        const cur=state.wheelZoom>0?state.wheelZoom:(zoom>0?Math.min(zoom,total):total);
+        const ratio=_pinchDist/dist; // pinch in=ratio>1=zoom in=fewer candles
+        state.wheelZoom=Math.max(2,Math.min(total,Math.round(cur*ratio)));
+        _pinchDist=dist;
+        _redrawMktChart(exchange);
+      }
+    };
+    canvas.ontouchend=function(){_pinchDist=null;};
   }
   setTimeout(doRender,60);
 }
@@ -6665,6 +6708,7 @@ function _redrawMktChart(exchange){
 function setMktRange(exchange,n){
   if(!_mktState[exchange]) return;
   _mktState[exchange].zoom=n;
+  _mktState[exchange].wheelZoom=0; // reset wheel zoom when range button clicked
   const ex=exchange.toLowerCase();
   [7,30,90,0].forEach(function(v){
     const btn=document.getElementById(ex+'-range-'+v);

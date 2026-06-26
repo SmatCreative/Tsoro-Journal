@@ -6865,12 +6865,27 @@ async function saveOhlc(){
     closeOhlcModal();
     showToast(`${symbol} ${date} saved.`,'success');
     renderMarketPage(exchange);
+    // Auto-update holding current price if this is the latest candle for that security
+    autoUpdateHoldingPrice(symbol, exchange, close, date);
     // Refresh detail modal if open for same symbol
     if(_cdSymbol===symbol&&_cdExchange===exchange&&document.getElementById('candle-detail-modal').classList.contains('open')){
       openCandleDetail(symbol,exchange);
     }
   } catch(err){errEl.textContent='Save failed: '+err.message;errEl.style.display='block';}
   finally{btn.disabled=false; btn.textContent='Save';}
+}
+
+function autoUpdateHoldingPrice(symbol, exchange, closePrice, date){
+  // Find the latest candle date for this symbol to confirm this is current
+  const allForSym=ohlcData.filter(r=>r.symbol===symbol&&r.exchange===exchange);
+  const latestDate=allForSym.reduce((best,r)=>r.date>best?r.date:best,'');
+  if(date<latestDate) return; // older candle, don't override
+  const holdings=loadZseHoldings();
+  const matched=holdings.filter(h=>h.symbol===symbol&&h.exchange===exchange);
+  if(!matched.length) return;
+  matched.forEach(h=>{h.currentPrice=closePrice;h.priceDate=date;});
+  saveZseHoldingsLocal(holdings);
+  renderZse();
 }
 
 </script>

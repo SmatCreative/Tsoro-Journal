@@ -85,25 +85,26 @@ html[data-theme="light"] canvas{filter:none}
 .mkt-layout{display:flex;flex-direction:column;height:100%}
 .mkt-header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}
 .mkt-body{flex:1;display:flex;overflow:hidden}
-.mkt-list{width:260px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;background:var(--surface)}
-.mkt-list-header{padding:8px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px;position:sticky;top:0;background:var(--surface);z-index:1}
-.mkt-row{padding:9px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background .1s;border-left:3px solid transparent}
+.mkt-list{width:240px;border-right:1px solid var(--border);overflow-y:auto;overflow-x:hidden;flex-shrink:0;background:var(--surface);min-height:0;display:flex;flex-direction:column}
+.mkt-list-inner{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
+.mkt-list-header{padding:7px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1;flex-shrink:0}
+.mkt-row{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px;transition:background .1s;border-left:3px solid transparent}
 .mkt-row:hover{background:var(--surface2)}
-.mkt-row.active{background:var(--surface2);border-left-color:var(--accent)}
-.mkt-row-sym{font-size:12px;font-weight:700;letter-spacing:-.2px}
-.mkt-row-name{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.mkt-row.active{background:rgba(26,111,212,.08);border-left-color:var(--accent)}
+.mkt-row-sym{font-size:12px;font-weight:700;letter-spacing:-.1px;color:var(--text)}
+.mkt-row-name{font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px}
 .mkt-row-price{text-align:right;flex-shrink:0}
-.mkt-row-last{font-size:12px;font-weight:700}
-.mkt-row-chg{font-size:10px;font-weight:600;margin-top:1px}
-.mkt-chart-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.mkt-row-last{font-size:11.5px;font-weight:700}
+.mkt-row-chg{font-size:10px;font-weight:600;margin-top:2px}
+.mkt-chart-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0}
 .mkt-chart-header{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
-.mkt-stats-strip{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
-.mkt-stat{padding:8px 14px;border-right:1px solid var(--border)}
-.mkt-stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
-.mkt-stat-val{font-size:14px;font-weight:700;margin-top:2px}
-.mkt-canvas-wrap{flex:1;position:relative;overflow:hidden;min-height:0}
+.mkt-stats-strip{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.mkt-stat{padding:8px 16px;border-right:1px solid var(--border);flex-shrink:0}
+.mkt-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700}
+.mkt-stat-val{font-size:15px;font-weight:800;margin-top:3px;letter-spacing:-.3px}
+.mkt-canvas-wrap{flex:1;position:relative;overflow:hidden;min-height:280px}
 .mkt-canvas-wrap canvas{display:block;position:absolute;top:0;left:0}
-.mkt-table-wrap{height:180px;overflow-y:auto;border-top:1px solid var(--border);flex-shrink:0}
+.mkt-table-wrap{height:160px;overflow-y:auto;border-top:1px solid var(--border);flex-shrink:0}
 .mkt-range-btn{background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .1s}
 .mkt-range-btn:hover{color:var(--text);background:var(--surface3)}
 .mkt-range-btn.active{background:var(--accent);color:#fff}
@@ -863,6 +864,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div class="mkt-body">
             <div class="mkt-list" id="zse-sec-list">
               <div class="mkt-list-header"><span>Symbol</span><span>Price / Chg</span></div>
+              <div class="mkt-list-inner" id="zse-sec-list-inner"></div>
             </div>
             <div class="mkt-chart-area" id="zse-chart-area">
               <div id="zse-chart-header" class="mkt-chart-header" style="display:none">
@@ -917,6 +919,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div class="mkt-body">
             <div class="mkt-list" id="vfex-sec-list">
               <div class="mkt-list-header"><span>Symbol</span><span>Price / Chg</span></div>
+              <div class="mkt-list-inner" id="vfex-sec-list-inner"></div>
             </div>
             <div class="mkt-chart-area" id="vfex-chart-area">
               <div id="vfex-chart-header" class="mkt-chart-header" style="display:none">
@@ -6337,8 +6340,10 @@ function drawCandleChart(canvas, candles, opts){
   const highs=sorted.map(function(c){return c.high!=null?c.high:Math.max(c.open,c.close);});
   const lows=sorted.map(function(c){return c.low!=null?c.low:Math.min(c.open,c.close);});
   const maxP=Math.max.apply(null,highs), minP=Math.min.apply(null,lows);
-  const rawRange=maxP-minP||maxP*0.02||1;
-  const pad5=rawRange*0.08;
+  const rawRange=maxP-minP||maxP*0.04||1;
+  // More vertical breathing room for few candles, tighter for many
+  const padPct=n<=1?0.35:n<=5?0.20:n<=20?0.12:0.07;
+  const pad5=rawRange*padPct;
   const minV=minP-pad5, maxV=maxP+pad5, range=maxV-minV;
   const sy=function(v){return pad.t+chartH-(v-minV)/range*chartH;};
 
@@ -6465,35 +6470,42 @@ function drawCrosshair(exchange, mx, my){
 }
 
 // ── Market list + selection ───────────────────────────────────────
+function _mktChgCalc(candles){
+  const last=candles[candles.length-1], prev=candles[candles.length-2];
+  if(!last) return {chgPct:null,isUp:null,intraday:false};
+  // prefer close-vs-prev-close; fall back to intraday open-vs-close
+  const base=prev?prev.close:last.open;
+  const chg=prev?(last.close-prev.close):(last.close-last.open);
+  const chgPct=base?(chg/base*100):null;
+  const isUp=chgPct==null?null:chgPct>=0;
+  return {chgPct,isUp,intraday:!prev,last,prev};
+}
+
 function renderMarketPage(exchange){
   const ex=exchange.toLowerCase();
   const listEl=document.getElementById(ex+'-sec-list'); if(!listEl) return;
+  const innerEl=document.getElementById(ex+'-sec-list-inner'); if(!innerEl) return;
   const secs=marketSecurities.filter(function(s){return s.exchange===exchange;}).sort(function(a,b){return a.symbol.localeCompare(b.symbol);});
-  const header=listEl.querySelector('.mkt-list-header');
-  listEl.innerHTML='';
-  if(header) listEl.appendChild(header);
+  innerEl.innerHTML='';
   if(!secs.length){
-    listEl.insertAdjacentHTML('beforeend','<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:13px">No securities yet.<br>Click "+ Security" to add.</div>');
+    innerEl.innerHTML='<div style="padding:24px 16px;text-align:center;color:var(--muted);font-size:13px">No securities yet.<br>Click "+ Security" to add.</div>';
     return;
   }
   secs.forEach(function(sec){
     const candles=ohlcData.filter(function(r){return r.symbol===sec.symbol&&r.exchange===exchange;}).sort(function(a,b){return a.date.localeCompare(b.date);});
-    const last=candles[candles.length-1], prev=candles[candles.length-2];
-    const chg=last&&prev?(last.close-prev.close):null;
-    const chgPct=chg!=null&&prev&&prev.close?(chg/prev.close*100):null;
-    const isUp=chgPct==null?null:chgPct>=0;
+    const {chgPct,isUp,intraday,last}=_mktChgCalc(candles);
     const ccy=sec.currency||'ZiG', sym=ccySym&&ccySym(ccy)||'';
     const chgColor=isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)';
-    const chgStr=chgPct!=null?((isUp?'▲':'▼')+' '+Math.abs(chgPct).toFixed(2)+'%'):(candles.length?candles.length+' days':'No data');
+    const chgStr=chgPct!=null?((isUp?'▲':'▼')+' '+Math.abs(chgPct).toFixed(2)+'%'):(candles.length?'—':'No data');
     const sel=_mktState[exchange]&&_mktState[exchange].sym===sec.symbol;
     const row=document.createElement('div');
     row.className='mkt-row'+(sel?' active':'');
     row.dataset.sym=sec.symbol;
-    row.innerHTML='<div style="min-width:0"><div class="mkt-row-sym">'+sec.symbol+'</div><div class="mkt-row-name">'+(sec.name||'')+'</div></div>'
-      +'<div class="mkt-row-price"><div class="mkt-row-last">'+(last?sym+fmtNum(last.close):'—')+'</div>'
-      +'<div class="mkt-row-chg" style="color:'+chgColor+'">'+chgStr+'</div></div>';
+    row.innerHTML='<div style="min-width:0;overflow:hidden"><div class="mkt-row-sym">'+sec.symbol+'</div><div class="mkt-row-name">'+(sec.name||'')+'</div></div>'
+      +'<div class="mkt-row-price"><div class="mkt-row-last" style="color:'+(isUp==null?'var(--text)':isUp?'var(--green)':'var(--red)')+'">'+(last?sym+fmtNum(last.close):'—')+'</div>'
+      +'<div class="mkt-row-chg" style="color:'+chgColor+'">'+chgStr+(intraday&&chgPct!=null?' ↕':'')+'</div></div>';
     row.addEventListener('click',function(){selectMarketSec(sec.symbol,exchange);});
-    listEl.appendChild(row);
+    innerEl.appendChild(row);
   });
   const cur=_mktState[exchange]&&_mktState[exchange].sym;
   const toSel=(cur&&secs.find(function(s){return s.symbol===cur;}))?cur:secs[0].symbol;
@@ -6504,7 +6516,7 @@ function selectMarketSec(symbol,exchange){
   if(!_mktState[exchange]) return;
   _mktState[exchange].sym=symbol;
   const ex=exchange.toLowerCase();
-  document.querySelectorAll('#'+ex+'-sec-list .mkt-row').forEach(function(r){r.classList.toggle('active',r.dataset.sym===symbol);});
+  document.querySelectorAll('#'+ex+'-sec-list-inner .mkt-row').forEach(function(r){r.classList.toggle('active',r.dataset.sym===symbol);});
 
   const sec=marketSecurities.find(function(s){return s.symbol===symbol&&s.exchange===exchange;});
   const allCandles=ohlcData.filter(function(r){return r.symbol===symbol&&r.exchange===exchange;}).sort(function(a,b){return a.date.localeCompare(b.date);});
@@ -6513,10 +6525,7 @@ function selectMarketSec(symbol,exchange){
   _mktState[exchange].ccy=ccy;
   _mktState[exchange].candles=allCandles;
 
-  const last=allCandles[allCandles.length-1], prev=allCandles[allCandles.length-2];
-  const chg=last&&prev?(last.close-prev.close):null;
-  const chgPct=chg!=null&&prev&&prev.close?(chg/prev.close*100):null;
-  const isUp=chgPct==null?null:chgPct>=0;
+  const {chgPct,isUp,intraday,last,prev}=_mktChgCalc(allCandles);
 
   // Show panels
   const emptyEl=document.getElementById(ex+'-empty-state');
@@ -6534,9 +6543,11 @@ function selectMarketSec(symbol,exchange){
   // Stats strip
   if(statsEl){
     statsEl.style.display='flex';
+    const chgLabel=intraday?'Intraday':'Change';
+    const chgVal=chgPct!=null?((chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'):'—';
     const stats=[
       {l:'Last Close',v:last?sym+fmtNum(last.close):'—',c:isUp==null?'var(--text)':isUp?'var(--green)':'var(--red)'},
-      {l:'Change',v:chgPct!=null?((chgPct>=0?'+':'')+chgPct.toFixed(2)+'%'):'—',c:isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)'},
+      {l:chgLabel,v:chgVal,c:isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)'},
       {l:'Open',v:last?sym+fmtNum(last.open):'—',c:'var(--text)'},
       {l:'High',v:last&&last.high!=null?sym+fmtNum(last.high):'—',c:'var(--green)'},
       {l:'Low',v:last&&last.low!=null?sym+fmtNum(last.low):'—',c:'var(--red)'},
@@ -6580,20 +6591,23 @@ function _redrawMktChart(exchange){
   const allCandles=state.candles||[];
   const zoom=state.zoom||0;
   const candles=zoom>0?allCandles.slice(-zoom):allCandles;
-  setTimeout(function(){
+  let attempts=0;
+  function doRender(){
+    const h=canvasWrap.clientHeight, w=canvasWrap.clientWidth;
+    if((h<80||w<80)&&attempts<12){ attempts++; setTimeout(doRender,60); return; }
     const geom=drawCandleChart(canvas,candles,{bgDark:state.bgDark!==false,overlayId:ex+'-overlay-canvas'});
     state.geom=geom;
-    // Attach crosshair events
+    if(!geom) return;
     canvas.onmousemove=function(e){
       const rect=canvas.getBoundingClientRect();
-      const W=geom?geom.W:canvas.width; const H=geom?geom.H:canvas.height;
-      drawCrosshair(exchange,(e.clientX-rect.left)*(W/rect.width),(e.clientY-rect.top)*(H/rect.height));
+      drawCrosshair(exchange,(e.clientX-rect.left)*(geom.W/rect.width),(e.clientY-rect.top)*(geom.H/rect.height));
     };
     canvas.onmouseleave=function(){
       const ov=document.getElementById(ex+'-overlay-canvas');
       if(ov){const ctx=ov.getContext('2d');ctx.clearRect(0,0,ov.width,ov.height);}
     };
-  },40);
+  }
+  setTimeout(doRender,60);
 }
 
 // ── Zoom range ────────────────────────────────────────────────────

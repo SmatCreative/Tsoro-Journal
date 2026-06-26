@@ -78,9 +78,9 @@ html[data-theme="light"] canvas{filter:none}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0;background:var(--surface)}
 .content{flex:1;overflow-y:auto;padding:28px;-webkit-overflow-scrolling:touch}
-.content.mkt-mode{padding:0;overflow:hidden;display:flex;flex-direction:column}
-.content.mkt-mode .page.active{flex:1;min-height:0;display:flex;flex-direction:column}
-.content.mkt-mode .mkt-layout{flex:1;min-height:0}
+/* Market pages use position:fixed to bypass DOM ancestry issues */
+#page-zse-market,#page-vfex-market{position:fixed!important;top:56px;left:240px;right:0;bottom:0;display:none!important;flex-direction:column;padding:0;margin:0;overflow:hidden}
+#page-zse-market.active,#page-vfex-market.active{display:flex!important}
 /* Market TradingView layout */
 .mkt-layout{display:flex;flex-direction:column;height:100%}
 .mkt-header{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surface)}

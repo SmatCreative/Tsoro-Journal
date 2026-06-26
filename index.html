@@ -6374,8 +6374,9 @@ function drawCandleChart(canvas, candles, opts){
   const pad={l:64,r:12,t:20,b:38};
   const chartW=W-pad.l-pad.r, chartH=H-pad.t-pad.b;
 
-  const highs=sorted.map(function(c){return c.high!=null?c.high:Math.max(c.open,c.close);});
-  const lows=sorted.map(function(c){return c.low!=null?c.low:Math.min(c.open,c.close);});
+  const highs=sorted.filter(function(c){return !c._empty;}).map(function(c){return c.high!=null?c.high:Math.max(c.open,c.close);});
+  const lows=sorted.filter(function(c){return !c._empty;}).map(function(c){return c.low!=null?c.low:Math.min(c.open,c.close);});
+  if(!highs.length){ctx.fillStyle=bgDark?'#64748b':'#8891a8';ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No candle data yet — click "+ Add Day" to begin',W/2,H/2);return null;}
   const maxP=Math.max.apply(null,highs), minP=Math.min.apply(null,lows);
   const rawRange=maxP-minP||maxP*0.04||1;
   const padPct=n<=1?0.35:n<=5?0.20:n<=20?0.12:0.07;
@@ -6408,6 +6409,7 @@ function drawCandleChart(canvas, candles, opts){
 
   // Candles
   sorted.forEach(function(c,i){
+    if(c._empty) return;
     const x=sx(i);
     const o=c.open, cl=c.close;
     const hi=c.high!=null?c.high:Math.max(o,cl);
@@ -6624,7 +6626,21 @@ function _redrawMktChart(exchange){
   const state=_mktState[exchange]; if(!state) return;
   const allCandles=state.candles||[];
   const zoom=state.zoom||0;
-  const candles=zoom>0?allCandles.slice(-zoom):allCandles;
+  let candles;
+  if(zoom>0){
+    // Build full calendar date range so x-axis always spans the selected period
+    const today=new Date(); today.setHours(0,0,0,0);
+    const start=new Date(today); start.setDate(today.getDate()-zoom+1);
+    const dateArr=[];
+    for(const d=new Date(start);d<=today;d.setDate(d.getDate()+1)){
+      const ds=d.toISOString().slice(0,10);
+      const found=allCandles.find(c=>c.date===ds)||null;
+      dateArr.push(found||{date:ds,open:null,close:null,high:null,low:null,_empty:true});
+    }
+    candles=dateArr;
+  } else {
+    candles=allCandles;
+  }
   let attempts=0;
   function doRender(){
     const h=canvasWrap.clientHeight, w=canvasWrap.clientWidth;

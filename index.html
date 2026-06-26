@@ -113,7 +113,7 @@ html[data-theme="light"] canvas{filter:none}
 
 /* ── Sidebar ── */
 .sidebar-brand{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#003a8c,#1a6fd4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,#003a8c,#1a6fd4);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;overflow:hidden}
 .brand-name{font-size:16px;font-weight:600;letter-spacing:-.4px}.brand-name span{color:var(--accent2)}
 .nav-section{padding:16px 12px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 0;border-radius:11px;cursor:pointer;color:var(--muted2);transition:all .15s;font-size:13.5px;font-weight:500;border:none;background:none;width:100%;text-align:left}
@@ -359,7 +359,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 <div class="auth-screen" id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">
-      <img src="/tsoro.png" alt="Tsoro" style="width:56px;height:56px;object-fit:contain">
+      <img src="/tsoro.png" alt="Tsoro" style="width:56px;height:56px;object-fit:contain;border-radius:12px">
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
@@ -395,7 +395,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 <div class="app" id="app">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="/tsoro.png" alt="Tsoro" style="width:36px;height:36px;object-fit:contain;flex-shrink:0">
+      <img src="/tsoro.png" alt="Tsoro" style="width:32px;height:32px;object-fit:cover;flex-shrink:0">
       <div class="brand-name">Tsoro <span>Journal</span></div>
     </div>
     <div class="nav-section">Main</div>
@@ -725,7 +725,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
             Add Capital Entry
           </button>
         </div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div></div>
+        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
 
         <!-- Money Flow Report -->
         <div style="margin-top:28px">
@@ -778,12 +778,9 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 
       <!-- Rates -->
       <div class="page" id="page-rates">
-        <div style="background:var(--hero-grad);border-radius:var(--r);padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-          <div>
-            <div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px">Exchange Rates</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:4px">Track currency rates — used across all pages to convert values to USD</div>
-          </div>
-          <button class="btn btn-sm" onclick="openRateModal()" style="background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div style="font-size:13px;color:var(--muted)">Track currency rates — used across all pages to convert values to USD</div>
+          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Rate
           </button>
@@ -882,7 +879,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                       <button class="mkt-range-btn" id="zse-range-90" onclick="setMktRange('ZSE',90)">3M</button>
                       <button class="mkt-range-btn" id="zse-range-0" onclick="setMktRange('ZSE',0)">All</button>
                     </div>
-                    <button class="btn btn-ghost btn-sm" id="zse-bg-btn" onclick="toggleChartBg('ZSE')" title="Toggle chart background" style="font-size:14px;padding:5px 10px">☀</button>
+                    <button class="btn btn-ghost btn-sm" id="zse-bg-btn" onclick="toggleChartBg('ZSE')" title="Toggle chart background" style="font-size:11px;padding:5px 10px">BG</button>
                     <button class="btn btn-primary btn-sm" onclick="openOhlcForSelected('ZSE')">+ Add Day</button>
                   </div>
                 </div>
@@ -896,7 +893,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                 <div id="zse-cd-table"></div>
               </div>
               <div id="zse-empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)">
-                <div style="font-size:48px;opacity:.3">📊</div>
+                <div style="font-size:13px;color:var(--muted)">Select a security to view its chart</div>
                 <div style="font-size:14px;font-weight:600">Select a security</div>
                 <div style="font-size:12px">Choose a ticker from the list to view its chart</div>
               </div>
@@ -937,7 +934,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                       <button class="mkt-range-btn" id="vfex-range-90" onclick="setMktRange('VFEX',90)">3M</button>
                       <button class="mkt-range-btn" id="vfex-range-0" onclick="setMktRange('VFEX',0)">All</button>
                     </div>
-                    <button class="btn btn-ghost btn-sm" id="vfex-bg-btn" onclick="toggleChartBg('VFEX')" title="Toggle chart background" style="font-size:14px;padding:5px 10px">☀</button>
+                    <button class="btn btn-ghost btn-sm" id="vfex-bg-btn" onclick="toggleChartBg('VFEX')" title="Toggle chart background" style="font-size:11px;padding:5px 10px">BG</button>
                     <button class="btn btn-primary btn-sm" onclick="openOhlcForSelected('VFEX')">+ Add Day</button>
                   </div>
                 </div>
@@ -951,7 +948,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                 <div id="vfex-cd-table"></div>
               </div>
               <div id="vfex-empty-state" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--muted)">
-                <div style="font-size:48px;opacity:.3">📊</div>
+                <div style="font-size:13px;color:var(--muted)">Select a security to view its chart</div>
                 <div style="font-size:14px;font-weight:600">Select a security</div>
                 <div style="font-size:12px">Choose a ticker from the list to view its chart</div>
               </div>
@@ -2326,7 +2323,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates & Inflation',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -5869,21 +5866,20 @@ function drawZseChart(canvas, h, pts){
     // Header
     const ccy=h.exchange==='VFSE'?'$':'ZiG ';
     const pctChg=prices.length>1?((last-first)/first*100):null;
-    ctx.font='bold 15px system-ui'; ctx.textAlign='left';
+    // Symbol (left) + Price (right) on line 1
+    ctx.font='bold 14px system-ui'; ctx.textAlign='left';
     ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
-    ctx.fillText(h.symbol,14,24);
-    // Exchange badge (plain rect, no roundRect)
-    ctx.font='bold 9px system-ui';
-    const symW=ctx.measureText(h.symbol).width;
-    const bx=14+symW+8, by=12, bw=ctx.measureText(h.exchange).width+10, bh=14;
+    ctx.fillText(h.symbol,14,22);
+    ctx.font='bold 14px system-ui'; ctx.textAlign='right';
+    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
+    ctx.fillText(ccy+fmtNum(last),W-14,22);
+    // Exchange badge on line 2
+    ctx.font='bold 9px system-ui'; ctx.textAlign='left';
+    const bw=ctx.measureText(h.exchange).width+10, bh=13;
     ctx.fillStyle=h.exchange==='ZSE'?'rgba(26,111,212,0.4)':'rgba(16,185,129,0.35)';
-    ctx.fillRect(bx,by,bw,bh);
+    ctx.fillRect(14,28,bw,bh);
     ctx.fillStyle=h.exchange==='ZSE'?'#5098e8':'#34d399';
-    ctx.fillText(h.exchange,bx+5,by+10);
-    // Price + %
-    ctx.font='bold 15px system-ui'; ctx.textAlign='right';
-    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
-    ctx.fillText(ccy+fmtNum(last),W-14,24);
+    ctx.fillText(h.exchange,19,38);
     if(pctChg!==null){
       ctx.font='11px system-ui';
       ctx.fillStyle=pctChg>=0?'#34d399':'#f87171';
@@ -5933,7 +5929,7 @@ function renderZsePriceCharts(){
   });
 
   el.innerHTML=`
-    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">&#128200; Price History</div>
+    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
       ${holdings.map(h=>`<div style="border-radius:var(--r);overflow:hidden;box-shadow:0 4px 24px rgba(0,74,173,.18)"><canvas id="zph-${h.id}" style="display:block;width:100%"></canvas></div>`).join('')}
     </div>`;
@@ -6014,7 +6010,7 @@ function renderZse(){
           <div style="font-weight:600;font-size:14px">${h.symbol}</div>
           <div style="font-size:11px;margin-top:1px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
             <span class="badge" style="background:${h.exchange==='ZSE'?'rgba(26,111,212,.15)':'rgba(16,185,129,.15)'};color:${h.exchange==='ZSE'?'var(--accent2)':'var(--green)'};font-size:10px;font-weight:600">${h.exchange}</span>
-            ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">⏱ ${holdLabel}</span>`:''}
+            ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">${holdLabel}</span>`:''}
           </div>
           ${h.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+h.notes+'</div>':''}
         </td>
@@ -6501,7 +6497,7 @@ function renderMarketPage(exchange){
     row.dataset.sym=sec.symbol;
     row.innerHTML='<div style="min-width:0;overflow:hidden"><div class="mkt-row-sym">'+sec.symbol+'</div><div class="mkt-row-name">'+(sec.name||'')+'</div></div>'
       +'<div class="mkt-row-price"><div class="mkt-row-last" style="color:'+(isUp==null?'var(--text)':isUp?'var(--green)':'var(--red)')+'">'+(last?sym+fmtNum(last.close):'—')+'</div>'
-      +'<div class="mkt-row-chg" style="color:'+chgColor+'">'+chgStr+(intraday&&chgPct!=null?' ↕':'')+'</div></div>';
+      +'<div class="mkt-row-chg" style="color:'+chgColor+'">'+chgStr+(intraday&&chgPct!=null?' (intra)':'')+'</div></div>';
     row.addEventListener('click',function(){selectMarketSec(sec.symbol,exchange);});
     innerEl.appendChild(row);
   });
@@ -6626,7 +6622,7 @@ function toggleChartBg(exchange){
   _mktState[exchange].bgDark=!_mktState[exchange].bgDark;
   const ex=exchange.toLowerCase();
   const btn=document.getElementById(ex+'-bg-btn');
-  if(btn) btn.textContent=_mktState[exchange].bgDark?'☀':'🌙';
+  if(btn) btn.textContent='BG';
   _redrawMktChart(exchange);
 }
 

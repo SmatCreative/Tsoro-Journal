@@ -103,7 +103,9 @@ html[data-theme="light"] canvas{filter:none}
 .mkt-stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700}
 .mkt-stat-val{font-size:15px;font-weight:800;margin-top:3px;letter-spacing:-.3px}
 .mkt-canvas-wrap{flex:1;position:relative;overflow:hidden;min-height:280px}
-.mkt-canvas-wrap canvas{display:block;position:absolute;top:0;left:0}
+.mkt-canvas-wrap canvas{display:block}
+#zse-main-canvas,#vfex-main-canvas{width:100%;height:100%}
+#zse-overlay-canvas,#vfex-overlay-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
 .mkt-table-wrap{height:160px;overflow-y:auto;border-top:1px solid var(--border);flex-shrink:0}
 .mkt-range-btn{background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .1s}
 .mkt-range-btn:hover{color:var(--text);background:var(--surface3)}
@@ -6309,11 +6311,9 @@ function drawCandleChart(canvas, candles, opts){
   if(!opts) opts={};
   if(!canvas) return null;
   const dpr=window.devicePixelRatio||1;
-  const wrap=canvas.parentElement;
-  const W=wrap?wrap.clientWidth:700;
-  const H=wrap?wrap.clientHeight:340;
+  const W=canvas.offsetWidth||canvas.parentElement?.clientWidth||700;
+  const H=canvas.offsetHeight||canvas.parentElement?.clientHeight||340;
   canvas.width=W*dpr; canvas.height=H*dpr;
-  canvas.style.width=W+'px'; canvas.style.height=H+'px';
 
   // Size overlay canvas if present
   const ovId=opts.overlayId;

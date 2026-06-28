@@ -923,6 +923,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                   <button class="chart-tool" id="zse-tool-vline" onclick="setChartTool('ZSE','vline')" title="Vertical Line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="22"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="8" y1="22" x2="16" y2="22"/></svg></button>
                   <div class="chart-tools-sep"></div>
                   <button class="chart-tool chart-tool-clear" onclick="clearChartDrawings('ZSE')" title="Clear Drawings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+                  <div class="chart-tools-sep"></div>
+                  <button class="chart-tool" id="zse-tool-charttype" onclick="toggleChartType('ZSE')" title="Toggle Candle/Line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="3" height="8" rx="1" fill="currentColor" stroke="none"/><line x1="4.5" y1="5" x2="4.5" y2="8"/><line x1="4.5" y1="16" x2="4.5" y2="19"/><rect x="10.5" y="11" width="3" height="6" rx="1" fill="currentColor" stroke="none"/><line x1="12" y1="8" x2="12" y2="11"/><line x1="12" y1="17" x2="12" y2="20"/><rect x="18" y="6" width="3" height="9" rx="1" fill="currentColor" stroke="none"/><line x1="19.5" y1="3" x2="19.5" y2="6"/><line x1="19.5" y1="15" x2="19.5" y2="18"/></svg></button>
                 </div>
               </div>
               <div id="zse-table-wrap" class="mkt-table-wrap" style="display:none">
@@ -989,6 +991,8 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
                   <button class="chart-tool" id="vfex-tool-vline" onclick="setChartTool('VFEX','vline')" title="Vertical Line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="22"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="8" y1="22" x2="16" y2="22"/></svg></button>
                   <div class="chart-tools-sep"></div>
                   <button class="chart-tool chart-tool-clear" onclick="clearChartDrawings('VFEX')" title="Clear Drawings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+                  <div class="chart-tools-sep"></div>
+                  <button class="chart-tool" id="vfex-tool-charttype" onclick="toggleChartType('VFEX')" title="Toggle Candle/Line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="3" height="8" rx="1" fill="currentColor" stroke="none"/><line x1="4.5" y1="5" x2="4.5" y2="8"/><line x1="4.5" y1="16" x2="4.5" y2="19"/><rect x="10.5" y="11" width="3" height="6" rx="1" fill="currentColor" stroke="none"/><line x1="12" y1="8" x2="12" y2="11"/><line x1="12" y1="17" x2="12" y2="20"/><rect x="18" y="6" width="3" height="9" rx="1" fill="currentColor" stroke="none"/><line x1="19.5" y1="3" x2="19.5" y2="6"/><line x1="19.5" y1="15" x2="19.5" y2="18"/></svg></button>
                 </div>
               </div>
               <div id="vfex-table-wrap" class="mkt-table-wrap" style="display:none">
@@ -6338,7 +6342,7 @@ async function loadOhlcData(){
   // Only fetch last 60 days for the security list prices; full history loads per-symbol on demand
   const since=_localDateStr2(60);
   const[{data:od},{data:ms}]=await Promise.all([
-    sb.from('securities_ohlc').select('*').gte('date',since).order('date',{ascending:true}),
+    sb.from('securities_ohlc').select('*').gte('date',since).order('date',{ascending:true}).limit(50000),
     sb.from('market_securities').select('*').order('symbol',{ascending:true})
   ]);
   ohlcData=od||[]; marketSecurities=ms||[];
@@ -6351,7 +6355,7 @@ async function _ensureFullHistory(symbol,exchange){
   const key=symbol+'_'+exchange;
   if(_ohlcFullLoaded[key]) return;
   _ohlcFullLoaded[key]=true;
-  const{data}=await sb.from('securities_ohlc').select('*').eq('symbol',symbol).eq('exchange',exchange).order('date',{ascending:true});
+  const{data}=await sb.from('securities_ohlc').select('*').eq('symbol',symbol).eq('exchange',exchange).order('date',{ascending:true}).limit(50000);
   if(data&&data.length){
     ohlcData=ohlcData.filter(r=>!(r.symbol===symbol&&r.exchange===exchange));
     ohlcData.push(...data);
@@ -6385,8 +6389,8 @@ async function seedDefaultSecurities(){
 
 // ── Market chart state ────────────────────────────────────────────
 const _mktState={
-  ZSE:{zoom:0,wheelZoom:0,bgDark:true,geom:null,candles:[],ccy:'ZiG',sym:null,tool:'cursor',drawings:{},drawState:null,priceScale:1},
-  VFEX:{zoom:0,wheelZoom:0,bgDark:true,geom:null,candles:[],ccy:'USD',sym:null,tool:'cursor',drawings:{},drawState:null,priceScale:1}
+  ZSE:{zoom:0,wheelZoom:0,bgDark:true,geom:null,candles:[],ccy:'ZiG',sym:null,tool:'cursor',drawings:{},drawState:null,priceScale:1,chartType:'candle'},
+  VFEX:{zoom:0,wheelZoom:0,bgDark:true,geom:null,candles:[],ccy:'USD',sym:null,tool:'cursor',drawings:{},drawState:null,priceScale:1,chartType:'candle'}
 };
 
 // ── Candlestick canvas renderer ───────────────────────────────────
@@ -6430,7 +6434,7 @@ function drawCandleChart(canvas, candles, opts){
   const startX=pad.l+(chartW-slotW*n); // right-align candles
   const sx=i=>startX+(i+0.5)*slotW;
   const candleW=Math.max(2,Math.min(14,Math.floor(slotW*0.6)));
-  const lineMode=slotW<2; // too many candles: draw as line chart
+  const lineMode=opts.chartType==='line'||slotW<2; // line chart if forced or too many candles
   // Converters for hit-testing
   const pxToIdx=mx=>Math.max(0,Math.min(n-1,Math.floor((mx-startX)/slotW)));
   const pxToPrice=my=>minV+(pad.t+chartH-my)/chartH*range;
@@ -6452,25 +6456,23 @@ function drawCandleChart(canvas, candles, opts){
   for(let i=0;i<n;i++){if(i%vstep===0){ctx.beginPath();ctx.moveTo(sx(i),pad.t);ctx.lineTo(sx(i),H-pad.b);ctx.stroke();}}
   // Candles or line chart
   if(lineMode){
-    // Line chart mode: draw close price as a smooth line
+    // Line chart: collect non-empty points, draw line + fill area beneath
     const accent='#3b82f6';
-    ctx.strokeStyle=accent; ctx.lineWidth=1.5; ctx.beginPath();
-    let started=false;
-    sorted.forEach((c,i)=>{
-      if(c._empty||c.close==null) return;
-      const x=sx(i), y=sy(c.close);
-      if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-    // Fill under line
-    if(started){
-      const lastNonEmpty=sorted.filter(c=>!c._empty&&c.close!=null);
-      if(lastNonEmpty.length>1){
-        const lx=sx(sorted.indexOf(lastNonEmpty[lastNonEmpty.length-1]));
-        const fx=sx(sorted.indexOf(lastNonEmpty[0]));
-        ctx.lineTo(lx,H-pad.b);ctx.lineTo(fx,H-pad.b);ctx.closePath();
-        ctx.fillStyle=bgDark?'rgba(59,130,246,.10)':'rgba(59,130,246,.07)';ctx.fill();
-      }
+    const pts=[];
+    sorted.forEach((c,i)=>{ if(!c._empty&&c.close!=null) pts.push({x:sx(i),y:sy(c.close)}); });
+    if(pts.length>0){
+      // Fill area
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, H-pad.b);
+      pts.forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.lineTo(pts[pts.length-1].x, H-pad.b);
+      ctx.closePath();
+      ctx.fillStyle=bgDark?'rgba(59,130,246,.10)':'rgba(59,130,246,.07)';
+      ctx.fill();
+      // Line on top
+      ctx.beginPath();
+      pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+      ctx.strokeStyle=accent; ctx.lineWidth=1.5; ctx.stroke();
     }
   } else {
     sorted.forEach((c,i)=>{
@@ -6728,7 +6730,7 @@ async function selectMarketSec(symbol,exchange){
         return '<div style="display:grid;grid-template-columns:88px 1fr 1fr 1fr 1fr 64px;padding:7px 12px;font-size:11px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;transition:background .1s"'
           +' onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'\'"'
           +' onclick="openOhlcModal(\''+c.id+'\',\''+exchange+'\')">'
-          +'<div style="color:var(--muted2);font-size:10px">'+new Date(c.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})+'</div>'
+          +'<div style="color:var(--muted2);font-size:10px">'+new Date(c.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'})+'</div>'
           +'<div>'+bar+sym+fmtNum(c.open)+'</div>'
           +'<div style="color:var(--green)">'+(c.high!=null?sym+fmtNum(c.high):'—')+'</div>'
           +'<div style="color:var(--red)">'+(c.low!=null?sym+fmtNum(c.low):'—')+'</div>'
@@ -6794,7 +6796,7 @@ function _redrawMktChart(exchange){
   function doRender(){
     const h=canvasWrap.clientHeight, w=canvasWrap.clientWidth;
     if((h<80||w<80)&&attempts<12){attempts++;setTimeout(doRender,60);return;}
-    const geom=drawCandleChart(canvas,candles,{bgDark:state.bgDark!==false,overlayId:ex+'-overlay-canvas',priceScale:state.priceScale||1,drawings});
+    const geom=drawCandleChart(canvas,candles,{bgDark:state.bgDark!==false,overlayId:ex+'-overlay-canvas',priceScale:state.priceScale||1,drawings,chartType:state.chartType||'candle'});
     state.geom=geom;
     if(!geom) return;
     // Mouse move — crosshair + drawing preview
@@ -6880,6 +6882,18 @@ function setMktRange(exchange,n){
     const btn=document.getElementById(ex+'-range-'+v);
     if(btn) btn.classList.toggle('active',v===n);
   });
+  _redrawMktChart(exchange);
+}
+
+function toggleChartType(exchange){
+  const state=_mktState[exchange]; if(!state) return;
+  state.chartType=state.chartType==='line'?'candle':'line';
+  const ex=exchange.toLowerCase();
+  const btn=document.getElementById(ex+'-tool-charttype');
+  if(btn){
+    btn.title=state.chartType==='line'?'Switch to Candles':'Switch to Line';
+    btn.style.color=state.chartType==='line'?'var(--accent)':'';
+  }
   _redrawMktChart(exchange);
 }
 

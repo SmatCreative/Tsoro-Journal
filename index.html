@@ -6331,14 +6331,31 @@ function viewImage(url){
 // ═══════════════════════════════════════════════════════════════════
 let ohlcData=[], marketSecurities=[];
 let _cdSymbol=null, _cdExchange=null;
+const _ohlcFullLoaded={};
 
 // ── Data loading ──────────────────────────────────────────────────
 async function loadOhlcData(){
+  // Only fetch last 60 days for the security list prices; full history loads per-symbol on demand
+  const since=_localDateStr2(60);
   const[{data:od},{data:ms}]=await Promise.all([
-    sb.from('securities_ohlc').select('*').order('date',{ascending:true}),
+    sb.from('securities_ohlc').select('*').gte('date',since).order('date',{ascending:true}),
     sb.from('market_securities').select('*').order('symbol',{ascending:true})
   ]);
   ohlcData=od||[]; marketSecurities=ms||[];
+}
+function _localDateStr2(daysBack){
+  const d=new Date(); d.setDate(d.getDate()-daysBack);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+async function _ensureFullHistory(symbol,exchange){
+  const key=symbol+'_'+exchange;
+  if(_ohlcFullLoaded[key]) return;
+  _ohlcFullLoaded[key]=true;
+  const{data}=await sb.from('securities_ohlc').select('*').eq('symbol',symbol).eq('exchange',exchange).order('date',{ascending:true});
+  if(data&&data.length){
+    ohlcData=ohlcData.filter(r=>!(r.symbol===symbol&&r.exchange===exchange));
+    ohlcData.push(...data);
+  }
 }
 
 // Seed well-known ZSE & VFEX tickers for first-time users
@@ -6413,6 +6430,7 @@ function drawCandleChart(canvas, candles, opts){
   const startX=pad.l+(chartW-slotW*n); // right-align candles
   const sx=i=>startX+(i+0.5)*slotW;
   const candleW=Math.max(2,Math.min(14,Math.floor(slotW*0.6)));
+  const lineMode=slotW<2; // too many candles: draw as line chart
   // Converters for hit-testing
   const pxToIdx=mx=>Math.max(0,Math.min(n-1,Math.floor((mx-startX)/slotW)));
   const pxToPrice=my=>minV+(pad.t+chartH-my)/chartH*range;
@@ -6432,26 +6450,55 @@ function drawCandleChart(canvas, candles, opts){
   const vstep=Math.max(1,Math.ceil(n/10));
   ctx.strokeStyle=gridColor;
   for(let i=0;i<n;i++){if(i%vstep===0){ctx.beginPath();ctx.moveTo(sx(i),pad.t);ctx.lineTo(sx(i),H-pad.b);ctx.stroke();}}
-  // Candles
-  sorted.forEach((c,i)=>{
-    if(c._empty) return;
-    const x=sx(i);
-    const o=c.open,cl=c.close;
-    const hi=c.high!=null?c.high:Math.max(o,cl);
-    const lo=c.low!=null?c.low:Math.min(o,cl);
-    const bull=cl>=o;
-    const col=bull?'#10b981':'#ef4444';
-    ctx.strokeStyle=col;ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(x,sy(hi));ctx.lineTo(x,sy(lo));ctx.stroke();
-    const bodyTop=sy(Math.max(o,cl)),bodyH=Math.max(2,sy(Math.min(o,cl))-bodyTop);
-    ctx.fillStyle=col;ctx.fillRect(x-candleW/2,bodyTop,candleW,bodyH);
-  });
-  // X-axis date labels
+  // Candles or line chart
+  if(lineMode){
+    // Line chart mode: draw close price as a smooth line
+    const accent='#3b82f6';
+    ctx.strokeStyle=accent; ctx.lineWidth=1.5; ctx.beginPath();
+    let started=false;
+    sorted.forEach((c,i)=>{
+      if(c._empty||c.close==null) return;
+      const x=sx(i), y=sy(c.close);
+      if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Fill under line
+    if(started){
+      const lastNonEmpty=sorted.filter(c=>!c._empty&&c.close!=null);
+      if(lastNonEmpty.length>1){
+        const lx=sx(sorted.indexOf(lastNonEmpty[lastNonEmpty.length-1]));
+        const fx=sx(sorted.indexOf(lastNonEmpty[0]));
+        ctx.lineTo(lx,H-pad.b);ctx.lineTo(fx,H-pad.b);ctx.closePath();
+        ctx.fillStyle=bgDark?'rgba(59,130,246,.10)':'rgba(59,130,246,.07)';ctx.fill();
+      }
+    }
+  } else {
+    sorted.forEach((c,i)=>{
+      if(c._empty) return;
+      const x=sx(i);
+      const o=c.open,cl=c.close;
+      const hi=c.high!=null?c.high:Math.max(o,cl);
+      const lo=c.low!=null?c.low:Math.min(o,cl);
+      const bull=cl>=o;
+      const col=bull?'#10b981':'#ef4444';
+      ctx.strokeStyle=col;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,sy(hi));ctx.lineTo(x,sy(lo));ctx.stroke();
+      const bodyTop=sy(Math.max(o,cl)),bodyH=Math.max(2,sy(Math.min(o,cl))-bodyTop);
+      ctx.fillStyle=col;ctx.fillRect(x-candleW/2,bodyTop,candleW,bodyH);
+    });
+  }
+  // X-axis date labels — show year when range spans multiple years
   ctx.fillStyle=labelColor;ctx.font='9px Inter,system-ui';ctx.textAlign='center';
+  const firstYear=sorted[0]?new Date(sorted[0].date+'T00:00:00').getFullYear():null;
+  const lastYear=sorted[n-1]?new Date(sorted[n-1].date+'T00:00:00').getFullYear():null;
+  const multiYear=firstYear&&lastYear&&lastYear>firstYear;
   for(let i=0;i<n;i++){
     if(i%vstep!==0&&i!==n-1) continue;
     const d=new Date(sorted[i].date+'T00:00:00');
-    ctx.fillText(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),sx(i),H-pad.b+14);
+    const lbl=multiYear
+      ? d.toLocaleDateString('en-US',{month:'short',year:'2-digit'})
+      : d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    ctx.fillText(lbl,sx(i),H-pad.b+14);
   }
   // Price axis panel (right side)
   ctx.fillStyle=bgDark?'#0d1117':'#f8fafc';
@@ -6618,11 +6665,14 @@ function renderMarketPage(exchange){
   selectMarketSec(toSel,exchange);
 }
 
-function selectMarketSec(symbol,exchange){
+async function selectMarketSec(symbol,exchange){
   if(!_mktState[exchange]) return;
   _mktState[exchange].sym=symbol;
   const ex=exchange.toLowerCase();
   document.querySelectorAll('#'+ex+'-sec-list-inner .mkt-row').forEach(function(r){r.classList.toggle('active',r.dataset.sym===symbol);});
+
+  // Lazy-load full history for this symbol
+  await _ensureFullHistory(symbol,exchange);
 
   const sec=marketSecurities.find(function(s){return s.symbol===symbol&&s.exchange===exchange;});
   const allCandles=ohlcData.filter(function(r){return r.symbol===symbol&&r.exchange===exchange;}).sort(function(a,b){return a.date.localeCompare(b.date);});

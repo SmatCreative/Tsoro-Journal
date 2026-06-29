@@ -6664,7 +6664,30 @@ function renderMarketPage(exchange){
   });
   const cur=_mktState[exchange]&&_mktState[exchange].sym;
   const toSel=(cur&&secs.find(function(s){return s.symbol===cur;}))?cur:secs[0].symbol;
-  selectMarketSec(toSel,exchange);
+  // async: after full history loads, refresh the sidebar prices too
+  selectMarketSec(toSel,exchange).then(function(){
+    _refreshMktSidebarPrices(exchange);
+  });
+}
+
+function _refreshMktSidebarPrices(exchange){
+  const ex=exchange.toLowerCase();
+  const innerEl=document.getElementById(ex+'-sec-list-inner'); if(!innerEl) return;
+  const secs=marketSecurities.filter(function(s){return s.exchange===exchange;});
+  innerEl.querySelectorAll('.mkt-row').forEach(function(row){
+    const sym=row.dataset.sym;
+    const sec=secs.find(function(s){return s.symbol===sym;});
+    if(!sec) return;
+    const candles=ohlcData.filter(function(r){return r.symbol===sym&&r.exchange===exchange;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+    const {chgPct,isUp,intraday,last}=_mktChgCalc(candles);
+    const ccy=sec.currency||'ZiG', sym2=ccySym&&ccySym(ccy)||'';
+    const chgColor=isUp==null?'var(--muted)':isUp?'var(--green)':'var(--red)';
+    const chgStr=chgPct!=null?((isUp?'▲':'▼')+' '+Math.abs(chgPct).toFixed(2)+'%'):(candles.length?'—':'No data');
+    const priceEl=row.querySelector('.mkt-row-last');
+    const chgEl=row.querySelector('.mkt-row-chg');
+    if(priceEl){ priceEl.textContent=last?sym2+fmtNum(last.close):'—'; priceEl.style.color=isUp==null?'var(--text)':isUp?'var(--green)':'var(--red)'; }
+    if(chgEl){ chgEl.textContent=chgStr+(intraday&&chgPct!=null?' (intra)':''); chgEl.style.color=chgColor; }
+  });
 }
 
 async function selectMarketSec(symbol,exchange){

@@ -6347,6 +6347,25 @@ async function loadOhlcData(){
   ]);
   ohlcData=od||[]; marketSecurities=ms||[];
 }
+
+// Auto-refresh when tab regains focus so new data appears without manual reload
+let _lastOhlcRefresh=0;
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible') return;
+  const now=Date.now();
+  if(now-_lastOhlcRefresh<60000) return; // throttle: max once per minute
+  _lastOhlcRefresh=now;
+  // Clear per-symbol full-history cache so next selectMarketSec re-fetches
+  Object.keys(_ohlcFullLoaded).forEach(function(k){delete _ohlcFullLoaded[k];});
+  loadOhlcData().then(function(){
+    ['ZSE','VFEX'].forEach(function(ex){
+      const state=_mktState[ex]; if(!state||!state.sym) return;
+      const pg=document.getElementById(ex.toLowerCase()+'-canvas-wrap');
+      if(!pg||pg.offsetParent===null) return; // only refresh if market page is visible
+      selectMarketSec(state.sym,ex).then(function(){ _refreshMktSidebarPrices(ex); });
+    });
+  });
+});
 function _localDateStr2(daysBack){
   const d=new Date(); d.setDate(d.getDate()-daysBack);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -6899,12 +6918,24 @@ function _redrawMktChart(exchange){
 function setMktRange(exchange,n){
   if(!_mktState[exchange]) return;
   _mktState[exchange].zoom=n;
-  _mktState[exchange].wheelZoom=0; // reset wheel zoom when range button clicked
+  _mktState[exchange].wheelZoom=0;
   const ex=exchange.toLowerCase();
   [7,30,90,0].forEach(function(v){
     const btn=document.getElementById(ex+'-range-'+v);
     if(btn) btn.classList.toggle('active',v===n);
   });
+  // If range has no real data, the full-history cache may be stale — re-fetch then redraw
+  if(n>0){
+    const state=_mktState[exchange];
+    const rangeCandles=_buildDateRange(state.candles||[],n);
+    const hasData=rangeCandles.some(function(c){return !c._empty&&c.close!=null;});
+    if(!hasData&&state.sym){
+      const key=state.sym+'_'+exchange;
+      delete _ohlcFullLoaded[key];
+      selectMarketSec(state.sym,exchange);
+      return;
+    }
+  }
   _redrawMktChart(exchange);
 }
 

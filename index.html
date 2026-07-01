@@ -5897,8 +5897,8 @@ function drawZseChart(canvas, h, pts){
     if(pts.length>=2){
       // Area fill
       const aG = ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
-      aG.addColorStop(0, isUp?'rgba(0,74,173,0.50)':'rgba(239,68,68,0.40)');
-      aG.addColorStop(1, isUp?'rgba(0,74,173,0.03)':'rgba(239,68,68,0.03)');
+      aG.addColorStop(0, isUp?'rgba(16,185,129,0.40)':'rgba(239,68,68,0.40)');
+      aG.addColorStop(1, isUp?'rgba(16,185,129,0.03)':'rgba(239,68,68,0.03)');
       ctx.beginPath();
       ctx.moveTo(mapped[0].x, PAD.t+cH);
       ctx.lineTo(mapped[0].x, mapped[0].y);
@@ -5912,8 +5912,8 @@ function drawZseChart(canvas, h, pts){
 
       // Line
       const lG = ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);
-      lG.addColorStop(0, isUp?'#1a6fd4':'#ef4444');
-      lG.addColorStop(1, isUp?'#5098e8':'#f87171');
+      lG.addColorStop(0, isUp?'#10b981':'#ef4444');
+      lG.addColorStop(1, isUp?'#34d399':'#f87171');
       ctx.beginPath(); ctx.moveTo(mapped[0].x,mapped[0].y);
       for(let i=1;i<mapped.length-1;i++){
         const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
@@ -5928,12 +5928,12 @@ function drawZseChart(canvas, h, pts){
       const isEdge=(i===0||i===mapped.length-1), r=isEdge?5:3.5;
       if(i===mapped.length-1){
         ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2);
-        ctx.fillStyle=isUp?'rgba(80,152,232,0.18)':'rgba(248,113,113,0.18)'; ctx.fill();
+        ctx.fillStyle=isUp?'rgba(52,211,153,0.18)':'rgba(248,113,113,0.18)'; ctx.fill();
         ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2);
-        ctx.fillStyle=isUp?'rgba(80,152,232,0.28)':'rgba(248,113,113,0.28)'; ctx.fill();
+        ctx.fillStyle=isUp?'rgba(52,211,153,0.28)':'rgba(248,113,113,0.28)'; ctx.fill();
       }
       ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
-      ctx.fillStyle=isEdge?(isUp?'#5098e8':'#f87171'):(isDark?'rgba(255,255,255,0.55)':'rgba(26,111,212,0.7)');
+      ctx.fillStyle=isEdge?(isUp?'#34d399':'#f87171'):(isDark?'rgba(255,255,255,0.55)':'rgba(16,185,129,0.7)');
       ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
     });
 

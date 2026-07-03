@@ -2798,6 +2798,9 @@ function renderAnalytics(){
   const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();
   const avgWin=wins.length?grossP/wins.length:0;
   const avgLoss=losses.length?grossL/losses.length:0;
+  const pnlMean=pnls.length?pnls.reduce((s,v)=>s+v,0)/pnls.length:0;
+  const pnlStdDev=pnls.length?Math.sqrt(pnls.reduce((s,v)=>s+(v-pnlMean)**2,0)/pnls.length):0;
+  const sharpe=pnlStdDev>0?pnlMean/pnlStdDev:null;
 
   // ── Per-trade issue detection ───────────────────────────────────
   function detectIssues(t){
@@ -2941,6 +2944,7 @@ function renderAnalytics(){
       {l:'No SL Trades',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
       {l:'Avg Winner',v:wins.length?'+$'+fmtMoney(avgWin):'—',col:'var(--green)'},
       {l:'Avg Loser',v:losses.length?'−$'+fmtMoney(avgLoss):'—',col:'var(--red)'},
+      {l:'Sharpe Ratio',v:sharpe!=null?sharpe.toFixed(2):'—',col:sharpe!=null&&sharpe>=1?'var(--green)':sharpe!=null&&sharpe>=0?'var(--yellow)':'var(--red)'},
       {l:'Closed Trades',v:closed.length,col:'var(--text)'},
     ].map(s=>'<div class="stat-card"><div class="stat-label">'+s.l+'</div><div class="stat-value" style="font-size:19px;color:'+s.col+'">'+s.v+'</div></div>').join('')
   +'</div>';
@@ -2970,6 +2974,7 @@ function renderAnalytics(){
   const summaryCard='<div class="card"><div class="card-header"><div class="card-title">Summary statistics</div></div>'
     +[['Total closed',closed.length],['Win rate',closed.length?wr.toFixed(1)+'%':'—'],['Profit factor',pf!=null?pf.toFixed(2):'—'],
       ['Gross profit','+$'+fmtMoney(grossP)],['Gross loss','−$'+fmtMoney(grossL)],['Max drawdown','−$'+fmtMoney(maxDD)],
+      ['Sharpe ratio',sharpe!=null?sharpe.toFixed(2):'—'],
       ['Best trade',bestPnL!=null?'+$'+fmtMoney(bestPnL):'—'],['Worst trade',worstPnL!=null?'−$'+fmtMoney(Math.abs(worstPnL)):'—'],
       ['Avg winner',wins.length?'+$'+fmtMoney(avgWin):'—'],['Avg loser',losses.length?'−$'+fmtMoney(avgLoss):'—'],
     ].map(([k,v])=>'<div class="perf-row"><span class="perf-key">'+k+'</span><span class="perf-val">'+v+'</span></div>').join('')

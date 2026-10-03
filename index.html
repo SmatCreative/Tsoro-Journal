@@ -3687,7 +3687,8 @@ function _renderWallet(){
   const totalCashUSD = wallets.reduce((s,w)=>s+walletToUSD(w),0);
   const openTrades = trades.filter(t=>t.status==='open');
   const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty, t.currency)??t.entry*t.qty),0);
-  const grandTotal = totalCashUSD + deployedUSD;
+  const zseStocksUSD = zseHoldingsValueUSD();
+  const grandTotal = totalCashUSD + deployedUSD + zseStocksUSD;
   const cashPct = grandTotal>0 ? totalCashUSD/grandTotal*100 : 0;
   const deployPct = grandTotal>0 ? deployedUSD/grandTotal*100 : 0;
 
@@ -3707,7 +3708,7 @@ function _renderWallet(){
       <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
         <div class="wallet-sum-lbl">Total Tracked Funds</div>
         <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtMoney(grandTotal)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">Cash + open positions</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Cash · trades · stocks</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--muted)">
         <div class="wallet-sum-lbl">Cash Utilisation</div>
@@ -3882,6 +3883,17 @@ function drawWalletDonut(cashUSD, deployedUSD){
   wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd,type:'wallet'}); });
   if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,type:'trades'});
   privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v,type:'invest'}); });
+  // ZSE/VFEX stock positions — grouped by symbol
+  const _zseGrpMap={};
+  loadZseHoldings().forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
+  Object.values(_zseGrpMap).forEach(g=>{
+    const tot=g.lots.reduce((s,h)=>s+h.shares,0);
+    const cost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+    const ll=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
+    const cp=ll.currentPrice??(cost/tot);
+    const v=holdingToUSD({...g.lots[0],shares:tot,buyPrice:cost/tot,currentPrice:cp,priceDate:ll.priceDate});
+    if(v>0) segments.push({label:g.symbol,val:v,type:'zse'});
+  });
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
 

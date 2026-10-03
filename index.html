@@ -454,7 +454,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
     </button>
     <button class="nav-item" data-page="zse">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
-      <span>ZSE / VFSE</span>
+      <span>ZSE / VFEX</span>
     </button>
     <button class="nav-item" data-page="goals">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
@@ -822,7 +822,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <!-- Holdings section -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div>
-            <div style="font-size:15px;font-weight:600;letter-spacing:-.2px">My ZSE / VFSE Holdings</div>
+            <div style="font-size:15px;font-weight:600;letter-spacing:-.2px">My ZSE / VFEX Holdings</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px">Add your shares — update prices daily to see current value</div>
           </div>
           <div style="display:flex;gap:8px">
@@ -1874,7 +1874,11 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <label class="form-label">Interest Rate (%)</label>
         <input class="form-input" id="ln-rate" type="number" step="any" min="0" placeholder="e.g. 10" value="0" oninput="calcLoanPreview()">
         <div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap">
-          ${[5,10,15,20,25].map(v=>`<button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=${v};calcLoanPreview()">${v}%</button>`).join('')}
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=5;calcLoanPreview()">5%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=10;calcLoanPreview()">10%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=15;calcLoanPreview()">15%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=20;calcLoanPreview()">20%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="document.getElementById('ln-rate').value=25;calcLoanPreview()">25%</button>
         </div>
       </div>
       <div class="form-group">
@@ -1967,7 +1971,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <label class="form-label">Risk per Trade (%)</label>
         <input class="form-input" id="psc2-risk" type="number" step="any" value="1" placeholder="1" oninput="calcPosSizeFull()">
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-          ${[0.5,1,2,3].map(v=>`<button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=${v};calcPosSizeFull()">${v}%</button>`).join('')}
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=0.5;calcPosSizeFull()">0.5%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=1;calcPosSizeFull()">1%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=2;calcPosSizeFull()">2%</button>
+          <button type="button" class="btn btn-ghost btn-sm" style="padding:3px 9px;font-size:11px" onclick="document.getElementById('psc2-risk').value=3;calcPosSizeFull()">3%</button>
         </div>
       </div>
       <div class="form-group">
@@ -2214,6 +2221,8 @@ const IC = {
   inbox:`<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>`,
 };
 
+function escapeHtml(s){ return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
 // ── Supabase ───────────────────────────────────────────────────────
 const SUPA_URL = 'https://cdmieckdazpkunmmmcdy.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkbWllY2tkYXpwa3VubW1tY2R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NzY2MzYsImV4cCI6MjA5NjI1MjYzNn0.jHpKaOitYK2ee3pzM9hK4UmaskkM3VFaEgwwvm0PH2E';
@@ -2397,7 +2406,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFSE Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',b.id==='mnav-'+page)); renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -2599,9 +2608,9 @@ function renderTable(containerId,list){
     const pnl=calcPnL(t); const c=getColor(t.symbol);
     const rr=t.sl&&t.tp&&t.entry?((Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)).toFixed(1)+'R'):'—';
     return `<tr>
-      <td><div class="symbol-cell"><div class="symbol-icon" style="background:${c}22;color:${c}">${t.symbol.slice(0,3)}</div><div><div style="font-weight:600">${t.symbol}</div><div style="font-size:11px;color:var(--muted)">${t.strategy||''}</div></div></div></td>
-      <td><span class="badge badge-market">${t.market}</span></td>
-      <td>${t.exchange?`<span class="badge badge-market" style="font-weight:600;color:var(--accent2)">${t.exchange}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+      <td><div class="symbol-cell"><div class="symbol-icon" style="background:${c}22;color:${c}">${escapeHtml(t.symbol.slice(0,3))}</div><div><div style="font-weight:600">${escapeHtml(t.symbol)}</div><div style="font-size:11px;color:var(--muted)">${escapeHtml(t.strategy||'')}</div></div></div></td>
+      <td><span class="badge badge-market">${escapeHtml(t.market)}</span></td>
+      <td>${t.exchange?`<span class="badge badge-market" style="font-weight:600;color:var(--accent2)">${escapeHtml(t.exchange)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="badge ${t.type==='day'?'badge-day':'badge-long-term'}">${t.type==='day'?IC.zap+' Day':IC.arrowUpRight+' Long'}</span></td>
       <td><span class="badge ${t.direction==='Long'?'badge-long':'badge-short'}">${t.direction}</span></td>
       <td style="font-weight:600">${fmtNum(t.qty)}</td><td>${fmtNum(t.entry)}</td>
@@ -2612,7 +2621,7 @@ function renderTable(containerId,list){
       <td style="color:var(--muted2);font-size:12px">${rr}</td>
       <td><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}">${t.status}</span></td>
       <td><div style="display:flex;gap:5px;align-items:center">
-        ${t._synthetic?`<button class="btn btn-sm btn-ghost" onclick="navigate('zse')" style="font-size:11px;white-space:nowrap">View in ZSE/VFSE</button>`:`
+        ${t._synthetic?`<button class="btn btn-sm btn-ghost" onclick="navigate('zse')" style="font-size:11px;white-space:nowrap">View in ZSE/VFEX</button>`:`
         ${t.imageUrl?`<button class="btn btn-sm btn-ghost" onclick="viewImage('${t.imageUrl}')" title="View screenshot" style="padding:4px 6px;font-size:14px">📷</button>`:''}
         ${t.status==='open'?`<button class="btn btn-sm btn-primary" onclick="openCloseModal('${t.id}')">Close</button>`:''}
         <button class="btn btn-sm btn-ghost" onclick="editTrade('${t.id}')">Edit</button>
@@ -2924,7 +2933,7 @@ function renderAnalytics(){
       +'</div>'
       +(flags.length?'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px">'+flags.map(chip).join('')+'</div>'
         :'<div style="margin-top:6px;font-size:11px;color:var(--green)">✓ No issues detected</div>')
-      +(t.notes?'<div style="font-size:11px;color:var(--muted2);margin-top:4px;font-style:italic">'+t.notes+'</div>':'')
+      +(t.notes?'<div style="font-size:11px;color:var(--muted2);margin-top:4px;font-style:italic">'+escapeHtml(t.notes)+'</div>':'')
     +'</div>';
   }).join('');
 
@@ -3840,7 +3849,7 @@ function _renderWallet(){
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding-top:5px;margin-top:3px;border-top:1px solid var(--border)"><span style="font-weight:600">Total</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(totalVal)+'</span></div>'
           +'</div>'
           :'')
-        +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+w.notes+'</div>':'')
+        +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+escapeHtml(w.notes)+'</div>':'')
         +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">'+(isBroker?'Recent Trades':'Recent Transactions')+'</div>'
         +tradeRows
         +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
@@ -4924,7 +4933,7 @@ document.getElementById('sec-modal').addEventListener('click',e=>{if(e.target===
 // ZSE / VFSE TRACKER
 // ═══════════════════════════════════════════════════════════════════
 
-const PAGE_TITLES_ZSE = {'zse':'ZSE / VFSE Tracker'};
+const PAGE_TITLES_ZSE = {'zse':'ZSE / VFEX Tracker'};
 Object.assign(PAGE_TITLES, PAGE_TITLES_ZSE);
 
 function zseKey(suffix){ return 'tj_zse_'+(currentUser?.id||'guest')+'_'+suffix; }
@@ -5261,7 +5270,7 @@ function renderPrivInvest(){
         <span style="color:var(--muted2)">Invested ${ccySym(p.currency)}${fmtMoney(p.amount_invested)}</span>
         <span class="${gain>=0?'pnl-pos':'pnl-neg'}" style="font-weight:600">${gain>=0?'+':'−'}${ccySym(p.currency)}${fmtMoney(Math.abs(gain))} (${gainPct>=0?'+':''}${gainPct.toFixed(1)}%)</span>
       </div>
-      ${p.notes?'<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">'+p.notes+'</div>':''}
+      ${p.notes?'<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">'+escapeHtml(p.notes)+'</div>':''}
       <div style="display:flex;gap:6px;margin-top:12px">
         <button class="btn btn-sm btn-ghost" onclick="openPrivInvestModal('${p.id}')">Edit</button>
         <button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deletePrivInvest('${p.id}')">Remove</button>
@@ -5473,14 +5482,14 @@ function renderLoans(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-            <span style="font-size:15px;font-weight:600">${loan.borrower_name}</span>
+            <span style="font-size:15px;font-weight:600">${escapeHtml(loan.borrower_name)}</span>
             <span style="font-size:11px;font-weight:700;color:${statusColor};background:${statusColor}18;padding:2px 8px;border-radius:20px">${statusLabel}</span>
           </div>
           <div style="font-size:12px;color:var(--muted)">
-            ${loan.contact?`📞 ${loan.contact} · `:''}${rateLabel}
+            ${loan.contact?`📞 ${escapeHtml(loan.contact)} · `:''}${rateLabel}
             ${due?` · Due ${due.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})}${status==='active'&&daysLeft>=0?' ('+daysLeft+'d left)':''}`:' · No due date'}
           </div>
-          ${loan.notes?`<div style="font-size:12px;color:var(--muted2);margin-top:3px;font-style:italic">${loan.notes}</div>`:''}
+          ${loan.notes?`<div style="font-size:12px;color:var(--muted2);margin-top:3px;font-style:italic">${escapeHtml(loan.notes)}</div>`:''}
         </div>
         <div style="display:flex;gap:5px;flex-shrink:0">
           ${status!=='paid'?`<button class="btn btn-sm btn-primary" onclick="openLoanPaymentModal('${loan.id}')">+ Payment</button>`:''}
@@ -5513,7 +5522,7 @@ function renderLoans(){
         <div style="font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Payment History</div>
         <div style="display:flex;flex-direction:column;gap:5px">
           ${payments.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 10px;background:var(--surface2);border-radius:6px">
-            <span style="color:var(--muted)">${new Date(p.paid_date).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})}${p.notes?' · <em>'+p.notes+'</em>':''}</span>
+            <span style="color:var(--muted)">${new Date(p.paid_date).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'})}${p.notes?' · <em>'+escapeHtml(p.notes)+'</em>':''}</span>
             <span style="font-weight:600;color:var(--green)">+${loan.currency||'$'}${fmtMoney(Number(p.amount))}</span>
           </div>`).join('')}
         </div>
@@ -5743,14 +5752,14 @@ function renderGoals(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:15px;font-weight:600">${g.title}</span>
+            <span style="font-size:15px;font-weight:600">${escapeHtml(g.title)}</span>
             <span class="badge badge-market" style="color:var(--accent2)">${periodBadge}</span>
             <span style="font-size:11px;font-weight:600;color:${status[1]}">● ${status[0]}</span>
           </div>
           <div style="font-size:12px;color:var(--muted);margin-top:3px">
             ${start.toLocaleDateString('en-US',{month:'short',day:'numeric'})} → ${end.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
             ${expired?'':' · '+daysLeft+' day'+(daysLeft!==1?'s':'')+' left'}
-            ${g.notes?' · <em>'+g.notes+'</em>':''}
+            ${g.notes?' · <em>'+escapeHtml(g.notes)+'</em>':''}
           </div>
         </div>
         <div style="display:flex;gap:5px">
@@ -6279,7 +6288,6 @@ async function deleteTradeImage(imageUrl){
 }
 
 // Wrap insertTrade to handle image upload
-const _origInsertTrade = insertTrade;
 async function insertTrade(t){
   const file=document.getElementById('f-image')?.files?.[0];
   // Insert trade first to get the ID
@@ -6299,7 +6307,6 @@ async function insertTrade(t){
 }
 
 // Wrap updateTrade to handle image upload/delete
-const _origUpdateTrade = updateTrade;
 async function updateTrade(id, t){
   const file=document.getElementById('f-image')?.files?.[0];
   let imageUrl=t.imageUrl||null;

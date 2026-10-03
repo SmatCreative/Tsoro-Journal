@@ -5029,22 +5029,23 @@ function deleteZseHolding(id){
   renderZse();
 }
 
-// Inline price update
-function openZsePriceUpdate(id){
-  const h=loadZseHoldings().find(x=>x.id===id); if(!h) return;
-  const price=prompt('Enter today\'s price for '+h.symbol+' ('+h.exchange+'):',h.currentPrice||'');
+// Inline price update — updates ALL lots for this symbol
+function openZsePriceUpdate(symbol, exchange){
+  const allHoldings=loadZseHoldings();
+  const group=allHoldings.filter(x=>x.symbol===symbol&&x.exchange===exchange);
+  if(!group.length) return;
+  const ref=group.find(h=>h.currentPrice!=null)||group[0];
+  const price=prompt('Enter today\'s price for '+symbol+' ('+exchange+'):',ref.currentPrice||'');
   if(price===null) return;
   const p=parseFloat(price);
   if(isNaN(p)||p<0){showToast('Invalid price','error');return;}
-  const holdings=loadZseHoldings();
-  const idx=holdings.findIndex(x=>x.id===id);
   const today=new Date().toISOString().slice(0,10);
-  if(idx>=0){ holdings[idx].currentPrice=p; holdings[idx].priceDate=today; }
-  saveZseHoldingsLocal(holdings);
-  const ccy=h.exchange==='VFSE'?'USD':'ZiG';
-  recordZsePrice(h.symbol,h.exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
+  allHoldings.forEach(lot=>{ if(lot.symbol===symbol&&lot.exchange===exchange){ lot.currentPrice=p; lot.priceDate=today; } });
+  saveZseHoldingsLocal(allHoldings);
+  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
   renderZse();
-  showToast(h.symbol+' price updated to '+p,'success');
+  showToast(symbol+' price updated to '+p,'success');
 }
 
 // ── Charges modal ──────────────────────────────────────────────────
@@ -5866,7 +5867,7 @@ function calcNetProceeds(grossValue, charges){
   return { afterSell, afterWithdraw, totalPct, withdrawPct: charges.withdraw||0 };
 }
 
-function drawZseChart(canvas, h, pts){
+function drawZseChart(canvas, h, pts, entries){
   try {
     const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 340;
     const H = 210;
@@ -5951,6 +5952,26 @@ function drawZseChart(canvas, h, pts){
       ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
     });
 
+    // Entry arrows — one per lot buy date
+    if(entries&&entries.length>1){
+      const dateIdx={};
+      pts.forEach((p,i)=>{ dateIdx[p.date]=i; });
+      const seen={};
+      entries.forEach(entry=>{
+        if(!entry.date||seen[entry.date]) return;
+        seen[entry.date]=true;
+        const idx=dateIdx[entry.date];
+        if(idx==null) return;
+        const ax=xOf(idx), ay=yOf(entry.price);
+        const arrowLen=14;
+        ctx.save();
+        ctx.strokeStyle='rgba(251,191,36,0.9)'; ctx.fillStyle='rgba(251,191,36,0.9)'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(ax,ay+arrowLen+6); ctx.lineTo(ax,ay+6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ax,ay+2); ctx.lineTo(ax-4.5,ay+9); ctx.lineTo(ax+4.5,ay+9); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+    }
+
     // Header
     const ccy=h.exchange==='VFSE'?'$':'ZiG ';
     const pctChg=prices.length>1?((last-first)/first*100):null;
@@ -6003,31 +6024,54 @@ function renderZsePriceCharts(){
   const holdings=loadZseHoldings();
   if(!holdings.length){ el.innerHTML=''; return; }
 
+  // Group by symbol+exchange into unique stocks
+  const stockMap={};
+  holdings.forEach(h=>{
+    const key=h.symbol+'|'+h.exchange;
+    if(!stockMap[key]) stockMap[key]={symbol:h.symbol,exchange:h.exchange,lots:[],buyDate:h.buyDate};
+    stockMap[key].lots.push(h);
+    if(h.buyDate&&(!stockMap[key].buyDate||h.buyDate<stockMap[key].buyDate)) stockMap[key].buyDate=h.buyDate;
+  });
+  const stocks=Object.values(stockMap);
+
+  // Build price series per symbol
   const bySymbol={};
   zsePriceHistory.forEach(r=>{ (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:r.note||''}); });
-  holdings.forEach(h=>{
-    if(!bySymbol[h.symbol]) bySymbol[h.symbol]=[];
-    if(h.buyDate&&h.buyPrice>0&&!bySymbol[h.symbol].find(r=>r.date===h.buyDate))
-      bySymbol[h.symbol].push({date:h.buyDate,price:Number(h.buyPrice),note:'Buy price'});
-    const pd=h.priceDate||new Date().toISOString().slice(0,10);
-    if(h.currentPrice>0&&!bySymbol[h.symbol].find(r=>r.date===pd))
-      bySymbol[h.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
-    bySymbol[h.symbol].sort((a,b)=>a.date.localeCompare(b.date));
-    bySymbol[h.symbol]=bySymbol[h.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
+  stocks.forEach(s=>{
+    if(!bySymbol[s.symbol]) bySymbol[s.symbol]=[];
+    s.lots.forEach(h=>{
+      if(h.buyDate&&h.buyPrice>0&&!bySymbol[s.symbol].find(r=>r.date===h.buyDate))
+        bySymbol[s.symbol].push({date:h.buyDate,price:Number(h.buyPrice),note:'Buy price'});
+      const pd=h.priceDate||new Date().toISOString().slice(0,10);
+      if(h.currentPrice>0&&!bySymbol[s.symbol].find(r=>r.date===pd))
+        bySymbol[s.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
+    });
+    bySymbol[s.symbol].sort((a,b)=>a.date.localeCompare(b.date));
+    bySymbol[s.symbol]=bySymbol[s.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
   });
 
+  // Entry markers per symbol (each lot's buy date+price, for arrows)
+  const entryMap={};
+  stocks.forEach(s=>{
+    entryMap[s.symbol]=s.lots.filter(h=>h.buyDate&&h.buyPrice>0).map(h=>({date:h.buyDate,price:Number(h.buyPrice),shares:h.shares}));
+  });
+
+  const canvasId=sym=>'zph-'+sym.replace(/[^a-zA-Z0-9]/g,'-');
   el.innerHTML=`
     <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-      ${holdings.map(h=>`<div style="border-radius:var(--r);overflow:hidden;box-shadow:0 4px 24px rgba(0,74,173,.18)"><canvas id="zph-${h.id}" style="display:block;width:100%"></canvas></div>`).join('')}
+      ${stocks.map(s=>`<div style="border-radius:var(--r);overflow:hidden;box-shadow:0 4px 24px rgba(0,74,173,.18)"><canvas id="${canvasId(s.symbol)}" style="display:block;width:100%"></canvas></div>`).join('')}
     </div>`;
 
   setTimeout(()=>{
-    holdings.forEach(h=>{
-      const canvas=document.getElementById('zph-'+h.id); if(!canvas) return;
-      const pts=bySymbol[h.symbol]||[];
-      const fallback=[{date:h.buyDate||new Date().toISOString().slice(0,10),price:Number(h.buyPrice)||0,note:'Buy price'}];
-      drawZseChart(canvas,h,pts.length?pts:fallback);
+    stocks.forEach(s=>{
+      const canvas=document.getElementById(canvasId(s.symbol)); if(!canvas) return;
+      const pts=bySymbol[s.symbol]||[];
+      // synthetic holding for chart header
+      const latestLot=s.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,s.lots[0]);
+      const synthH={symbol:s.symbol,exchange:s.exchange,buyDate:s.buyDate,currentPrice:latestLot.currentPrice,buyPrice:s.lots[0].buyPrice};
+      const fallback=s.lots.map(h=>({date:h.buyDate||new Date().toISOString().slice(0,10),price:Number(h.buyPrice)||0,note:'Buy price'}));
+      drawZseChart(canvas,synthH,pts.length?pts:fallback,entryMap[s.symbol]||[]);
     });
   },60);
 }
@@ -6057,7 +6101,7 @@ function renderZse(){
       <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
         <div class="wallet-sum-lbl">Portfolio Value (USD)</div>
         <div class="wallet-sum-val" style="color:var(--accent2)">${hasAllPrices&&totalUSD?'$'+fmtMoney(totalUSD):'—'}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">${holdings.length} holding${holdings.length!==1?'s':''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${Object.keys(holdings.reduce((m,h)=>{m[h.symbol+'|'+h.exchange]=1;return m;},{})).length} stock${Object.keys(holdings.reduce((m,h)=>{m[h.symbol+'|'+h.exchange]=1;return m;},{})).length!==1?'s':''}, ${holdings.length} lot${holdings.length!==1?'s':''}</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--green)">
         <div class="wallet-sum-lbl">Cost Basis (USD)</div>
@@ -6076,38 +6120,59 @@ function renderZse(){
       </div>
     </div>`;
 
-  // ── Holdings table ──
+  // ── Holdings table — grouped by symbol ──
   const el = document.getElementById('zse-holdings-table');
   if(!holdings.length){
-    el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No holdings yet</h3><p>Click <strong>Add Holding</strong> to track your ZSE or VFSE shares.</p></div>';
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No holdings yet</h3><p>Click <strong>Add Holding</strong> to track your ZSE or VFEX shares.</p></div>';
   } else {
-    const rows = holdings.map(h=>{
-      const price = h.currentPrice ?? h.buyPrice;
-      const mv    = h.shares * price;
-      const cost  = h.shares * h.buyPrice;
-      const pnl   = mv - cost;
-      const pnlPct= cost>0 ? (pnl/cost*100) : 0;
-      const usd   = holdingToUSD(h);
-      const sym   = h.exchange==='ZSE' ? 'ZiG ' : '$';
-      const np    = usd != null ? calcNetProceeds(usd, charges) : null;
-      const priceStale = h.priceDate && h.priceDate < new Date().toISOString().slice(0,10);
-      const holdDays   = h.buyDate ? Math.floor((new Date()-new Date(h.buyDate))/86400000) : null;
-      const holdLabel  = holdDays!=null ? (holdDays>=365 ? (holdDays/365).toFixed(1)+'y' : holdDays>=30 ? Math.floor(holdDays/30)+'mo' : holdDays+'d') : null;
-      return `<tr>
+    // Build groups: one entry per unique symbol+exchange
+    const groupMap={};
+    holdings.forEach(h=>{
+      const key=h.symbol+'|'+h.exchange;
+      if(!groupMap[key]) groupMap[key]={symbol:h.symbol,exchange:h.exchange,lots:[]};
+      groupMap[key].lots.push(h);
+    });
+    const groups=Object.values(groupMap);
+
+    const rows=groups.map(g=>{
+      const sym=g.exchange==='ZSE'?'ZiG ':'$';
+      const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+      const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+      const wavg=totalCost/totalShares;
+      // Pick price from most recently updated lot
+      const latestLot=g.lots.reduce((b,h)=>{ if(!b.priceDate&&!h.priceDate) return b; if(!b.priceDate) return h; if(!h.priceDate) return b; return h.priceDate>b.priceDate?h:b; },g.lots[0]);
+      const currentPrice=latestLot.currentPrice??wavg;
+      const priceDate=latestLot.priceDate;
+      const mv=totalShares*currentPrice;
+      const pnl=mv-totalCost;
+      const pnlPct=totalCost>0?(pnl/totalCost*100):0;
+      // Synthetic holding for USD conversion
+      const synthH={...g.lots[0],shares:totalShares,buyPrice:wavg,currentPrice,priceDate};
+      const usd=holdingToUSD(synthH);
+      const np=usd!=null?calcNetProceeds(usd,charges):null;
+      const priceStale=priceDate&&priceDate<new Date().toISOString().slice(0,10);
+      const hasCurrentPrice=latestLot.currentPrice!=null;
+      const earliestDate=g.lots.reduce((min,h)=>h.buyDate&&(!min||h.buyDate<min)?h.buyDate:min,null);
+      const holdDays=earliestDate?Math.floor((new Date()-new Date(earliestDate))/86400000):null;
+      const holdLabel=holdDays!=null?(holdDays>=365?(holdDays/365).toFixed(1)+'y':holdDays>=30?Math.floor(holdDays/30)+'mo':holdDays+'d'):null;
+      const multi=g.lots.length>1;
+
+      // Main row
+      let html=`<tr>
         <td>
-          <div style="font-weight:600;font-size:14px">${h.symbol}</div>
+          <div style="font-weight:600;font-size:14px">${escapeHtml(g.symbol)}</div>
           <div style="font-size:11px;margin-top:1px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
-            <span class="badge" style="background:${h.exchange==='ZSE'?'rgba(26,111,212,.15)':'rgba(16,185,129,.15)'};color:${h.exchange==='ZSE'?'var(--accent2)':'var(--green)'};font-size:10px;font-weight:600">${h.exchange}</span>
+            <span class="badge" style="background:${g.exchange==='ZSE'?'rgba(26,111,212,.15)':'rgba(16,185,129,.15)'};color:${g.exchange==='ZSE'?'var(--accent2)':'var(--green)'};font-size:10px;font-weight:600">${escapeHtml(g.exchange)}</span>
             ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">${holdLabel}</span>`:''}
+            ${multi?`<span style="font-size:10px;color:var(--muted)">${g.lots.length} lots</span>`:''}
           </div>
-          ${h.notes?'<div style="font-size:11px;color:var(--muted);margin-top:2px">'+h.notes+'</div>':''}
         </td>
-        <td style="font-weight:600;text-align:right">${fmtNum(h.shares)}</td>
-        <td style="text-align:right;color:var(--muted2)">${sym}${fmtNum(h.buyPrice)}</td>
+        <td style="font-weight:600;text-align:right">${fmtNum(totalShares)}</td>
+        <td style="text-align:right;color:var(--muted2)">${sym}${fmtNum(wavg)}</td>
         <td style="text-align:right">
-          <div style="font-weight:600">${sym}${fmtNum(price)}</div>
-          ${priceStale?'<div style="font-size:10px;color:var(--yellow)">'+h.priceDate+'</div>':''}
-          ${!h.currentPrice?'<div style="font-size:10px;color:var(--muted)">buy price</div>':''}
+          <div style="font-weight:600">${sym}${fmtNum(currentPrice)}</div>
+          ${priceStale?'<div style="font-size:10px;color:var(--yellow)">'+priceDate+'</div>':''}
+          ${!hasCurrentPrice?'<div style="font-size:10px;color:var(--muted)">buy price</div>':''}
         </td>
         <td style="text-align:right;font-weight:600">${sym}${fmtNum(mv)}</td>
         <td class="${pnlClass(pnl)}" style="text-align:right">
@@ -6120,12 +6185,34 @@ function renderZse(){
         </td>
         <td>
           <div style="display:flex;gap:4px;justify-content:flex-end">
-            <button class="btn btn-sm btn-primary" onclick="openZsePriceUpdate('${h.id}')" title="Update price">Update Price</button>
-            <button class="btn btn-sm btn-ghost" onclick="openZseHoldingModal('${h.id}')">Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteZseHolding('${h.id}')">${IC.trash}</button>
+            <button class="btn btn-sm btn-primary" onclick="openZsePriceUpdate('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')" title="Update price">Update Price</button>
+            ${!multi?`<button class="btn btn-sm btn-ghost" onclick="openZseHoldingModal('${g.lots[0].id}')">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteZseHolding('${g.lots[0].id}')">${IC.trash}</button>`:''}
           </div>
         </td>
       </tr>`;
+
+      // Lot sub-rows (only when multiple lots)
+      if(multi){
+        g.lots.forEach((h,i)=>{
+          const lotDays=h.buyDate?Math.floor((new Date()-new Date(h.buyDate))/86400000):null;
+          const lotLabel=lotDays!=null?(lotDays>=365?(lotDays/365).toFixed(1)+'y':lotDays>=30?Math.floor(lotDays/30)+'mo':lotDays+'d'):null;
+          html+=`<tr style="background:rgba(255,255,255,0.02)">
+            <td colspan="7" style="padding:5px 12px 5px 30px;border-top:none">
+              <span style="color:var(--border);margin-right:6px">└</span>
+              <span style="font-size:12px;color:var(--muted2)">${fmtNum(h.shares)} shares @ ${sym}${fmtNum(h.buyPrice)}</span>
+              ${lotLabel?`<span style="font-size:11px;color:var(--muted);margin-left:6px">(held ${lotLabel})</span>`:''}
+              ${h.notes?`<span style="font-size:11px;color:var(--muted);margin-left:6px">· ${escapeHtml(h.notes)}</span>`:''}
+            </td>
+            <td style="padding:5px 12px 5px 0;border-top:none">
+              <div style="display:flex;gap:4px;justify-content:flex-end">
+                <button class="btn btn-sm btn-ghost" style="font-size:11px;padding:3px 8px" onclick="openZseHoldingModal('${h.id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" style="font-size:11px;padding:3px 8px" onclick="deleteZseHolding('${h.id}')">${IC.trash}</button>
+              </div>
+            </td>
+          </tr>`;
+        });
+      }
+      return html;
     }).join('');
 
     el.innerHTML=`<div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><table>
@@ -6150,17 +6237,29 @@ function renderZse(){
       {label:'Brokerage & Levies',   pct:charges.broker||0, color:'var(--muted2)'},
     ].filter(r=>r.pct>0);
 
-    const holdingRows = holdings.map(h=>{
-      const usd = holdingToUSD(h);
+    // Group for calculator too
+    const calcGroupMap={};
+    holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!calcGroupMap[k]) calcGroupMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; calcGroupMap[k].lots.push(h); });
+    const calcGroups=Object.values(calcGroupMap);
+
+    const holdingRows = calcGroups.map(g=>{
+      const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+      const totalCostG=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+      const wavgG=totalCostG/totalShares;
+      const latestLotG=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
+      const curPriceG=latestLotG.currentPrice??wavgG;
+      const synthHG={...g.lots[0],shares:totalShares,buyPrice:wavgG,currentPrice:curPriceG,priceDate:latestLotG.priceDate};
+      const usd = holdingToUSD(synthHG);
       if(usd==null) return '';
       const gross = usd;
       const np    = calcNetProceeds(gross, charges);
       const sellChargeAmt = gross - np.afterSell;
       const withdrawAmt   = np.afterSell - np.afterWithdraw;
+      const h=synthHG;
       return `<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:10px 12px">
-          <div style="font-weight:600">${h.symbol} <span style="font-size:11px;font-weight:500;color:var(--muted)">${h.exchange}</span></div>
-          <div style="font-size:11px;color:var(--muted)">${fmtNum(h.shares)} shares @ ${h.exchange==='ZSE'?'ZiG ':'$'}${fmtNum(h.currentPrice??h.buyPrice)}</div>
+          <div style="font-weight:600">${escapeHtml(g.symbol)} <span style="font-size:11px;font-weight:500;color:var(--muted)">${escapeHtml(g.exchange)}</span></div>
+          <div style="font-size:11px;color:var(--muted)">${fmtNum(totalShares)} shares @ ${g.exchange==='ZSE'?'ZiG ':'$'}${fmtNum(curPriceG)}${g.lots.length>1?' ('+g.lots.length+' lots)':''}</div>
         </td>
         <td style="padding:10px 12px;text-align:right">
           <div style="font-weight:600">$${fmtMoney(gross)}</div>
@@ -6186,7 +6285,7 @@ function renderZse(){
     }).filter(Boolean).join('');
 
     // Total row
-    const totalGross = holdings.reduce((s,h)=>{ const u=holdingToUSD(h); return u?s+u:s; },0);
+    const totalGross = calcGroups.reduce((s,g)=>{ const tot=g.lots.reduce((a,h)=>a+h.shares,0); const cost=g.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0); const lLot=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]); const cp=lLot.currentPrice??(cost/tot); const u=holdingToUSD({...g.lots[0],shares:tot,buyPrice:cost/tot,currentPrice:cp,priceDate:lLot.priceDate}); return u?s+u:s; },0);
     const totalNP    = calcNetProceeds(totalGross, charges);
 
     calc.innerHTML = `

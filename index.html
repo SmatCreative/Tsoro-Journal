@@ -672,6 +672,17 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
           <div id="wh-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
           <canvas id="wallet-perf-chart" height="220"></canvas>
         </div>
+        <!-- Stock Portfolio Performance -->
+        <div class="card" style="margin-bottom:16px;display:none" id="zse-perf-card">
+          <div class="card-header" style="flex-wrap:wrap;gap:10px">
+            <div>
+              <div class="card-title">Stock Portfolio Performance</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Cost basis vs current market value — ZSE &amp; VFEX holdings</div>
+            </div>
+          </div>
+          <div id="zse-perf-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
+          <canvas id="zse-perf-chart" height="220"></canvas>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="wallet-top-grid">
           <!-- Holdings Breakdown Card (replaces donut) -->
           <div class="card" id="wallet-donut-card" style="padding:0;overflow:hidden">
@@ -3539,6 +3550,7 @@ function renderWallet(){
     if(c) c.innerHTML='<div style="padding:24px;color:var(--red);font-size:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)"><strong>Error loading wallet page:</strong> '+e.message+'</div>';
   }
   try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
+  try { renderZsePerformanceCard(); } catch(e){ console.error('stock perf card:',e); }
   try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
   try { renderLoans(); } catch(e){ console.error('loans section:',e); }
@@ -3678,6 +3690,156 @@ function drawWalletPerfChart(series, ccy){
   ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=lineCol;
   ctx.fillText(ccySym(ccy)+fmtMoney(lp.v), W-padR, Math.max(sy(lp.v)-8,12));
 }
+// ── Stock portfolio performance card ──────────────────────────────────
+function renderZsePerformanceCard(){
+  const card=document.getElementById('zse-perf-card'); if(!card) return;
+  const holdings=loadZseHoldings();
+  if(!holdings.length){ card.style.display='none'; return; }
+  card.style.display='';
+  const zigRate=getZigUsdRate();
+  const mvToUSD=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+
+  // Group by symbol+exchange
+  const groupMap={};
+  holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!groupMap[k]) groupMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; groupMap[k].lots.push(h); });
+  const groups=Object.values(groupMap);
+
+  // Total cost basis USD
+  let totalCostUSD=0;
+  groups.forEach(g=>g.lots.forEach(h=>{ const u=mvToUSD(g.exchange,h.shares*h.buyPrice); if(u!=null) totalCostUSD+=u; }));
+
+  // Current market value USD (uses most-recently-priced lot per group)
+  let currentUSD=0;
+  groups.forEach(g=>{
+    const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+    const latest=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
+    const cp=latest.currentPrice??(g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0)/totalShares);
+    const u=mvToUSD(g.exchange,totalShares*cp); if(u!=null) currentUSD+=u;
+  });
+
+  // Build per-symbol price-by-date lookup (from history + buy/price dates on holdings)
+  const symPrices={};
+  zsePriceHistory.forEach(r=>{ if(!symPrices[r.symbol]) symPrices[r.symbol]={}; symPrices[r.symbol][r.recorded_date]=Number(r.price); });
+  holdings.forEach(h=>{
+    if(h.buyDate&&h.buyPrice){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; if(!symPrices[h.symbol][h.buyDate]) symPrices[h.symbol][h.buyDate]=Number(h.buyPrice); }
+    if(h.priceDate&&h.currentPrice){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; symPrices[h.symbol][h.priceDate]=Number(h.currentPrice); }
+  });
+
+  const allDates=[...new Set(Object.values(symPrices).flatMap(dp=>Object.keys(dp)))].sort();
+  const getPrice=(sym,date)=>{ const dp=symPrices[sym]; if(!dp) return null; const ds=Object.keys(dp).filter(d=>d<=date).sort(); return ds.length?dp[ds[ds.length-1]]:null; };
+
+  // Build historical MV series
+  const series=allDates.map(date=>{
+    let val=0;
+    for(const g of groups){
+      const bl=g.lots.filter(h=>!h.buyDate||h.buyDate<=date);
+      if(!bl.length) continue;
+      const ts=bl.reduce((s,h)=>s+h.shares,0);
+      const p=getPrice(g.symbol,date); if(p==null) return null;
+      const u=mvToUSD(g.exchange,ts*p); if(u==null) return null;
+      val+=u;
+    }
+    return {date,val};
+  }).filter(Boolean);
+
+  // Stats row
+  const pnl=currentUSD-totalCostUSD, pnlPct=totalCostUSD>0?pnl/totalCostUSD*100:0;
+  const statsEl=document.getElementById('zse-perf-stats');
+  if(statsEl){
+    const st=(lbl,val,cls)=>`<div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${lbl}</div><div style="font-size:17px;font-weight:500" class="${cls||''}">${val}</div></div>`;
+    statsEl.innerHTML=
+      st('Invested','$'+fmtMoney(totalCostUSD))+
+      st('Current Value','$'+fmtMoney(currentUSD))+
+      st('Gain / Loss',(pnl>=0?'+':'−')+'$'+fmtMoney(Math.abs(pnl)),pnl>=0?'pnl-pos':'pnl-neg')+
+      st('Return',(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',pnlPct>=0?'pnl-pos':'pnl-neg');
+  }
+
+  drawZsePerfChart(series,totalCostUSD,currentUSD);
+}
+
+function drawZsePerfChart(series,costUSD,currentUSD){
+  const canvas=document.getElementById('zse-perf-chart'); if(!canvas) return;
+  const W=canvas.parentElement.clientWidth-40, H=220;
+  canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  const isUp=currentUSD>=costUSD;
+
+  if(series.length<2){
+    // Bar comparison: cost basis vs current value
+    const barW=Math.min(150,(W-80)/2-10);
+    const maxV=Math.max(costUSD,currentUSD)*1.15||1;
+    const padB=40,padT=20,barH=H-padB-padT;
+    const drawBar=(x,val,color,label)=>{
+      const bh=(val/maxV)*barH;
+      ctx.fillStyle=color; ctx.fillRect(x,padT+barH-bh,barW,bh);
+      ctx.fillStyle=themeVal('#94a3b8','#64748b'); ctx.font='500 11px Inter,system-ui'; ctx.textAlign='center';
+      ctx.fillText('$'+fmtMoney(val),x+barW/2,padT+barH-bh-6);
+      ctx.fillText(label,x+barW/2,H-8);
+    };
+    const x1=W/2-barW-12, x2=W/2+12;
+    drawBar(x1,costUSD,themeVal('rgba(100,116,139,0.45)','rgba(100,116,139,0.3)'),'Cost Basis');
+    drawBar(x2,currentUSD,isUp?'rgba(16,185,129,0.5)':'rgba(239,68,68,0.4)','Current Value');
+    return;
+  }
+
+  const vals=series.map(p=>p.val);
+  const allVals=[...vals,costUSD];
+  const minV=Math.min(...allVals),maxV=Math.max(...allVals);
+  const range=(maxV-minV)||Math.abs(maxV)||1;
+  const yMin=minV-range*.1,yMax=maxV+range*.1,yRange=yMax-yMin;
+  const padB=26,padT=10,padR=16,padL=64;
+  const cW=W-padL-padR,cH=H-padB-padT;
+  const sx=i=>padL+(i/(series.length-1))*cW;
+  const sy=v=>H-padB-((v-yMin)/yRange)*cH;
+
+  // Grid + y labels
+  ctx.strokeStyle=themeVal('#1a2336','#eef2f7'); ctx.lineWidth=1;
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px Inter,system-ui';
+  for(let i=0;i<=4;i++){
+    const v=yMin+yRange*i/4,y=sy(v);
+    ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+    ctx.textAlign='right'; ctx.fillText('$'+Number(v).toLocaleString('en-US',{maximumFractionDigits:yRange<20?2:0}),padL-6,y+3);
+  }
+
+  // Cost basis dashed reference line
+  const cy=sy(costUSD);
+  ctx.save();
+  ctx.strokeStyle=themeVal('rgba(148,163,184,.7)','rgba(100,116,139,.7)'); ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(padL,cy); ctx.lineTo(W-padR,cy); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=themeVal('#94a3b8','#64748b'); ctx.font='10px Inter,system-ui'; ctx.textAlign='left';
+  ctx.fillText('Invested $'+fmtMoney(costUSD),padL+4,cy-4);
+  ctx.restore();
+
+  // Area fill + line
+  const grd=ctx.createLinearGradient(0,padT,0,H-padB);
+  grd.addColorStop(0,isUp?'rgba(16,185,129,.22)':'rgba(239,68,68,.22)');
+  grd.addColorStop(1,isUp?'rgba(16,185,129,.02)':'rgba(239,68,68,.02)');
+  const pts=series.map((p,i)=>({x:sx(i),y:sy(p.val)}));
+  ctx.beginPath(); smoothPath(ctx,pts);
+  ctx.lineTo(sx(series.length-1),H-padB); ctx.lineTo(sx(0),H-padB); ctx.closePath();
+  ctx.fillStyle=grd; ctx.fill();
+
+  ctx.beginPath(); smoothPath(ctx,pts);
+  ctx.strokeStyle=isUp?'#10b981':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+
+  // End dot + label
+  const lp=pts[pts.length-1];
+  ctx.beginPath(); ctx.arc(lp.x,lp.y,4,0,Math.PI*2); ctx.fillStyle=isUp?'#10b981':'#ef4444'; ctx.fill();
+  ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=isUp?'#10b981':'#ef4444';
+  ctx.fillText('$'+fmtMoney(vals[vals.length-1]),W-padR,Math.max(lp.y-8,12));
+
+  // X date labels
+  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='9px Inter,system-ui'; ctx.textAlign='center';
+  const step=Math.max(1,Math.floor(series.length/4));
+  series.forEach((p,i)=>{
+    if(i===0||i===series.length-1||i%step===0){
+      const d=new Date(p.date+'T00:00:00');
+      ctx.fillText(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}),sx(i),H-8);
+    }
+  });
+}
+
 function _renderWallet(){
   // Show/hide quickstart banner
   const qs=document.getElementById('wallet-quickstart');

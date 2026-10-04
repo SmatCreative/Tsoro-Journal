@@ -2644,7 +2644,7 @@ function zseHoldingsAsTrades(){
       }));
   }catch(e){return[];}
 }
-function allTrades(){ return [...trades,...zseHoldingsAsTrades()]; }
+function allTrades(){ return [...trades,...zseHoldingsAsTrades()].filter(t=>t.market!=='Forex'); }
 function filtered(type,search,market,exchange,dir,status){ return allTrades().filter(t=>{if(type&&t.type!==type)return false;if(search&&!t.symbol.toLowerCase().includes(search.toLowerCase()))return false;if(market&&t.market!==market)return false;if(exchange&&t.exchange!==exchange)return false;if(dir&&t.direction!==dir)return false;if(status&&t.status!==status)return false;return true;}); }
 ['j-search','j-type','j-market','j-exchange','j-dir','j-status'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);}));
 
@@ -2652,7 +2652,7 @@ function filtered(type,search,market,exchange,dir,status){ return allTrades().fi
 function renderDashboard(){
   startSessionsTicker();
   calcPosSize();
-  const closed=trades.filter(t=>t.status==='closed');
+  const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
   const allPnL=closed.map(t=>calcPnL(t)||0);
   const totalPnL=allPnL.reduce((s,v)=>s+v,0);
   const wins=allPnL.filter(v=>v>0),losses=allPnL.filter(v=>v<0);
@@ -2880,7 +2880,7 @@ function openExposureCard(){
     `<div class="perf-row"><span class="perf-key" style="font-weight:600">Total Account (USD)</span><span class="perf-val" style="color:var(--accent2)">$${fmtMoney(deployedUSD+walletCashUSD)}</span></div></div>`;
 }
 function renderAnalytics(){
-  const closed=trades.filter(t=>t.status==='closed');
+  const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
   const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   // ── Core stats ──────────────────────────────────────────────────
@@ -5619,7 +5619,7 @@ async function deleteDividend(id){
 function renderTithe(){
   const el=document.getElementById('db-tithe'); if(!el) return;
   // Realised profit in USD (losses reduce it, floored at 0 for tithing)
-  const closed=trades.filter(t=>t.status==='closed');
+  const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
   const profitUSD=closed.reduce((s,t)=>s+((toUSD(calcPnL(t)||0,t.currency))??0),0);
   const titheProfitBase=Math.max(profitUSD,0);
   let missingRate=false;

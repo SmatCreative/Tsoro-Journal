@@ -2786,6 +2786,112 @@ function drawDailyChart(closed){ const canvas=document.getElementById('daily-cha
 // ── Analytics ──────────────────────────────────────────────────────
 // Live snapshot of open positions + wallet cash so Analytics is useful
 // even before any trade has been closed
+function zseAnalyticsCard(){
+  const holdings=loadZseHoldings();
+  if(!holdings.length) return '';
+  const zigRate=getZigUsdRate();
+  const mvToUSD=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+  const today=new Date().toISOString().slice(0,10);
+
+  // Group by symbol+exchange
+  const groupMap={};
+  holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!groupMap[k]) groupMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; groupMap[k].lots.push(h); });
+  const groups=Object.values(groupMap);
+
+  // Per-group derived stats
+  const positions=groups.map(g=>{
+    const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+    const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+    const avgBuy=totalCost/totalShares;
+    const latest=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
+    const cp=latest.currentPrice??avgBuy;
+    const costUSD=mvToUSD(g.exchange,totalCost);
+    const mvUSD=mvToUSD(g.exchange,totalShares*cp);
+    const pnlUSD=(costUSD!=null&&mvUSD!=null)?mvUSD-costUSD:null;
+    const returnPct=costUSD?pnlUSD/costUSD*100:null;
+    const buyDates=g.lots.map(h=>h.buyDate).filter(Boolean).sort();
+    const firstBuy=buyDates[0]||null;
+    const holdDays=firstBuy?Math.floor((new Date(today)-new Date(firstBuy))/86400000):null;
+    const staleDays=latest.priceDate?Math.floor((new Date(today)-new Date(latest.priceDate))/86400000):null;
+    return {symbol:g.symbol,exchange:g.exchange,lots:g.lots.length,totalShares,avgBuy,currentPrice:cp,priceDate:latest.priceDate,costUSD,mvUSD,pnlUSD,returnPct,holdDays,staleDays};
+  });
+
+  const totalCostUSD=positions.reduce((s,p)=>p.costUSD!=null?s+p.costUSD:s,0);
+  const totalMvUSD=positions.reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
+  const totalPnlUSD=totalMvUSD-totalCostUSD;
+  const totalReturn=totalCostUSD?totalPnlUSD/totalCostUSD*100:0;
+
+  // Insights
+  const sorted=[...positions].filter(p=>p.returnPct!=null).sort((a,b)=>b.returnPct-a.returnPct);
+  const best=sorted[0], worst=sorted[sorted.length-1];
+  const concentrated=totalMvUSD>0?positions.filter(p=>p.mvUSD!=null&&p.mvUSD/totalMvUSD>0.4):[];
+  const stale=positions.filter(p=>p.staleDays==null||p.staleDays>7);
+  const zigMV=positions.filter(p=>p.exchange!=='VFSE').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
+  const usdMV=positions.filter(p=>p.exchange==='VFSE').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
+
+  function insightBox(level,title,text){
+    const border={danger:'var(--red)',warn:'var(--yellow)',good:'var(--green)',info:'var(--accent2)'};
+    const bg={danger:'rgba(224,16,16,.07)',warn:'rgba(245,158,11,.07)',good:'rgba(16,185,129,.07)',info:'rgba(26,111,212,.07)'};
+    return `<div style="border-left:3px solid ${border[level]||border.warn};background:${bg[level]||bg.warn};border-radius:0 var(--r-sm) var(--r-sm) 0;padding:10px 14px;margin-bottom:8px"><div style="font-weight:600;font-size:13px;margin-bottom:2px">${title}</div><div style="font-size:12px;color:var(--muted2)">${text}</div></div>`;
+  }
+
+  const insights=[];
+  if(best&&best.returnPct>0) insights.push(insightBox('good',`Best performer: ${escapeHtml(best.symbol)}`,`Up ${best.returnPct.toFixed(1)}% — unrealised gain of ${best.pnlUSD>=0?'+':'−'}$${fmtMoney(Math.abs(best.pnlUSD))} USD.`));
+  if(worst&&worst.returnPct<0) insights.push(insightBox('warn',`Biggest drag: ${escapeHtml(worst.symbol)}`,`Down ${Math.abs(worst.returnPct).toFixed(1)}% from cost basis (−$${fmtMoney(Math.abs(worst.pnlUSD))} USD). Review the position thesis.`));
+  concentrated.forEach(p=>insights.push(insightBox('warn',`Concentration risk: ${escapeHtml(p.symbol)}`,`${(p.mvUSD/totalMvUSD*100).toFixed(0)}% of your stock portfolio is in one name. High concentration amplifies both upside and downside.`)));
+  if(stale.length) insights.push(insightBox('warn',`${stale.length} position${stale.length>1?'s':''} with stale prices`,`${stale.map(p=>escapeHtml(p.symbol)).join(', ')} ${stale.length>1?'have':'has'} not been price-updated in over 7 days — market value may be inaccurate.`));
+  if(zigMV>0&&usdMV>0){ const zp=(zigMV/(zigMV+usdMV)*100).toFixed(0); insights.push(insightBox('info','Currency split',`${zp}% ZiG-denominated (ZSE) · ${100-Number(zp)}% USD-denominated (VFEX). ZSE positions carry ZiG/USD currency risk alongside equity risk.`)); }
+
+  // Stats row
+  const statsRow=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px">`
+    +[{l:'Positions',v:positions.length,col:'var(--text)'},{l:'Total Lots',v:holdings.length,col:'var(--text)'},
+      {l:'Cost Basis',v:'$'+fmtMoney(totalCostUSD),col:'var(--muted)'},
+      {l:'Market Value',v:'$'+fmtMoney(totalMvUSD),col:'var(--text)'},
+      {l:'Unrealised P&L',v:(totalPnlUSD>=0?'+':'−')+'$'+fmtMoney(Math.abs(totalPnlUSD)),col:totalPnlUSD>=0?'var(--green)':'var(--red)'},
+      {l:'Total Return',v:(totalReturn>=0?'+':'')+totalReturn.toFixed(1)+'%',col:totalReturn>=0?'var(--green)':'var(--red)'},
+    ].map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-value" style="font-size:19px;color:${s.col}">${s.v}</div></div>`).join('')+'</div>';
+
+  // Per-position table
+  const colTpl='1.5fr .7fr .8fr .8fr .85fr .85fr .75fr .7fr .55fr .55fr';
+  const hdr=`<div style="display:grid;grid-template-columns:${colTpl};gap:8px;padding:6px 0 6px;border-bottom:2px solid var(--border);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+    <div>Symbol</div><div>Shares</div><div>Avg Buy</div><div>Current</div><div>Cost (USD)</div><div>Value (USD)</div><div>P&amp;L</div><div>Return</div><div>Weight</div><div>Held</div></div>`;
+  const rows=positions.map(p=>{
+    const wt=totalMvUSD>0&&p.mvUSD!=null?(p.mvUSD/totalMvUSD*100).toFixed(1)+'%':'—';
+    const held=p.holdDays!=null?(p.holdDays>=365?(p.holdDays/365).toFixed(1)+'y':p.holdDays+'d'):'—';
+    const staleTag=p.staleDays!=null&&p.staleDays>7?`<span style="color:var(--yellow);font-size:10px;margin-left:3px">⚠${p.staleDays}d</span>`:'';
+    const xBadge=p.exchange==='VFSE'
+      ?'<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(16,185,129,.18);color:var(--green)">VFEX</span>'
+      :'<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(26,111,212,.18);color:var(--accent2)">ZSE</span>';
+    const lotsTag=p.lots>1?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${p.lots} lots</span>`:'';
+    return `<div style="display:grid;grid-template-columns:${colTpl};gap:8px;padding:10px 0;border-bottom:1px solid var(--border);align-items:center;font-size:12px">
+      <div><div style="font-weight:700;font-size:13px">${escapeHtml(p.symbol)}</div><div style="margin-top:3px">${xBadge}${lotsTag}</div></div>
+      <div>${fmtNum(p.totalShares)}</div>
+      <div>${fmtNum(p.avgBuy)}</div>
+      <div>${fmtNum(p.currentPrice)}${staleTag}</div>
+      <div>${p.costUSD!=null?'$'+fmtMoney(p.costUSD):'—'}</div>
+      <div>${p.mvUSD!=null?'$'+fmtMoney(p.mvUSD):'—'}</div>
+      <div class="${p.pnlUSD!=null?pnlClass(p.pnlUSD):''}">${p.pnlUSD!=null?(p.pnlUSD>=0?'+':'−')+'$'+fmtMoney(Math.abs(p.pnlUSD)):'—'}</div>
+      <div class="${p.returnPct!=null?pnlClass(p.returnPct):''}">${p.returnPct!=null?(p.returnPct>=0?'+':'')+p.returnPct.toFixed(1)+'%':'—'}</div>
+      <div>${wt}</div>
+      <div>${held}</div></div>`;
+  }).join('');
+
+  return `<div class="card" style="grid-column:1/-1">
+    <div class="card-header">
+      <div><div class="card-title">ZSE &amp; VFEX — Stock Position Analysis</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${positions.length} position${positions.length!==1?'s':''} · ${holdings.length} lot${holdings.length!==1?'s':''} · unrealised P&amp;L in USD</div>
+      </div>
+    </div>
+    ${statsRow}
+    <div style="overflow-x:auto"><div style="min-width:680px">${hdr}${rows}</div></div>
+    <div style="margin-top:14px">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Portfolio weight by market value</div>
+      <canvas id="zse-alloc-chart" height="56"></canvas>
+    </div>
+    ${insights.length?'<div style="margin-top:16px">'+insights.join('')+'</div>':''}
+  </div>`;
+}
+
 function openExposureCard(){
   const open=allTrades().filter(t=>t.status==='open');
   const walletCashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
@@ -3007,7 +3113,7 @@ function renderAnalytics(){
     perfCard('By Strategy', Object.entries(byStrategy).sort((a,b)=>b[1].pnl-a[1].pnl)) +
     perfCard('Long vs Short', Object.entries(byDir)) +
     perfCard('By Day of Week', DAYS.map(d=>[d,byDow[d]||{pnl:0,count:0,wins:0}]).filter(([,v])=>v.count>0)) +
-    summaryCard;
+    summaryCard + zseAnalyticsCard();
 
   // ── Draw P&L bar chart ──────────────────────────────────────────
   setTimeout(()=>{
@@ -3052,6 +3158,46 @@ function renderAnalytics(){
     ctx.fillStyle=lastV>=0?themeVal('#10b981','#059669'):themeVal('#e01010','#cc0a0a');
     ctx.font='600 10px Inter,system-ui'; ctx.textAlign='center';
     ctx.fillText((lastV>=0?'+':'')+fmtMoney(lastV), lastX, baseline-(lastV>=0?1:-1)*( Math.abs(lastV)/maxAbs*(H-padT-padB)/2+12));
+
+    // ── ZSE allocation bar chart ──────────────────────────────────
+    const allocCanvas=document.getElementById('zse-alloc-chart'); if(!allocCanvas) return;
+    const holdings=loadZseHoldings();
+    if(!holdings.length) return;
+    const zigRate=getZigUsdRate();
+    const mvToUSD2=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+    const groupMap2={};
+    holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!groupMap2[k]) groupMap2[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; groupMap2[k].lots.push(h); });
+    const grps=Object.values(groupMap2);
+    const allocData=grps.map(g=>{
+      const ts=g.lots.reduce((s,h)=>s+h.shares,0);
+      const tc=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+      const ll=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
+      const cp=ll.currentPrice??(tc/ts);
+      const usd=mvToUSD2(g.exchange,ts*cp);
+      return {label:g.symbol,val:usd??0,exchange:g.exchange};
+    }).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
+    if(!allocData.length) return;
+    const totalV=allocData.reduce((s,d)=>s+d.val,0);
+    const AW=allocCanvas.parentElement.clientWidth-0, AH=56;
+    allocCanvas.width=AW; allocCanvas.height=AH;
+    const actx=allocCanvas.getContext('2d'); actx.clearRect(0,0,AW,AH);
+    const COLORS=['#1a6fd4','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#64748b'];
+    let xCursor=0;
+    const barH=24, barY=0, lblY=barH+14;
+    allocData.forEach((d,i)=>{
+      const bw=d.val/totalV*AW;
+      actx.fillStyle=COLORS[i%COLORS.length];
+      actx.fillRect(xCursor,barY,bw-1,barH);
+      if(bw>32){
+        actx.fillStyle='#fff'; actx.font='600 10px Inter,system-ui'; actx.textAlign='center';
+        const pct=(d.val/totalV*100).toFixed(0)+'%';
+        actx.fillText(pct,xCursor+bw/2,barH-8);
+      }
+      // label below
+      actx.fillStyle=COLORS[i%COLORS.length]; actx.font='9px Inter,system-ui'; actx.textAlign='center';
+      const lx=Math.max(xCursor+bw/2,xCursor+4); if(bw>24) actx.fillText(d.label.slice(0,7),lx,lblY);
+      xCursor+=bw;
+    });
   },0);
 }
 

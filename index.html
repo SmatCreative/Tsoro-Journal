@@ -231,12 +231,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .bar-fill.pos{background:rgba(34,197,94,.25);color:var(--green)}.bar-fill.neg{background:rgba(239,68,68,.25);color:var(--red)}
 .bar-val{font-size:12px;min-width:70px;text-align:right}
 
-/* ── Calendar ── */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal-day-label{font-size:10px;color:var(--muted);text-align:center;padding:4px 0;font-weight:600;text-transform:uppercase}
-.cal-cell{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:var(--surface2);color:var(--muted)}
-.cal-cell.pos{background:rgba(34,197,94,.2);color:var(--green)}.cal-cell.neg{background:rgba(239,68,68,.2);color:var(--red)}
-.cal-cell.today{outline:2px solid var(--accent);outline-offset:-2px}.cal-cell.empty{background:transparent}
 
 /* ── Analytics ── */
 .analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
@@ -435,10 +429,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
       <span>Analytics</span>
     </button>
-    <button class="nav-item" data-page="calendar">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-      <span>Calendar</span>
-    </button>
     <div class="nav-section">Analysis</div>
     <button class="nav-item" data-page="securities">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
@@ -545,7 +535,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
               <div style="grid-column:1/-1;background:var(--surface2);border-radius:var(--r-sm);padding:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
                 <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risk $</div><div id="psc-risk-usd" style="font-size:16px;font-weight:700;color:var(--red)">—</div></div>
                 <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Units</div><div id="psc-units" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Lots (Forex)</div><div id="psc-lots" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
+                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Lots</div><div id="psc-lots" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
               </div>
             </div>
           </div>
@@ -582,23 +572,6 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <!-- Analytics -->
       <div class="page" id="page-analytics"><div class="analytics-grid" id="analytics-grid"></div></div>
 
-      <!-- Calendar -->
-      <div class="page" id="page-calendar">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title" id="cal-title"></div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-ghost btn-sm" id="cal-prev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-              <button class="btn btn-ghost btn-sm" id="cal-next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-            </div>
-          </div>
-          <div id="cal-wrap"></div>
-          <div style="margin-top:16px;display:flex;gap:20px;font-size:12px;color:var(--muted)">
-            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(34,197,94,.2);border-radius:2px;margin-right:4px"></span>Profitable day</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:rgba(239,68,68,.2);border-radius:2px;margin-right:4px"></span>Loss day</span>
-          </div>
-        </div>
-      </div>
 
       <!-- Securities Analysis -->
       <div class="page" id="page-securities">
@@ -1456,7 +1429,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <input type="hidden" id="f-type" value="day">
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Symbol / Asset</label><input class="form-input" id="f-symbol" placeholder="BTC, AAPL, EUR/USD…" list="sym-list" required autocomplete="off"><datalist id="sym-list"><option value="BTC/USD"><option value="ETH/USD"><option value="BNB/USD"><option value="SOL/USD"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="XAU/USD"><option value="XAG/USD"><option value="WTI/USD"><option value="AAPL"><option value="TSLA"><option value="NVDA"><option value="AMZN"><option value="MSFT"><option value="GOOGL"><option value="META"><option value="SPY"><option value="QQQ"><option value="GLD"></datalist></div>
-        <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Crypto">Crypto</option><option value="Forex">Forex</option><option value="Stocks">Stocks</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="ETF">ETF</option><option value="Bonds">Bonds</option></select></div>
+        <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Crypto">Crypto</option><option value="Stocks">Stocks</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="ETF">ETF</option><option value="Bonds">Bonds</option></select></div>
         <div class="form-group"><label class="form-label">Exchange <span class="opt">(optional)</span></label><input class="form-input" id="f-exchange" placeholder="ZSE, NYSE, NASDAQ…" list="exch-list" autocomplete="off"><datalist id="exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="LSE"><option value="NSE"><option value="BSE"><option value="ASX"><option value="TSX"><option value="HKEX"><option value="SSE"><option value="Euronext"><option value="XETRA"><option value="SGX"><option value="KSE"><option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX"><option value="CME"><option value="CBOE"><option value="ICE"><option value="OTC"></datalist></div>
         <div class="form-group"><label class="form-label">Currency</label><select class="form-select" id="f-currency"><option value="USD">USD — US Dollar ($)</option><option value="ZiG">ZiG — Zimbabwe Gold</option><option value="ZAR">ZAR — South African Rand (R)</option><option value="GBP">GBP — British Pound (£)</option><option value="EUR">EUR — Euro (€)</option><option value="NGN">NGN — Nigerian Naira (₦)</option><option value="INR">INR — Indian Rupee (₹)</option><option value="KES">KES — Kenyan Shilling</option><option value="AUD">AUD — Australian Dollar</option><option value="CAD">CAD — Canadian Dollar</option><option value="HKD">HKD — Hong Kong Dollar</option><option value="CNY">CNY — Chinese Yuan (¥)</option><option value="SGD">SGD — Singapore Dollar</option><option value="JPY">JPY — Japanese Yen (¥)</option><option value="USDT">USDT — Tether</option><option value="PKR">PKR — Pakistani Rupee (₨)</option><option value="GHS">GHS — Ghanaian Cedi (₵)</option><option value="BRL">BRL — Brazilian Real</option><option value="EGP">EGP — Egyptian Pound</option><option value="BTC">BTC — Bitcoin (₿)</option><option value="ETH">ETH — Ethereum (Ξ)</option></select></div>
         <div class="form-group"><label class="form-label">Direction</label><select class="form-select" id="f-dir"><option value="Long">Long (Buy)</option><option value="Short">Short (Sell)</option></select></div>
@@ -1666,7 +1639,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group">
         <label class="form-label">Exchange <span class="opt">(optional)</span></label>
         <input class="form-input" id="w-exchange" placeholder="ZSE, NYSE, Binance…" list="w-exch-list" autocomplete="off">
-        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"><option value="Forex"></datalist>
+        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"></datalist>
       </div>
       <div class="form-group">
         <label class="form-label">Currency</label>
@@ -2003,7 +1976,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group">
         <label class="form-label">Pip Value ($ per pip per lot)</label>
         <input class="form-input" id="psc2-pip" type="number" step="any" value="10" placeholder="10" oninput="calcPosSizeFull()">
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Forex standard: $10/pip/lot. Adjust for instrument.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Standard: $10/pip/lot. Adjust for your instrument.</div>
       </div>
     </div>
     <!-- Results -->
@@ -2017,7 +1990,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="psc2-pips" style="font-size:20px;font-weight:700">—</div>
       </div>
       <div>
-        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Lots (Forex)</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Lots</div>
         <div id="psc2-lots" style="font-size:20px;font-weight:700;color:var(--accent2)">—</div>
       </div>
       <div>
@@ -2241,7 +2214,6 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
 let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [], privInvest = [], loans = [], loanPayments = [], zsePriceHistory = [];
-let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 let currentUser = null;
 
 function fromDb(r){ return {id:r.id,type:r.type,symbol:r.symbol,market:r.market,exchange:r.exchange||'',currency:r.currency||'USD',direction:r.direction,qty:Number(r.qty),entry:Number(r.entry),entryDate:r.entry_date,exit:r.exit!=null?Number(r.exit):null,exitDate:r.exit_date,sl:r.sl!=null?Number(r.sl):null,tp:r.tp!=null?Number(r.tp):null,fee:Number(r.fee)||0,strategy:r.strategy||'',notes:r.notes||'',status:r.status,imageUrl:r.image_url||null,createdAt:r.created_at}; }
@@ -2417,7 +2389,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',calendar:'Calendar',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',b.id==='mnav-'+page)); renderPage(page); }
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
@@ -2989,8 +2961,6 @@ function renderAnalytics(){
     const pos=[];
     const withRR=closed.filter(t=>t.sl&&t.tp&&t.entry);
     if(withRR.length) pos.push(`${withRR.length} trade${withRR.length>1?'s':''}  had both SL and TP defined — correct process`);
-    const smallForex=closed.filter(t=>Number(t.qty)<=0.01&&t.market==='Forex');
-    if(smallForex.length) pos.push('Forex positions use 0.01 lots — appropriate micro sizing for a small account');
     const ltOpen=allTrades().filter(t=>t.type==='long'&&t.status==='open');
     if(ltOpen.length) pos.push(`${ltOpen.length} long-term position${ltOpen.length>1?'s':''} open — good portfolio diversification alongside active trading`);
     if(avgWin>0&&avgLoss>0&&avgWin>avgLoss) pos.push(`Average winner ($${fmtMoney(avgWin)}) exceeds average loser ($${fmtMoney(avgLoss)}) — good when win rate improves`);
@@ -3201,13 +3171,9 @@ function renderAnalytics(){
   },0);
 }
 
-// ── Calendar ───────────────────────────────────────────────────────
-function renderCalendar(){ const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'],DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; document.getElementById('cal-title').textContent=MONTHS[calMonth]+' '+calYear; const byDay={};trades.filter(t=>t.status==='closed').forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const firstDay=new Date(calYear,calMonth,1).getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),today=new Date().toISOString().slice(0,10);let html='';DAYS.forEach(d=>{html+=`<div class="cal-day-label">${d}</div>`;});for(let i=0;i<firstDay;i++)html+=`<div class="cal-cell empty"></div>`;for(let d=1;d<=dim;d++){const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const pnl=byDay[key];const cls=(pnl!=null?(pnl>=0?' pos':' neg'):'')+(key===today?' today':'');html+=`<div class="cal-cell${cls}" title="${pnl!=null?pnlStr(pnl):'No trades'}">${d}</div>`;}document.getElementById('cal-wrap').innerHTML=`<div class="cal-grid">${html}</div>`; }
-document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
-document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='calendar')renderCalendar(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='zse-market')renderZseMarket(); else if(page==='vfex-market')renderVfexMarket(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='zse-market')renderZseMarket(); else if(page==='vfex-market')renderVfexMarket(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════

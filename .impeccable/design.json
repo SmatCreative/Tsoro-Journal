@@ -1,0 +1,286 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T00:00:00Z",
+  "title": "Design System: Tsoro Journal",
+  "extensions": {
+    "colorMeta": {
+      "brand": {
+        "role": "primary",
+        "displayName": "Signal Green",
+        "canonical": "#00C853",
+        "lightModeValue": "#00A843",
+        "tonalRamp": ["#001a0a", "#003318", "#004d24", "#006630", "#008a36", "#00A843", "#00C853", "#b3f5ce"]
+      },
+      "brand-dim": {
+        "role": "primary-dim",
+        "displayName": "Signal Green Dim",
+        "canonical": "#00A843",
+        "lightModeValue": "#008a36",
+        "tonalRamp": ["#001408", "#002b12", "#00421c", "#005926", "#006f30", "#008a36", "#00A843", "#99edc2"]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Deep Navy Shell",
+        "canonical": "#0A0E1A",
+        "lightModeValue": "#F8F9FC",
+        "tonalRamp": ["#020408", "#060a12", "#0a0e1a", "#111827", "#1a2438", "#1e2a42", "#243050", "#3d4f6e"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Midnight Surface",
+        "canonical": "#111827",
+        "lightModeValue": "#FFFFFF",
+        "tonalRamp": ["#060a12", "#0a0e1a", "#111827", "#1a2438", "#1e2a42", "#243050", "#3d4f6e", "#5f7490"]
+      },
+      "surface2": {
+        "role": "neutral",
+        "displayName": "Charcoal Surface",
+        "canonical": "#1A2438",
+        "lightModeValue": "#F5F7FA",
+        "tonalRamp": ["#080f1c", "#111827", "#1a2438", "#1e2a42", "#243050", "#2d3c58", "#3d4f6e", "#5f7490"]
+      },
+      "surface3": {
+        "role": "neutral",
+        "displayName": "Lifted Surface",
+        "canonical": "#1E2A42",
+        "lightModeValue": "#EDF0F5",
+        "tonalRamp": ["#0a1020", "#121c30", "#1e2a42", "#243050", "#2d3c58", "#3d4f6e", "#5f7490", "#8fa8c4"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Navy Border",
+        "canonical": "#243050",
+        "lightModeValue": "#E5E9F0",
+        "tonalRamp": ["#0f1828", "#172030", "#1e2a42", "#243050", "#2d3c5e", "#3d4f6e", "#5f7490", "#8fa8c4"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Cloud Text",
+        "canonical": "#F0F4FC",
+        "lightModeValue": "#0A1628",
+        "tonalRamp": ["#8fa8c4", "#aabdd4", "#c0cfdf", "#d0dff0", "#e0eaf8", "#edf3fb", "#f0f4fc", "#ffffff"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "#5F7490",
+        "lightModeValue": "#7A94B0",
+        "tonalRamp": ["#1a2438", "#243050", "#2d3c58", "#3d4f6e", "#4e627e", "#5f7490", "#7a94b0", "#a8bdd0"]
+      },
+      "muted2": {
+        "role": "neutral",
+        "displayName": "Steel Muted",
+        "canonical": "#8FA8C4",
+        "lightModeValue": "#3D5A7A",
+        "tonalRamp": ["#1e2a42", "#243050", "#2d3c58", "#3d4f6e", "#5f7490", "#7a94b0", "#8fa8c4", "#c0d4e8"]
+      },
+      "red": {
+        "role": "semantic-danger",
+        "displayName": "Loss Red",
+        "canonical": "#EF4444",
+        "lightModeValue": "#DC2626",
+        "tonalRamp": ["#2a0000", "#5c0000", "#8c0000", "#b91c1c", "#dc2626", "#ef4444", "#f87171", "#fca5a5"]
+      },
+      "yellow": {
+        "role": "semantic-open",
+        "displayName": "Open Yellow",
+        "canonical": "#F59E0B",
+        "lightModeValue": "#D97706",
+        "tonalRamp": ["#3a2000", "#6b3d00", "#92500a", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fde68a"]
+      },
+      "blue": {
+        "role": "semantic-day",
+        "displayName": "Day-Trade Blue",
+        "canonical": "#38BDF8",
+        "lightModeValue": "#0369A1",
+        "tonalRamp": ["#001a2e", "#023a5c", "#0369a1", "#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd"]
+      },
+      "purple": {
+        "role": "semantic-longterm",
+        "displayName": "Long-Term Purple",
+        "canonical": "#A855F7",
+        "lightModeValue": "#7C3AED",
+        "tonalRamp": ["#1e0036", "#3b0070", "#5b21b6", "#6d28d9", "#7c3aed", "#9333ea", "#a855f7", "#d8b4fe"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Wallet Display",
+        "purpose": "Largest monetary value on screen — wallet balance and exchange rate. Used once per section. Tabular numerals mandatory."
+      },
+      "headline": {
+        "displayName": "Stat Headline",
+        "purpose": "Stat card values: portfolio total, day P&L, position size. Tabular numerals mandatory."
+      },
+      "title": {
+        "displayName": "Page Title",
+        "purpose": "Topbar page title and modal heading. Weight 700 signals structural hierarchy."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, trade notes, nav labels, table cell content, tooltips."
+      },
+      "label": {
+        "displayName": "Data Label",
+        "purpose": "Stat card labels, table column headers, form field labels, badge text. Always uppercase in data contexts."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient",
+        "value": "0 1px 4px rgba(0,0,0,.24)",
+        "lightValue": "0 1px 4px rgba(0,0,0,.08)",
+        "purpose": "Applied to stat cards and wallet cards at rest. Barely perceptible; tonal background differences do the primary depth work."
+      },
+      {
+        "name": "modal-lift",
+        "value": "0 24px 80px rgba(0,0,0,.6)",
+        "purpose": "Modal dialogs and the auth box. Decisively anchors the dialog above the blurred overlay plane."
+      }
+    ],
+    "motion": [
+      {
+        "name": "page-enter",
+        "value": "fadeSlideIn 0.22s cubic-bezier(.22,1,.36,1)",
+        "purpose": "Page transition on each .page.active — opacity 0→1 and translateY 14px→0. Spring-like curve adds momentum."
+      },
+      {
+        "name": "standard",
+        "value": "all 0.15s",
+        "purpose": "Default state transition for buttons, nav items, checklist items, inputs."
+      },
+      {
+        "name": "theme",
+        "value": "background 0.2s, color 0.2s",
+        "purpose": "Applied to all key surfaces to prevent flash on dark/light toggle."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "768px",
+        "behavior": "Sidebar hidden, bottom nav shown (56px), content padding collapses to 16px with 72px bottom clearance. Market pages fill full viewport width. Grid-2 collapses to 1 column."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action. Used for Log Trade, Add Wallet, Save Changes.",
+      "html": "<button class=\"ds-btn-primary\">Log Trade</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 11px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; font-family: Inter, system-ui, sans-serif; background: var(--accent, #00C853); color: #fff; transition: background 0.15s; } .ds-btn-primary:hover { background: var(--accent2, #00A843); } .ds-btn-primary:focus-visible { outline: 2px solid var(--accent, #00C853); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action. Used for Import, Export, Cancel, filter controls.",
+      "html": "<button class=\"ds-btn-ghost\">Export</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 11px; border: 1px solid var(--border, #243050); cursor: pointer; font-size: 13px; font-weight: 600; font-family: Inter, system-ui, sans-serif; background: var(--surface2, #1A2438); color: var(--muted2, #8FA8C4); transition: background 0.15s, color 0.15s; } .ds-btn-ghost:hover { background: var(--surface3, #1E2A42); color: var(--text, #F0F4FC); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--accent, #00C853); outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action — delete trade, close position.",
+      "html": "<button class=\"ds-btn-danger\">Delete</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 11px; border: 1px solid rgba(239,68,68,.2); cursor: pointer; font-size: 13px; font-weight: 600; font-family: Inter, system-ui, sans-serif; background: rgba(239,68,68,.12); color: var(--red, #EF4444); transition: background 0.15s, color 0.15s, border-color 0.15s; } .ds-btn-danger:hover { background: var(--red, #EF4444); color: #fff; border-color: var(--red, #EF4444); } .ds-btn-danger:focus-visible { outline: 2px solid var(--red, #EF4444); outline-offset: 2px; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "KPI tile used in the dashboard stats row and analytics. Displays one metric with a label and large tabular value.",
+      "html": "<div class=\"ds-stat-card\"><div class=\"ds-stat-label\">Total P&amp;L</div><div class=\"ds-stat-value ds-stat-green\">+$1,240.00</div></div>",
+      "css": ".ds-stat-card { background: var(--surface, #111827); border: 1px solid var(--border, #243050); border-radius: 8px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.24); transition: background 0.15s, border-color 0.15s; } .ds-stat-card:hover { background: var(--surface2, #1A2438); } .ds-stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .9px; color: var(--muted, #5F7490); font-weight: 500; margin-bottom: 10px; } .ds-stat-value { font-size: 22px; font-weight: 500; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--text, #F0F4FC); } .ds-stat-green { color: var(--green, #00C853); } .ds-stat-red { color: var(--red, #EF4444); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Standard content container used for chart areas, trade tables, analytics sections.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><span class=\"ds-card-title\">Win Rate by Symbol</span></div><div class=\"ds-card-body\">Chart area</div></div>",
+      "css": ".ds-card { background: var(--surface, #111827); border: 1px solid var(--border, #243050); border-radius: 8px; padding: 22px; box-shadow: 0 1px 4px rgba(0,0,0,.24); transition: background 0.15s, border-color 0.15s; } .ds-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; } .ds-card-title { font-size: 13.5px; font-weight: 700; letter-spacing: -.1px; color: var(--text, #F0F4FC); } .ds-card-body { color: var(--muted2, #8FA8C4); font-size: 13px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "form-input",
+      "description": "Standard form input used in the Log Trade modal and all data entry forms.",
+      "html": "<div class=\"ds-form-group\"><label class=\"ds-form-label\">Symbol</label><input class=\"ds-form-input\" type=\"text\" placeholder=\"e.g. DELTA\" /></div>",
+      "css": ".ds-form-group { display: flex; flex-direction: column; gap: 5px; } .ds-form-label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted, #5F7490); font-weight: 600; } .ds-form-input { background: var(--surface2, #1A2438); border: 1px solid var(--border, #243050); border-radius: 6px; color: var(--text, #F0F4FC); padding: 9px 12px; font-size: 13px; font-family: Inter, system-ui, sans-serif; outline: none; transition: border-color 0.15s; width: 100%; } .ds-form-input:focus { border-color: var(--accent, #00C853); } .ds-form-input::placeholder { color: var(--muted, #5F7490); }"
+    },
+    {
+      "name": "Badge — Long (Gain)",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Semantic badge indicating a long position. The tint-plus-saturated-text pattern is used for all badge variants.",
+      "html": "<span class=\"ds-badge ds-badge-long\">LONG</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; font-family: Inter, system-ui, sans-serif; } .ds-badge-long { background: rgba(34,197,94,.12); color: var(--green, #00C853); } .ds-badge-short { background: rgba(239,68,68,.12); color: var(--red, #EF4444); } .ds-badge-open { background: rgba(245,158,11,.12); color: var(--yellow, #F59E0B); } .ds-badge-day { background: rgba(56,189,248,.12); color: var(--blue, #38BDF8); } .ds-badge-long-term { background: rgba(168,85,247,.12); color: var(--purple, #A855F7); }"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Sidebar navigation button. Default muted, hover surface2, active surface3 + accent green.",
+      "html": "<button class=\"ds-nav-item ds-nav-active\"><span class=\"ds-nav-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\"/></svg></span><span>Dashboard</span></button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin: 2px 0; border-radius: 11px; cursor: pointer; color: var(--muted2, #8FA8C4); transition: background 0.15s, color 0.15s; font-size: 13.5px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; font-family: Inter, system-ui, sans-serif; } .ds-nav-item:hover { background: var(--surface2, #1A2438); color: var(--text, #F0F4FC); } .ds-nav-active { background: var(--surface3, #1E2A42); color: var(--accent, #00C853); font-weight: 600; } .ds-nav-icon { width: 18px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clarity Window",
+    "overview": "Tsoro Journal is a financial-data surface built around a single discipline: let the investor know their position instantly. The system refuses the common dashboard reflex of stacking metric tiles and colored card borders to signal importance; instead it uses a deep navy shell, a single green accent, and tight typographic hierarchy to make the numbers do the talking. Every design decision exists in service of quick comprehension under the pressure of real capital decisions.\n\nThe visual quality bar is Robinhood × Yahoo Finance — not as irony but as craft commitment. That means consistent padding, tonal layering without decorative gradients, Inter at tabular-numeral weight for every monetary figure, and a dual-mode system (dark default, light toggle) that preserves legibility in both contexts. The dark shell (#0A0E1A) is deep enough to function as a zero-point for the luminance ramp; the light shell (#F8F9FC) is a near-white that avoids clinical harshness. In both modes, accent green (#00C853 dark / #00A843 light) is the one non-neutral color that carries weight.\n\nCanvas 2D charts inherit palette through CSS custom properties, keeping the chart layer in sync with the theme toggle without a redraw pipeline. The layout is a fixed 240 px sidebar on desktop, collapsing to a bottom tab bar on mobile at 768 px.",
+    "keyCharacteristics": [
+      "Single brand accent; all other non-neutral color is semantic (green = gain, red = loss, yellow = open, blue = day trade, purple = long-term)",
+      "font-variant-numeric: tabular-nums on every monetary figure and table cell — figures never shift column width",
+      "Tonal surface layering (bg → surface → surface2 → surface3) replaces box-shadow depth",
+      "Thin 1 px borders at low-opacity for separation without visual weight",
+      "Subdued 1 px ambient shadow only; structural depth comes from tonal steps, not elevation"
+    ],
+    "rules": [
+      {
+        "name": "The One Voice Rule",
+        "body": "Signal Green appears on ≤10% of any given screen. It is the only non-semantic accent color. Introducing a second accent color violates the data hierarchy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Lock Rule",
+        "body": "Red, yellow, blue, and purple are permanently bound to their data roles (loss, open, day, long-term). They must not appear as decorative or UI-identity colors.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Mandate",
+        "body": "font-variant-numeric: tabular-nums is applied globally to .stat-value, td, .perf-val, and .wallet-sum-val. Every monetary value, percentage, and share count must use this feature. Column jitter as prices update is a legibility failure.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Restraint Rule",
+        "body": "Weight 900 (black) is reserved for the single largest number on a screen — wallet balance and rate display. Using it on secondary figures collapses the hierarchy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal-First Rule",
+        "body": "Surfaces communicate depth by their background color, not their shadow. Before reaching for a heavier shadow, verify that the surface is using the correct tone step. Shadows amplify; they do not substitute.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do apply font-variant-numeric: tabular-nums to every element that displays monetary values, share counts, or percentages.",
+      "Do use tonal surface steps (surface → surface2 → surface3) to indicate hover and active states before reaching for a heavier shadow.",
+      "Do reserve Signal Green (#00C853 / #00A843) for the primary button, positive P&L, active navigation, and brand elements only. Keep its surface coverage below 10% per view.",
+      "Do use semantic colors (red, yellow, blue, purple) exclusively for their assigned data roles. A loss is red; an open position is yellow; day trades are blue.",
+      "Do use the 11px radius on interactive controls (buttons, nav items) and the 8px radius on container surfaces (cards, modals) to preserve a clear affordance signal.",
+      "Do show theme transitions at 0.2s on background and color properties on all key surfaces to prevent flash on toggle."
+    ],
+    "donts": [
+      "Don't add colored left-border accents to cards. The OWN-WORLD contract prohibits them; they create a banded hierarchy that competes with the data.",
+      "Don't use gradient text. Text rendering of gradients is inconsistent across platforms and reduces legibility on financial figures.",
+      "Don't place kicker or eyebrow text above section headings. This is a financial data surface, not editorial content.",
+      "Don't use a second accent color for UI identity. Any new hue introduced must earn a semantic data role or it does not belong.",
+      "Don't render monetary values without tabular-nums — column-width shift as data refreshes is a legibility failure at the craft level this system targets.",
+      "Don't apply the brand gradient (--hero-grad) to data surfaces, chart fills, or badge backgrounds. It belongs on brand identity elements (logo, avatar) only."
+    ]
+  }
+}

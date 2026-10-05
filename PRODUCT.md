@@ -39,6 +39,8 @@ The only trading journal built natively for ZSE and VFEX, handling ZiG-denominat
 
 Name: Tsoro Journal. "Tsoro" is a Zimbabwean strategy board game — implies methodical thinking, long-term planning, and local roots. The name should anchor the identity.
 
+Visual direction: classic financial standard (canon). Quality bar: Robinhood × Yahoo Finance. Green `#00C853` as the primary brand accent (gains and primary actions). Deep navy `#0A0E1A` dark shell. 8px border radius. Tabular numerals on all monetary values. No gradient text, no colored left-borders above 1px, no translateY card lifts.
+
 ## Evidence on Hand
 
 - Full working codebase at `index.html` (~7 400 lines).

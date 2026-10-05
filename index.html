@@ -1610,7 +1610,7 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       Sell charges: <strong id="zc-total-pct" style="color:var(--text)">0%</strong> — net credited to wallet <strong id="zc-keep-pct" style="color:var(--green)">100%</strong> of gross
     </div>
     <div class="form-row" style="margin-top:14px">
-      <button class="btn btn-primary" onclick="saveZseCharges()">Save Settings</button>
+      <button class="btn btn-primary" onclick="saveZseChargesForm()">Save Settings</button>
       <button class="btn btn-ghost" onclick="closeZseChargesModal()">Cancel</button>
     </div>
   </div>
@@ -2333,7 +2333,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadOhlcData()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadOhlcData(),loadZseHoldings(),loadZseCharges()]);
     await seedDefaultSecurities();
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
@@ -2634,7 +2634,7 @@ function populateFilters(){
 function zseHoldingsAsTrades(){
   try{
     const realSymbols=new Set(trades.map(t=>t.symbol.toUpperCase()));
-    return loadZseHoldings()
+    return zseHoldings
       .filter(h=>!realSymbols.has(h.symbol.toUpperCase()))
       .map(h=>({
         id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
@@ -2767,7 +2767,7 @@ function drawDailyChart(closed){ const canvas=document.getElementById('daily-cha
 // Live snapshot of open positions + wallet cash so Analytics is useful
 // even before any trade has been closed
 function zseAnalyticsCard(){
-  const holdings=loadZseHoldings();
+  const holdings=zseHoldings;
   if(!holdings.length) return '';
   const zigRate=getZigUsdRate();
   const mvToUSD=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
@@ -3139,7 +3139,7 @@ function renderAnalytics(){
 
     // ── ZSE allocation bar chart ──────────────────────────────────
     const allocCanvas=document.getElementById('zse-alloc-chart'); if(!allocCanvas) return;
-    const holdings=loadZseHoldings();
+    const holdings=zseHoldings;
     if(!holdings.length) return;
     const zigRate=getZigUsdRate();
     const mvToUSD2=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
@@ -3813,7 +3813,7 @@ function drawWalletPerfChart(series, ccy){
 // ── Stock portfolio performance card ──────────────────────────────────
 function renderZsePerformanceCard(){
   const card=document.getElementById('zse-perf-card'); if(!card) return;
-  const holdings=loadZseHoldings();
+  const holdings=zseHoldings;
   if(!holdings.length){ card.style.display='none'; return; }
   card.style.display='';
   const zigRate=getZigUsdRate();
@@ -4167,7 +4167,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
   privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v,type:'invest'}); });
   // ZSE/VFEX stock positions — grouped by symbol
   const _zseGrpMap={};
-  loadZseHoldings().forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
+  zseHoldings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
   Object.values(_zseGrpMap).forEach(g=>{
     const tot=g.lots.reduce((s,h)=>s+h.shares,0);
     const cost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
@@ -5232,21 +5232,72 @@ Object.assign(PAGE_TITLES, PAGE_TITLES_ZSE);
 
 function zseKey(suffix){ return 'tj_zse_'+(currentUser?.id||'guest')+'_'+suffix; }
 
-function loadZseHoldings(){ try{ return JSON.parse(localStorage.getItem(zseKey('holdings'))||'[]'); }catch(e){return[];} }
-function saveZseHoldingsLocal(arr){ localStorage.setItem(zseKey('holdings'), JSON.stringify(arr)); }
 // Default fee structure (editable in Charges & Settings):
 // Sell: CGT 1.00% + platform admin 1.00% + brokerage & levies 0.92% = 2.92%
 // Withdraw to bank: 1.00% of cash moved · Dividend WHT: 10%
 const ZSE_DEFAULT_CHARGES={cgt:1.00, admin:1.00, broker:0.92, withdraw:1.00, divtax:10.00};
-function loadZseCharges(){
-  try{
-    const c=JSON.parse(localStorage.getItem(zseKey('charges'))||'{}');
-    // migrate old field names (zimra/stamp/csdr/other folded into the new structure)
-    if(c.zimra!=null&&c.cgt==null) return {...ZSE_DEFAULT_CHARGES};
-    return {...ZSE_DEFAULT_CHARGES, ...c};
-  }catch(e){ return {...ZSE_DEFAULT_CHARGES}; }
+
+// In-memory caches — populated by loadZseHoldings() / loadZseCharges() at startup
+let zseHoldings=[], zseCharges={...ZSE_DEFAULT_CHARGES};
+
+function fromZseHolding(r){
+  return {id:r.id,symbol:r.symbol,exchange:r.exchange,shares:Number(r.shares),buyPrice:Number(r.buy_price),buyDate:r.buy_date||null,currentPrice:r.current_price!=null?Number(r.current_price):null,priceDate:r.price_date||null,notes:r.notes||''};
 }
-function saveZseChargesLocal(obj){ localStorage.setItem(zseKey('charges'), JSON.stringify(obj)); }
+function toZseHoldingRow(h){
+  return {id:h.id,user_id:currentUser.id,symbol:h.symbol,exchange:h.exchange,shares:h.shares,buy_price:h.buyPrice,buy_date:h.buyDate||null,current_price:h.currentPrice??null,price_date:h.priceDate||null,notes:h.notes||''};
+}
+
+async function loadZseHoldings(){
+  try{
+    const{data,error}=await sb.from('zse_holdings').select('*').eq('user_id',currentUser.id);
+    if(error) throw error;
+    if(!data.length){
+      // One-time migration from localStorage
+      const lsRaw=localStorage.getItem(zseKey('holdings'));
+      const lsData=lsRaw?JSON.parse(lsRaw):[];
+      if(lsData.length){
+        const rows=lsData.map(toZseHoldingRow);
+        const{error:migErr}=await sb.from('zse_holdings').upsert(rows);
+        if(!migErr){ localStorage.removeItem(zseKey('holdings')); zseHoldings=lsData; return; }
+      }
+    }
+    zseHoldings=(data||[]).map(fromZseHolding);
+  }catch(e){
+    console.error('[Tsoro] zse_holdings:',e.message);
+    try{ zseHoldings=JSON.parse(localStorage.getItem(zseKey('holdings'))||'[]'); }catch(_){ zseHoldings=[]; }
+  }
+}
+
+async function loadZseCharges(){
+  try{
+    const{data,error}=await sb.from('zse_charges').select('*').eq('user_id',currentUser.id).maybeSingle();
+    if(error) throw error;
+    if(!data){
+      // One-time migration from localStorage
+      const lsRaw=localStorage.getItem(zseKey('charges'));
+      if(lsRaw){
+        try{
+          const lsData=JSON.parse(lsRaw);
+          if(lsData&&Object.keys(lsData).length){
+            if(lsData.zimra!=null&&lsData.cgt==null){ zseCharges={...ZSE_DEFAULT_CHARGES}; }
+            else{ const merged={...ZSE_DEFAULT_CHARGES,...lsData}; await saveZseCharges(merged); localStorage.removeItem(zseKey('charges')); return; }
+          }
+        }catch(_){}
+      }
+      zseCharges={...ZSE_DEFAULT_CHARGES}; return;
+    }
+    zseCharges={cgt:data.cgt,admin:data.admin,broker:data.broker,withdraw:data.withdraw,divtax:data.divtax};
+  }catch(e){
+    console.error('[Tsoro] zse_charges:',e.message);
+    zseCharges={...ZSE_DEFAULT_CHARGES};
+  }
+}
+
+async function saveZseCharges(obj){
+  zseCharges=obj;
+  const{error}=await sb.from('zse_charges').upsert({user_id:currentUser.id,...obj,updated_at:new Date().toISOString()});
+  if(error) console.error('[Tsoro] saveZseCharges:',error.message);
+}
 
 // ── Modals ─────────────────────────────────────────────────────────
 function openZseHoldingModal(id){
@@ -5255,7 +5306,7 @@ function openZseHoldingModal(id){
   zHoldingErr('');
   const today = new Date().toISOString().slice(0,10);
   if(id){
-    const h = loadZseHoldings().find(x=>x.id===id); if(!h) return;
+    const h = zseHoldings.find(x=>x.id===id); if(!h) return;
     document.getElementById('zh-symbol').value        = h.symbol||'';
     document.getElementById('zh-exchange').value      = h.exchange||'ZSE';
     document.getElementById('zh-shares').value        = h.shares||'';
@@ -5280,7 +5331,7 @@ document.getElementById('zse-holding-modal').addEventListener('click',e=>{if(e.t
 
 function zHoldingErr(msg){ const el=document.getElementById('zse-holding-err'); el.textContent=msg; el.style.display=msg?'block':'none'; }
 
-function saveZseHolding(){
+async function saveZseHolding(){
   const id       = document.getElementById('zh-edit-id').value;
   const symbol   = document.getElementById('zh-symbol').value.trim().toUpperCase();
   const exchange = document.getElementById('zh-exchange').value;
@@ -5291,18 +5342,21 @@ function saveZseHolding(){
   const priceDate= document.getElementById('zh-price-date').value;
   const notes    = document.getElementById('zh-notes').value.trim();
 
-  if(!symbol)         { zHoldingErr('Please enter a stock symbol.'); return; }
-  if(!shares||shares<=0){ zHoldingErr('Please enter number of shares.'); return; }
+  if(!symbol)            { zHoldingErr('Please enter a stock symbol.'); return; }
+  if(!shares||shares<=0) { zHoldingErr('Please enter number of shares.'); return; }
   if(isNaN(buyPrice)||buyPrice<0){ zHoldingErr('Please enter a valid buy price.'); return; }
 
-  const holdings = loadZseHoldings();
-  if(id){
-    const idx=holdings.findIndex(x=>x.id===id);
-    if(idx>=0) holdings[idx]={...holdings[idx],symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
-  } else {
-    holdings.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes});
-  }
-  saveZseHoldingsLocal(holdings);
+  const holding = id
+    ? {...(zseHoldings.find(x=>x.id===id)||{}),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes}
+    : {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
+
+  try{
+    const{error}=await sb.from('zse_holdings').upsert(toZseHoldingRow(holding));
+    if(error) throw error;
+    if(id){ const idx=zseHoldings.findIndex(x=>x.id===id); if(idx>=0) zseHoldings[idx]=holding; else zseHoldings.push(holding); }
+    else zseHoldings.push(holding);
+  }catch(e){ zHoldingErr('Save failed: '+e.message); return; }
+
   closeZseHoldingModal();
   // Record buy price as first history point (if new holding with buyDate)
   const ccy = exchange==='VFSE'?'USD':'ZiG';
@@ -5316,17 +5370,19 @@ function saveZseHolding(){
   renderZse();
 }
 
-function deleteZseHolding(id){
+async function deleteZseHolding(id){
   if(!confirm('Remove this holding?')) return;
-  const holdings=loadZseHoldings().filter(x=>x.id!==id);
-  saveZseHoldingsLocal(holdings);
+  try{
+    const{error}=await sb.from('zse_holdings').delete().eq('id',id).eq('user_id',currentUser.id);
+    if(error) throw error;
+    zseHoldings=zseHoldings.filter(x=>x.id!==id);
+  }catch(e){ showToast('Delete failed: '+e.message,'error'); return; }
   renderZse();
 }
 
 // Inline price update — updates ALL lots for this symbol
-function openZsePriceUpdate(symbol, exchange){
-  const allHoldings=loadZseHoldings();
-  const group=allHoldings.filter(x=>x.symbol===symbol&&x.exchange===exchange);
+async function openZsePriceUpdate(symbol, exchange){
+  const group=zseHoldings.filter(x=>x.symbol===symbol&&x.exchange===exchange);
   if(!group.length) return;
   const ref=group.find(h=>h.currentPrice!=null)||group[0];
   const price=prompt('Enter today\'s price for '+symbol+' ('+exchange+'):',ref.currentPrice||'');
@@ -5334,8 +5390,12 @@ function openZsePriceUpdate(symbol, exchange){
   const p=parseFloat(price);
   if(isNaN(p)||p<0){showToast('Invalid price','error');return;}
   const today=new Date().toISOString().slice(0,10);
-  allHoldings.forEach(lot=>{ if(lot.symbol===symbol&&lot.exchange===exchange){ lot.currentPrice=p; lot.priceDate=today; } });
-  saveZseHoldingsLocal(allHoldings);
+  zseHoldings.forEach(lot=>{ if(lot.symbol===symbol&&lot.exchange===exchange){ lot.currentPrice=p; lot.priceDate=today; } });
+  const rows=zseHoldings.filter(lot=>lot.symbol===symbol&&lot.exchange===exchange).map(toZseHoldingRow);
+  try{
+    const{error}=await sb.from('zse_holdings').upsert(rows);
+    if(error) throw error;
+  }catch(e){ showToast('Price save failed: '+e.message,'error'); }
   const ccy=exchange==='VFSE'?'USD':'ZiG';
   recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
   renderZse();
@@ -5344,7 +5404,7 @@ function openZsePriceUpdate(symbol, exchange){
 
 // ── Charges modal ──────────────────────────────────────────────────
 function openZseChargesModal(){
-  const c=loadZseCharges();
+  const c=zseCharges;
   document.getElementById('zc-cgt').value      = c.cgt;
   document.getElementById('zc-admin').value    = c.admin;
   document.getElementById('zc-broker').value   = c.broker;
@@ -5362,7 +5422,7 @@ document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.t
 
 // Total account value in USD — the number goals are measured against
 function zseHoldingsValueUSD(){
-  return loadZseHoldings().reduce((s,h)=>{
+  return zseHoldings.reduce((s,h)=>{
     const price=h.currentPrice??h.buyPrice;
     if(!price||!h.shares) return s;
     const ccy=h.exchange==='ZSE'?'ZiG':'USD';
@@ -5580,7 +5640,7 @@ function renderPrivInvest(){
 
 function openDividendModal(){
   document.getElementById('dv-error').style.display='none';
-  const wht=(loadZseCharges().divtax??10);
+  const wht=(zseCharges.divtax??10);
   document.getElementById('dv-wht-hint').textContent='Enter the net amount you received. (Withholding tax is '+wht+'% — gross × '+( (100-wht)/100 ).toFixed(2)+' = net.)';
   document.getElementById('dv-symbol').value='';
   document.getElementById('dv-amount').value='';
@@ -6123,7 +6183,7 @@ function updateZcTotal(){
 }
 ['zc-cgt','zc-admin','zc-broker','zc-withdraw','zc-divtax'].forEach(id=>document.getElementById(id).addEventListener('input',updateZcTotal));
 
-function saveZseCharges(){
+async function saveZseChargesForm(){
   const c={
     cgt:      parseFloat(document.getElementById('zc-cgt').value)||0,
     admin:    parseFloat(document.getElementById('zc-admin').value)||0,
@@ -6131,7 +6191,7 @@ function saveZseCharges(){
     withdraw: parseFloat(document.getElementById('zc-withdraw').value)||0,
     divtax:   parseFloat(document.getElementById('zc-divtax').value)||0,
   };
-  saveZseChargesLocal(c);
+  await saveZseCharges(c);
   closeZseChargesModal();
   renderZse();
   showToast('Charges saved','success');
@@ -6315,7 +6375,7 @@ function drawZseChart(canvas, h, pts, entries){
 
 function renderZsePriceCharts(){
   const el=document.getElementById('zse-price-charts'); if(!el) return;
-  const holdings=loadZseHoldings();
+  const holdings=zseHoldings;
   if(!holdings.length){ el.innerHTML=''; return; }
 
   // Group by symbol+exchange into unique stocks
@@ -6371,8 +6431,8 @@ function renderZsePriceCharts(){
 }
 
 function renderZse(){
-  const holdings = loadZseHoldings();
-  const charges  = loadZseCharges();
+  const holdings = zseHoldings;
+  const charges  = zseCharges;
   const zigRate  = getZigUsdRate();
 
   // ── Summary ──
@@ -7559,16 +7619,17 @@ async function saveOhlc(){
   finally{btn.disabled=false; btn.textContent='Save';}
 }
 
-function autoUpdateHoldingPrice(symbol, exchange, closePrice, date){
-  // Find the latest candle date for this symbol to confirm this is current
+async function autoUpdateHoldingPrice(symbol, exchange, closePrice, date){
   const allForSym=ohlcData.filter(r=>r.symbol===symbol&&r.exchange===exchange);
   const latestDate=allForSym.reduce((best,r)=>r.date>best?r.date:best,'');
-  if(date<latestDate) return; // older candle, don't override
-  const holdings=loadZseHoldings();
-  const matched=holdings.filter(h=>h.symbol===symbol&&h.exchange===exchange);
+  if(date<latestDate) return;
+  const matched=zseHoldings.filter(h=>h.symbol===symbol&&h.exchange===exchange);
   if(!matched.length) return;
   matched.forEach(h=>{h.currentPrice=closePrice;h.priceDate=date;});
-  saveZseHoldingsLocal(holdings);
+  try{
+    const{error}=await sb.from('zse_holdings').upsert(matched.map(toZseHoldingRow));
+    if(error) throw error;
+  }catch(e){ console.error('[Tsoro] autoUpdateHoldingPrice:',e.message); }
   renderZse();
 }
 

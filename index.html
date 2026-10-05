@@ -5284,6 +5284,9 @@ const ZSE_DEFAULT_CHARGES={cgt:1.00, admin:1.00, broker:0.92, withdraw:1.00, div
 
 // In-memory caches — populated by loadZseHoldings() / loadZseCharges() at startup
 let zseHoldings=[], zseCharges={...ZSE_DEFAULT_CHARGES};
+function zseTableMissing(e){const m=(e&&e.message)||'';return m.includes('zse_holdings')||m.includes('zse_charges')||m.includes('does not exist')||m.includes('schema cache');}
+function zseSaveLocal(){try{localStorage.setItem(zseKey('holdings'),JSON.stringify(zseHoldings));}catch(_){}}
+function zseChargesSaveLocal(){try{localStorage.setItem(zseKey('charges'),JSON.stringify(zseCharges));}catch(_){}}
 
 function fromZseHolding(r){
   return {id:r.id,symbol:r.symbol,exchange:r.exchange,shares:Number(r.shares),buyPrice:Number(r.buy_price),buyDate:r.buy_date||null,currentPrice:r.current_price!=null?Number(r.current_price):null,priceDate:r.price_date||null,notes:r.notes||''};
@@ -5341,7 +5344,7 @@ async function loadZseCharges(){
 async function saveZseCharges(obj){
   zseCharges=obj;
   const{error}=await sb.from('zse_charges').upsert({user_id:currentUser.id,...obj,updated_at:new Date().toISOString()});
-  if(error) console.error('[Tsoro] saveZseCharges:',error.message);
+  if(error){if(zseTableMissing(error)){zseChargesSaveLocal();}else{console.error('[Tsoro] saveZseCharges:',error.message);}}
 }
 
 // ── Modals ─────────────────────────────────────────────────────────
@@ -5395,12 +5398,17 @@ async function saveZseHolding(){
     ? {...(zseHoldings.find(x=>x.id===id)||{}),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes}
     : {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
 
+  let sbOk=false;
   try{
     const{error}=await sb.from('zse_holdings').upsert(toZseHoldingRow(holding));
     if(error) throw error;
-    if(id){ const idx=zseHoldings.findIndex(x=>x.id===id); if(idx>=0) zseHoldings[idx]=holding; else zseHoldings.push(holding); }
-    else zseHoldings.push(holding);
-  }catch(e){ zHoldingErr('Save failed: '+e.message); return; }
+    sbOk=true;
+  }catch(e){
+    if(!zseTableMissing(e)){zHoldingErr('Save failed: '+e.message);return;}
+  }
+  if(id){ const idx=zseHoldings.findIndex(x=>x.id===id); if(idx>=0) zseHoldings[idx]=holding; else zseHoldings.push(holding); }
+  else zseHoldings.push(holding);
+  if(!sbOk) zseSaveLocal();
 
   closeZseHoldingModal();
   // Record buy price as first history point (if new holding with buyDate)
@@ -5417,11 +5425,14 @@ async function saveZseHolding(){
 
 async function deleteZseHolding(id){
   if(!confirm('Remove this holding?')) return;
+  let sbOk=false;
   try{
     const{error}=await sb.from('zse_holdings').delete().eq('id',id).eq('user_id',currentUser.id);
     if(error) throw error;
-    zseHoldings=zseHoldings.filter(x=>x.id!==id);
-  }catch(e){ showToast('Delete failed: '+e.message,'error'); return; }
+    sbOk=true;
+  }catch(e){if(!zseTableMissing(e)){showToast('Delete failed: '+e.message,'error');return;}}
+  zseHoldings=zseHoldings.filter(x=>x.id!==id);
+  if(!sbOk) zseSaveLocal();
   renderZse();
 }
 
@@ -5440,7 +5451,7 @@ async function openZsePriceUpdate(symbol, exchange){
   try{
     const{error}=await sb.from('zse_holdings').upsert(rows);
     if(error) throw error;
-  }catch(e){ showToast('Price save failed: '+e.message,'error'); }
+  }catch(e){ if(zseTableMissing(e)){zseSaveLocal();}else{showToast('Price save failed: '+e.message,'error');} }
   const ccy=exchange==='VFSE'?'USD':'ZiG';
   recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
   renderZse();
@@ -7674,7 +7685,7 @@ async function autoUpdateHoldingPrice(symbol, exchange, closePrice, date){
   try{
     const{error}=await sb.from('zse_holdings').upsert(matched.map(toZseHoldingRow));
     if(error) throw error;
-  }catch(e){ console.error('[Tsoro] autoUpdateHoldingPrice:',e.message); }
+  }catch(e){ if(zseTableMissing(e)){zseSaveLocal();}else{console.error('[Tsoro] autoUpdateHoldingPrice:',e.message);} }
   renderZse();
 }
 

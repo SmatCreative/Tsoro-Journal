@@ -23,7 +23,7 @@ The only trading journal built natively for ZSE and VFEX, handling ZiG-denominat
 - Users check it at the start of a trading session, after placing a trade, and at end of day to review performance.
 - Core workflows: logging a new trade, updating a stock price, reviewing unrealised P&L, checking wallet balance, browsing analytics.
 - Hosted on Vercel as a single static HTML file with a Supabase (Postgres + auth) backend.
-- ZSE/VFEX positions stored in localStorage keyed by user ID; trade history in Supabase.
+- All user data (trades, wallets, ZSE/VFEX holdings, charges) stored in Supabase; no localStorage state.
 - No build tooling — single `index.html` with inline CSS and vanilla JS.
 
 ## Capabilities and Constraints

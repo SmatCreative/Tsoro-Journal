@@ -346,7 +346,14 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
 .mobile-nav-item svg{opacity:.7;transition:opacity .15s}
 .mobile-nav-item.active{color:var(--accent)}
 .mobile-nav-item.active svg{opacity:1}
-
+.mobile-more-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:298}
+.mobile-more-overlay.open{display:block}
+.mobile-more-sheet{position:fixed;bottom:56px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);border-radius:14px 14px 0 0;z-index:299;padding:10px 0 16px;transform:translateY(100%);transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.mobile-more-sheet.open{transform:translateY(0)}
+.mobile-more-handle{width:32px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px}
+.mobile-more-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.mobile-more-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:14px 6px;background:none;cursor:pointer;border:none;font-family:inherit;color:var(--muted2);font-size:11px;font-weight:500;width:100%;transition:color .15s}
+.mobile-more-item.active{color:var(--accent)}
 @media(max-width:768px){
   .sidebar{display:none!important}
   .mobile-nav{display:flex}
@@ -1004,6 +1011,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>Home</span>
     </button>
+    <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 16 12 11 16 14 21 9"/></svg>
+      <span>Portfolio</span>
+    </button>
     <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       <span>Journal</span>
@@ -1012,15 +1023,45 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 10h.01"/><path d="M2 10h20"/></svg>
       <span>Wallet</span>
     </button>
-    <button class="mobile-nav-item" id="mnav-zse-market" onclick="navigate('zse-market')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <span>ZSE</span>
-    </button>
-    <button class="mobile-nav-item" id="mnav-vfex-market" onclick="navigate('vfex-market')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-      <span>VFEX</span>
+    <button class="mobile-nav-item" id="mnav-more" onclick="toggleMoreSheet()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+      <span>More</span>
     </button>
   </nav>
+  <div class="mobile-more-overlay" id="more-overlay" onclick="closeMoreSheet()"></div>
+  <div class="mobile-more-sheet" id="more-sheet">
+    <div class="mobile-more-handle"></div>
+    <div class="mobile-more-grid">
+      <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Analytics</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-zse-market" onclick="navigate('zse-market')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>ZSE Market</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-vfex-market" onclick="navigate('vfex-market')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span>VFEX Market</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-rates" onclick="navigate('rates')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Rates</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-goals" onclick="navigate('goals')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span>Goals</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-loans" onclick="navigate('loans')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+        <span>Loans</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-securities" onclick="navigate('securities')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Securities</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Add Security Modal -->
@@ -2394,7 +2435,11 @@ async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be u
 
 // ── Navigation ─────────────────────────────────────────────────────
 const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
-function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',b.id==='mnav-'+page)); renderPage(page); }
+const MOBILE_MORE_PAGES=new Set(['analytics','securities','rates','goals','loans','zse-market','vfex-market']);
+function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); renderPage(page); }
+function toggleMoreSheet(){const s=document.getElementById('more-sheet');s.classList.contains('open')?closeMoreSheet():openMoreSheet();}
+function openMoreSheet(){document.getElementById('more-sheet').classList.add('open');document.getElementById('more-overlay').classList.add('open');}
+function closeMoreSheet(){document.getElementById('more-sheet').classList.remove('open');document.getElementById('more-overlay').classList.remove('open');}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 

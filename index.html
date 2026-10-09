@@ -6486,6 +6486,29 @@ function renderZsePriceCharts(){
   },60);
 }
 
+const STOCK_LOGOS={
+  'INN.VX':'/logos/inn.png',
+  'FCA.VX':'/logos/fca.png',
+  'SCIL.VX':'/logos/scil.png',
+  'INFR.VX':'/logos/infr.png',
+  'SIM.VX':'/logos/sim.png',
+  'AXIA.VX':'/logos/axia.png',
+  'MCMS.ZW':'/logos/mcms.png',
+  'FMWG.VX':'/logos/fmwg.png',
+};
+function stockLogo(symbol){
+  const src=STOCK_LOGOS[symbol];
+  const initials=symbol.replace(/\.[A-Z]+$/,'').slice(0,3);
+  let hash=0; for(let i=0;i<symbol.length;i++) hash=((hash<<5)-hash)+symbol.charCodeAt(i);
+  const palette=['#00C853','#2196F3','#FF5722','#9C27B0','#FF9800','#00BCD4','#E91E63','#607D8B'];
+  const c=palette[Math.abs(hash)%palette.length];
+  const inner=src
+    ?`<img src="${src}" style="width:100%;height:100%;object-fit:contain" alt="${symbol}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:10px;font-weight:700;color:${c};letter-spacing:-.3px\\'>${initials}</span>'">`
+    :`<span style="font-size:10px;font-weight:700;color:${c};letter-spacing:-.3px">${initials}</span>`;
+  const bg=src?'var(--surface2)':c+'1a';
+  return `<div style="width:36px;height:36px;flex-shrink:0;background:${bg};border-radius:7px;border:1px solid ${src?'var(--border)':c+'33'};display:flex;align-items:center;justify-content:center;overflow:hidden;padding:${src?'4px':'0'}">${inner}</div>`;
+}
+
 function renderZse(){
   const holdings = zseHoldings;
   const charges  = zseCharges;
@@ -6570,11 +6593,16 @@ function renderZse(){
       // Main row
       let html=`<tr>
         <td>
-          <div style="font-weight:600;font-size:14px">${escapeHtml(g.symbol)}</div>
-          <div style="font-size:11px;margin-top:1px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
-            <span class="badge" style="background:${g.exchange==='ZSE'?'rgba(0,200,83,.13)':'rgba(56,189,248,.13)'};color:${g.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-size:10px;font-weight:600">${escapeHtml(g.exchange)}</span>
-            ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">${holdLabel}</span>`:''}
-            ${multi?`<span style="font-size:10px;color:var(--muted)">${g.lots.length} lots</span>`:''}
+          <div style="display:flex;align-items:center;gap:9px">
+            ${stockLogo(g.symbol)}
+            <div>
+              <div style="font-weight:600;font-size:14px">${escapeHtml(g.symbol)}</div>
+              <div style="font-size:11px;margin-top:2px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                <span class="badge" style="background:${g.exchange==='ZSE'?'rgba(0,200,83,.13)':'rgba(56,189,248,.13)'};color:${g.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-size:10px;font-weight:600">${escapeHtml(g.exchange)}</span>
+                ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">${holdLabel}</span>`:''}
+                ${multi?`<span style="font-size:10px;color:var(--muted)">${g.lots.length} lots</span>`:''}
+              </div>
+            </div>
           </div>
         </td>
         <td style="font-weight:600;text-align:right">${fmtNum(totalShares)}</td>

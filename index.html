@@ -457,6 +457,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
       <span>Goals</span>
     </button>
+    <button class="nav-item" data-page="giving">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+      <span>Giving</span>
+    </button>
     <div class="nav-section">Markets</div>
     <button class="nav-item" data-page="zse-market">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18"/><rect x="9" y="8" width="6" height="13"/><rect x="16" y="13" width="6" height="8"/></svg></span>
@@ -865,6 +869,29 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
         <div id="goals-list"></div>
       </div>
 
+      <!-- Giving -->
+      <div class="page" id="page-giving">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Giving</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Track your generosity — tithes, donations, offerings &amp; gifts</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openGivingGoalModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Set Goal
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="openGivingModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Log Giving
+            </button>
+          </div>
+        </div>
+        <div id="giving-summary"></div>
+        <div id="giving-goal-card" style="margin-bottom:20px"></div>
+        <div id="giving-list"></div>
+      </div>
+
       <!-- ZSE Market -->
       <!-- ZSE Market -->
       <div class="page" id="page-zse-market">
@@ -1059,6 +1086,10 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
       <button class="mobile-more-item" id="mmore-securities" onclick="navigate('securities')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span>Securities</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-giving" onclick="navigate('giving')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>Giving</span>
       </button>
     </div>
   </div>
@@ -1878,6 +1909,74 @@ tbody tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- Giving Entry Modal -->
+<div class="overlay" id="giving-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title" id="giving-modal-title">Log Giving</div>
+      <button class="modal-close" onclick="closeGivingModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <input type="hidden" id="gv-edit-id">
+    <div class="form-group">
+      <label class="form-label">Date *</label>
+      <input class="form-input" type="date" id="gv-date">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Amount (USD) *</label>
+        <input class="form-input" type="number" id="gv-amount" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="gv-category">
+          <option value="Tithe">Tithe</option>
+          <option value="Church">Church Offering</option>
+          <option value="Charity">Charity</option>
+          <option value="Family">Family</option>
+          <option value="Community">Community</option>
+          <option value="Gift">Gift</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Recipient / Cause</label>
+      <input class="form-input" type="text" id="gv-recipient" placeholder="e.g. Church, Red Cross, family member">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="gv-notes" rows="2" placeholder="Optional notes"></textarea>
+    </div>
+    <div id="gv-err" style="color:var(--red);font-size:12px;margin-bottom:8px;min-height:16px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeGivingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGiving()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Giving Goal Modal -->
+<div class="overlay" id="giving-goal-modal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Annual Giving Goal</div>
+      <button class="modal-close" onclick="closeGivingGoalModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Annual Target (USD)</label>
+      <input class="form-input" type="number" id="gg-target" min="0" step="1" placeholder="e.g. 5000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="gg-notes" rows="2" placeholder="e.g. 10% of annual income"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeGivingGoalModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGivingGoal()">Save Goal</button>
+    </div>
+  </div>
+</div>
+
 <!-- Loan Modal -->
 <div class="overlay" id="loan-modal">
   <div class="modal" style="max-width:540px">
@@ -2259,6 +2358,24 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── State ──────────────────────────────────────────────────────────
 let trades = [], closingId = null, rates = [], capital = [], wallets = [], investments = [], walletHistory = [], goals = [], dividends = [], privInvest = [], loans = [], loanPayments = [], zsePriceHistory = [];
+let givingEntries = [], givingGoal = {annual_target:0,notes:''};
+function givingKey(k){return `tj_giving_${currentUser.id}_${k}`;}
+function givingTableMissing(e){const m=(e&&e.message)||'';return m.includes('giving')||m.includes('does not exist')||m.includes('schema cache');}
+async function loadGiving(){
+  try{
+    const[{data:ed,error:ee},{data:gd,error:ge}]=await Promise.all([
+      sb.from('giving_entries').select('*').order('date',{ascending:false}),
+      sb.from('giving_goal').select('*').eq('user_id',currentUser.id).maybeSingle()
+    ]);
+    if(ee) throw ee;
+    givingEntries=(ed||[]).map(r=>({id:r.id,date:r.date,amount:Number(r.amount_usd||r.amount||0),recipient:r.recipient||'',category:r.category||'Other',notes:r.notes||''}));
+    givingGoal=gd?{annual_target:Number(gd.annual_target)||0,notes:gd.notes||''}:{annual_target:0,notes:''};
+  }catch(e){
+    console.error('[Tsoro] giving:',e.message);
+    try{givingEntries=JSON.parse(localStorage.getItem(givingKey('entries'))||'[]');}catch(_){givingEntries=[];}
+    try{const g=JSON.parse(localStorage.getItem(givingKey('goal'))||'{}');givingGoal={annual_target:Number(g.annual_target)||0,notes:g.notes||''};}catch(_){givingGoal={annual_target:0,notes:''};}
+  }
+}
 let currentUser = null;
 
 function fromDb(r){ return {id:r.id,type:r.type,symbol:r.symbol,market:r.market,exchange:r.exchange||'',currency:r.currency||'USD',direction:r.direction,qty:Number(r.qty),entry:Number(r.entry),entryDate:r.entry_date,exit:r.exit!=null?Number(r.exit):null,exitDate:r.exit_date,sl:r.sl!=null?Number(r.sl):null,tp:r.tp!=null?Number(r.tp):null,fee:Number(r.fee)||0,strategy:r.strategy||'',notes:r.notes||'',status:r.status,imageUrl:r.image_url||null,createdAt:r.created_at}; }
@@ -2374,7 +2491,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadOhlcData(),loadZseHoldings(),loadZseCharges()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadOhlcData(),loadZseHoldings(),loadZseCharges(),loadGiving()]);
     await seedDefaultSecurities();
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
@@ -2434,8 +2551,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
-const MOBILE_MORE_PAGES=new Set(['analytics','securities','rates','goals','loans','zse-market','vfex-market']);
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts',giving:'Giving','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
+const MOBILE_MORE_PAGES=new Set(['analytics','securities','rates','goals','loans','giving','zse-market','vfex-market']);
 function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); renderPage(page); }
 function toggleMoreSheet(){const s=document.getElementById('more-sheet');s.classList.contains('open')?closeMoreSheet():openMoreSheet();}
 function openMoreSheet(){document.getElementById('more-sheet').classList.add('open');document.getElementById('more-overlay').classList.add('open');}
@@ -3226,7 +3343,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='zse-market')renderZseMarket(); else if(page==='vfex-market')renderVfexMarket(); }
+function renderPage(page){ populateSecFilters(); populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='securities')renderSecurities(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='giving')renderGiving(); else if(page==='zse-market')renderZseMarket(); else if(page==='vfex-market')renderVfexMarket(); }
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -6484,6 +6601,177 @@ function renderZsePriceCharts(){
       drawZseChart(canvas,synthH,pts.length?pts:fallback,entryMap[s.symbol]||[]);
     });
   },60);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GIVING
+// ═══════════════════════════════════════════════════════════════════
+
+function renderGiving(){
+  const yr=new Date().getFullYear();
+  const thisYear=givingEntries.filter(e=>e.date&&e.date.startsWith(''+yr));
+  const totalThisYear=thisYear.reduce((s,e)=>s+e.amount,0);
+  const totalAllTime=givingEntries.reduce((s,e)=>s+e.amount,0);
+  const goal=givingGoal.annual_target||0;
+  const pct=goal>0?Math.min(100,totalThisYear/goal*100):0;
+
+  const sumEl=document.getElementById('giving-summary');
+  if(sumEl) sumEl.innerHTML=`<div class="wallet-summary-grid" style="margin-bottom:20px">
+    <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
+      <div class="wallet-sum-lbl">Given This Year</div>
+      <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtMoney(totalThisYear)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${thisYear.length} gift${thisYear.length!==1?'s':''} in ${yr}</div>
+    </div>
+    <div class="wallet-sum-card" style="border-top:2px solid ${goal?'var(--green)':'var(--border)'}">
+      <div class="wallet-sum-lbl">Annual Goal</div>
+      <div class="wallet-sum-val" style="color:var(--green)">${goal?'$'+fmtMoney(goal):'Not set'}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${goal?pct.toFixed(1)+'% complete':'Click Set Goal to add a target'}</div>
+    </div>
+    <div class="wallet-sum-card" style="border-top:2px solid var(--border)">
+      <div class="wallet-sum-lbl">All-Time Total</div>
+      <div class="wallet-sum-val">$${fmtMoney(totalAllTime)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">${givingEntries.length} record${givingEntries.length!==1?'s':''}</div>
+    </div>
+  </div>`;
+
+  const goalEl=document.getElementById('giving-goal-card');
+  if(goalEl){
+    if(goal>0){
+      const remaining=Math.max(0,goal-totalThisYear);
+      const barColor=pct>=100?'var(--green)':pct>=75?'var(--accent)':'var(--blue)';
+      goalEl.innerHTML=`<div class="card" style="padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;letter-spacing:-.2px">${yr} Giving Goal</div>
+          <div style="font-size:12px;color:var(--muted)">${pct>=100?'Goal reached ✓':'$'+fmtMoney(remaining)+' remaining'}</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">
+          <div style="background:${barColor};height:100%;width:${pct.toFixed(1)}%;border-radius:4px;transition:width .4s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--muted)">
+          <span>$${fmtMoney(totalThisYear)} given</span>
+          <span>${pct.toFixed(1)}% of $${fmtMoney(goal)}</span>
+        </div>
+        ${givingGoal.notes?`<div style="font-size:12px;color:var(--muted2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">${escapeHtml(givingGoal.notes)}</div>`:''}
+      </div>`;
+    } else {
+      goalEl.innerHTML='';
+    }
+  }
+
+  const listEl=document.getElementById('giving-list');
+  if(!listEl) return;
+  if(!givingEntries.length){
+    listEl.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></div><h3>No giving recorded yet</h3><p>Click <strong>Log Giving</strong> to start tracking your tithes, donations, and gifts.</p></div>`;
+    return;
+  }
+
+  const CAT_COLORS={'Tithe':'var(--accent)','Church':'var(--blue)','Charity':'var(--green)','Family':'var(--yellow)','Community':'var(--blue)','Gift':'#e879f9','Other':'var(--muted2)'};
+  const rows=givingEntries.map(e=>`<tr>
+    <td style="color:var(--muted2);font-size:13px;white-space:nowrap">${e.date}</td>
+    <td style="font-weight:500">${e.recipient?escapeHtml(e.recipient):'<span style="color:var(--muted)">—</span>'}</td>
+    <td><span class="badge" style="background:${(CAT_COLORS[e.category]||'var(--muted2)')+'22'};color:${CAT_COLORS[e.category]||'var(--muted2)'};font-size:10px;font-weight:600">${escapeHtml(e.category)}</span></td>
+    <td style="font-weight:700;text-align:right;color:var(--accent2);font-variant-numeric:tabular-nums">$${fmtMoney(e.amount)}</td>
+    <td style="color:var(--muted);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.notes?escapeHtml(e.notes):'—'}</td>
+    <td><div style="display:flex;gap:4px;justify-content:flex-end">
+      <button class="btn btn-sm btn-ghost" onclick="openGivingModal('${e.id}')">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteGiving('${e.id}')">${IC.trash}</button>
+    </div></td>
+  </tr>`).join('');
+
+  listEl.innerHTML=`<div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><table>
+    <thead><tr>
+      <th>Date</th><th>Recipient / Cause</th><th>Category</th>
+      <th style="text-align:right">Amount</th><th>Notes</th><th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div></div>`;
+}
+
+function openGivingModal(id=null){
+  document.getElementById('gv-edit-id').value=id||'';
+  document.getElementById('giving-modal-title').textContent=id?'Edit Giving':'Log Giving';
+  if(id){
+    const e=givingEntries.find(x=>x.id===id); if(!e) return;
+    document.getElementById('gv-date').value=e.date;
+    document.getElementById('gv-amount').value=e.amount;
+    document.getElementById('gv-recipient').value=e.recipient;
+    document.getElementById('gv-category').value=e.category;
+    document.getElementById('gv-notes').value=e.notes;
+  } else {
+    document.getElementById('gv-date').value=new Date().toISOString().slice(0,10);
+    document.getElementById('gv-amount').value='';
+    document.getElementById('gv-recipient').value='';
+    document.getElementById('gv-category').value='Tithe';
+    document.getElementById('gv-notes').value='';
+  }
+  document.getElementById('gv-err').textContent='';
+  document.getElementById('giving-modal').classList.add('open');
+}
+function closeGivingModal(){document.getElementById('giving-modal').classList.remove('open');}
+document.getElementById('giving-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeGivingModal();});
+
+async function saveGiving(){
+  const id=document.getElementById('gv-edit-id').value;
+  const date=document.getElementById('gv-date').value;
+  const amount=parseFloat(document.getElementById('gv-amount').value);
+  const recipient=document.getElementById('gv-recipient').value.trim();
+  const category=document.getElementById('gv-category').value;
+  const notes=document.getElementById('gv-notes').value.trim();
+  const errEl=document.getElementById('gv-err');
+  if(!date){errEl.textContent='Please enter a date.';return;}
+  if(isNaN(amount)||amount<=0){errEl.textContent='Please enter a valid amount.';return;}
+  const entry={id:id||(Date.now().toString(36)+Math.random().toString(36).slice(2,5)),date,amount,recipient,category,notes};
+  let sbOk=false;
+  try{
+    const{error}=await sb.from('giving_entries').upsert({id:entry.id,user_id:currentUser.id,date:entry.date,amount_usd:entry.amount,recipient:entry.recipient,category:entry.category,notes:entry.notes});
+    if(error) throw error;
+    sbOk=true;
+  }catch(e){if(!givingTableMissing(e)){errEl.textContent='Save failed: '+e.message;return;}}
+  if(id){const idx=givingEntries.findIndex(x=>x.id===id);if(idx>=0)givingEntries[idx]=entry;else givingEntries.unshift(entry);}
+  else givingEntries.unshift(entry);
+  givingEntries.sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sbOk) try{localStorage.setItem(givingKey('entries'),JSON.stringify(givingEntries));}catch(_){}
+  closeGivingModal();
+  renderGiving();
+  showToast((id?'Updated':'Logged')+' $'+fmtMoney(amount),'success');
+}
+
+async function deleteGiving(id){
+  if(!confirm('Delete this giving record?')) return;
+  let sbOk=false;
+  try{
+    const{error}=await sb.from('giving_entries').delete().eq('id',id).eq('user_id',currentUser.id);
+    if(error) throw error;
+    sbOk=true;
+  }catch(e){if(!givingTableMissing(e)){showToast('Delete failed: '+e.message,'error');return;}}
+  givingEntries=givingEntries.filter(x=>x.id!==id);
+  if(!sbOk) try{localStorage.setItem(givingKey('entries'),JSON.stringify(givingEntries));}catch(_){}
+  renderGiving();
+  showToast('Record deleted','success');
+}
+
+function openGivingGoalModal(){
+  document.getElementById('gg-target').value=givingGoal.annual_target||'';
+  document.getElementById('gg-notes').value=givingGoal.notes||'';
+  document.getElementById('giving-goal-modal').classList.add('open');
+}
+function closeGivingGoalModal(){document.getElementById('giving-goal-modal').classList.remove('open');}
+document.getElementById('giving-goal-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeGivingGoalModal();});
+
+async function saveGivingGoal(){
+  const target=parseFloat(document.getElementById('gg-target').value)||0;
+  const notes=document.getElementById('gg-notes').value.trim();
+  givingGoal={annual_target:target,notes};
+  let sbOk=false;
+  try{
+    const{error}=await sb.from('giving_goal').upsert({user_id:currentUser.id,annual_target:target,notes,updated_at:new Date().toISOString()});
+    if(error) throw error;
+    sbOk=true;
+  }catch(e){if(!givingTableMissing(e)) console.error('[Tsoro] giving goal:',e.message);}
+  if(!sbOk) try{localStorage.setItem(givingKey('goal'),JSON.stringify(givingGoal));}catch(_){}
+  closeGivingGoalModal();
+  renderGiving();
+  showToast('Giving goal saved','success');
 }
 
 const STOCK_LOGOS={

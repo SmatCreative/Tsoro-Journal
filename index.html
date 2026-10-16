@@ -78,7 +78,7 @@ html[data-theme="light"] canvas{filter:none}
 /* ── Layout ── */
 .app{display:none;height:100vh;overflow:hidden}
 .app.show{display:flex}
-.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar{width:228px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:transform .25s cubic-bezier(.4,0,.2,1);will-change:transform}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0;background:var(--surface);position:relative}
 .topbar-mobile-brand{display:none;align-items:center;gap:8px;flex-shrink:0}
@@ -372,25 +372,38 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
 .mobile-more-grid{display:grid;grid-template-columns:repeat(3,1fr)}
 .mobile-more-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:14px 6px;background:none;cursor:pointer;border:none;font-family:inherit;color:var(--muted2);font-size:11px;font-weight:500;width:100%;transition:color .15s}
 .mobile-more-item.active{color:var(--accent)}
+/* ── Mobile drawer trigger ── */
+.topbar-hamburger{display:none;align-items:center;justify-content:center;width:36px;height:36px;border-radius:var(--r-sm);background:transparent;border:1px solid var(--border);cursor:pointer;color:var(--muted2);flex-shrink:0;transition:all .12s}
+.topbar-hamburger:hover{color:var(--text);background:var(--surface2);border-color:var(--border-s)}
+.mobile-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:249;-webkit-tap-highlight-color:transparent}
+.mobile-sidebar-overlay.show{display:block}
+
 @media(max-width:768px){
-  .sidebar{display:none!important}
-  .mobile-nav{display:flex}
-  .content{padding:16px;padding-bottom:72px}
-  .grid-2{grid-template-columns:1fr}
-  .stats-row{grid-template-columns:1fr 1fr}
+  /* Sidebar becomes a fixed drawer */
+  .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:250;transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,.55)}
+  /* Hide bottom nav entirely */
+  .mobile-nav{display:none!important}
+  .topbar-hamburger{display:flex}
+  .topbar-mobile-brand{display:none}
+  .topbar-title{font-size:15px}
   .topbar{padding:0 12px;gap:8px}
-  .topbar-title{font-size:15px;display:none}
-  .topbar-mobile-brand{display:flex}
   #import-btn{display:none}
   .btn-logout{display:none}
-  /* Market pages fill full width on mobile, leave room for bottom nav */
-  #page-zse-market,#page-vfex-market{left:0!important;bottom:56px!important}
+  .content{padding:16px;padding-bottom:24px}
+  .grid-2{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  /* Market pages fill full width with no bottom bar offset */
+  #page-zse-market,#page-vfex-market{left:0!important;bottom:0!important}
   /* Stack market list above chart on mobile */
   .mkt-body{flex-direction:column}
   .mkt-list{width:100%;height:180px;border-right:none;border-bottom:1px solid var(--border);flex-direction:column}
   .mkt-list-inner{flex:1;height:0;overflow-y:auto}
   .mkt-canvas-wrap{min-height:200px}
   .mkt-table-wrap{height:120px}
+  /* KPI strip scrolls horizontally on narrow screens */
+  .kpi-strip{overflow-x:auto;scroll-snap-type:x mandatory}
+  .kpi-item{min-width:120px;scroll-snap-align:start}
 }
 </style>
 </head>
@@ -504,7 +517,10 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
 
   <div class="main-area">
     <div class="topbar">
-      <div class="topbar-mobile-brand">
+      <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleMobileSidebar()" aria-label="Menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-mobile-brand" style="display:none">
         <img src="/tsoro.png" alt="" style="width:24px;height:24px;object-fit:cover;border-radius:6px;flex-shrink:0">
         <span style="font-size:15px;font-weight:700;letter-spacing:-.3px">Tsoro</span>
       </div>
@@ -1073,6 +1089,8 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
       <span>More</span>
     </button>
   </nav>
+  <!-- Mobile sidebar drawer backdrop -->
+  <div class="mobile-sidebar-overlay" id="mobile-sidebar-overlay" onclick="closeMobileSidebar()"></div>
   <div class="mobile-more-overlay" id="more-overlay" onclick="closeMoreSheet()"></div>
   <div class="mobile-more-sheet" id="more-sheet">
     <div class="mobile-more-handle"></div>
@@ -2659,7 +2677,20 @@ async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be u
 // ── Navigation ─────────────────────────────────────────────────────
 const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',securities:'Securities Analysis',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts',giving:'Giving','zse-market':'ZSE Market','vfex-market':'VFEX Market'};
 const MOBILE_MORE_PAGES=new Set(['analytics','securities','rates','goals','loans','giving','zse-market','vfex-market']);
-function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); renderPage(page); }
+function toggleMobileSidebar(){
+  const sb=document.querySelector('.sidebar');
+  const ov=document.getElementById('mobile-sidebar-overlay');
+  const open=sb.classList.toggle('mobile-open');
+  if(ov) ov.classList.toggle('show',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+function closeMobileSidebar(){
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  const ov=document.getElementById('mobile-sidebar-overlay');
+  if(ov) ov.classList.remove('show');
+  document.body.style.overflow='';
+}
+function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; const c=document.querySelector('.content'); if(c){ c.scrollTop=0; if(page==='zse-market'||page==='vfex-market') c.classList.add('mkt-mode'); else c.classList.remove('mkt-mode'); } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); if(window.innerWidth<=768) closeMobileSidebar(); renderPage(page); }
 function toggleMoreSheet(){const s=document.getElementById('more-sheet');s.classList.contains('open')?closeMoreSheet():openMoreSheet();}
 function openMoreSheet(){document.getElementById('more-sheet').classList.add('open');document.getElementById('more-overlay').classList.add('open');}
 function closeMoreSheet(){document.getElementById('more-sheet').classList.remove('open');document.getElementById('more-overlay').classList.remove('open');}

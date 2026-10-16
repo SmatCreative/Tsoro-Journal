@@ -4061,7 +4061,8 @@ function drawWalletPerfChart(series, ccy){
   const lineCol=themeVal('#00C853','#00A843');
   // Gradient fill under line
   const grd=ctx.createLinearGradient(0,padT,0,H-padB);
-  grd.addColorStop(0,'rgba(0,200,83,.18)');
+  grd.addColorStop(0,'rgba(0,200,83,.30)');
+  grd.addColorStop(0.6,'rgba(0,200,83,.08)');
   grd.addColorStop(1,'rgba(0,200,83,0)');
   const xyW=series.map(p=>({x:sx(p.t.getTime()),y:sy(p.v)}));
   ctx.beginPath(); smoothPath(ctx,xyW);
@@ -4201,20 +4202,24 @@ function drawZsePerfChart(series,costUSD,currentUSD){
 
   // Area fill + line
   const grd=ctx.createLinearGradient(0,padT,0,H-padB);
-  grd.addColorStop(0,isUp?'rgba(16,185,129,.22)':'rgba(239,68,68,.22)');
-  grd.addColorStop(1,isUp?'rgba(16,185,129,.02)':'rgba(239,68,68,.02)');
+  grd.addColorStop(0,isUp?'rgba(0,200,83,.30)':'rgba(239,68,68,.30)');
+  grd.addColorStop(0.55,isUp?'rgba(0,200,83,.08)':'rgba(239,68,68,.08)');
+  grd.addColorStop(1,isUp?'rgba(0,200,83,0)':'rgba(239,68,68,0)');
   const pts=series.map((p,i)=>({x:sx(i),y:sy(p.val)}));
   ctx.beginPath(); smoothPath(ctx,pts);
   ctx.lineTo(sx(series.length-1),H-padB); ctx.lineTo(sx(0),H-padB); ctx.closePath();
   ctx.fillStyle=grd; ctx.fill();
 
   ctx.beginPath(); smoothPath(ctx,pts);
-  ctx.strokeStyle=isUp?'#10b981':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+  ctx.strokeStyle=isUp?'#00C853':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
 
   // End dot + label
   const lp=pts[pts.length-1];
-  ctx.beginPath(); ctx.arc(lp.x,lp.y,4,0,Math.PI*2); ctx.fillStyle=isUp?'#10b981':'#ef4444'; ctx.fill();
-  ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=isUp?'#10b981':'#ef4444';
+  const ldCol=isUp?'#00C853':'#ef4444';
+  ctx.beginPath(); ctx.arc(lp.x,lp.y,10,0,Math.PI*2); ctx.fillStyle=isUp?'rgba(0,200,83,.12)':'rgba(239,68,68,.12)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(lp.x,lp.y,5,0,Math.PI*2); ctx.fillStyle=ldCol; ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=ldCol;
   ctx.fillText('$'+fmtMoney(vals[vals.length-1]),W-padR,Math.max(lp.y-8,12));
 
   // X date labels
@@ -4401,15 +4406,15 @@ function _renderWallet(){
           +'</div>'
           :'')
         +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+escapeHtml(w.notes)+'</div>':'')
-        +'<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">'+(isBroker?'Recent Trades':'Recent Transactions')+'</div>'
+        +'<div style="font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;margin-top:2px">'+(isBroker?'Recent Trades':'Recent Transactions')+'</div>'
         +tradeRows
         +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
         +'<div class="wallet-actions" style="flex-wrap:wrap;gap:6px">'
-          +'<button class="btn btn-sm" style="background:rgba(16,185,129,.12);color:#10b981;border:1px solid rgba(16,185,129,.3);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'in\')">⬇ Deposit</button>'
-          +'<button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);flex:1;min-width:80px" onclick="openFlowModal(\''+w.id+'\',\'out\')">⬆ Withdraw</button>'
-          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:80px" onclick="openTransferFrom(\''+w.id+'\')">⇄ Transfer</button>'
-          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:80px" onclick="openWalletTxModal(\''+w.id+'\')">📋 History</button>'
-          +'<button class="btn btn-sm btn-ghost" onclick="openWalletModal(\''+w.id+'\')">Edit</button>'
+          +'<button class="btn btn-sm" style="background:rgba(0,200,83,.10);color:var(--accent);border:1px solid rgba(0,200,83,.22);flex:1;min-width:76px;gap:5px" onclick="openFlowModal(\''+w.id+'\',\'in\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Deposit</button>'
+          +'<button class="btn btn-sm" style="background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.22);flex:1;min-width:76px;gap:5px" onclick="openFlowModal(\''+w.id+'\',\'out\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Withdraw</button>'
+          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:76px;gap:5px" onclick="openTransferFrom(\''+w.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14M5 8l4-4M5 8l4 4M19 16H5M19 16l-4-4M19 16l-4 4"/></svg> Transfer</button>'
+          +'<button class="btn btn-sm btn-ghost" style="flex:1;min-width:76px;gap:5px" onclick="openWalletTxModal(\''+w.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg> History</button>'
+          +'<button class="btn btn-sm btn-ghost" style="gap:5px" onclick="openWalletModal(\''+w.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>'
           +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+'</button>'
         +'</div>'
         +'</div>';
@@ -6526,11 +6531,14 @@ function drawZseChart(canvas, h, pts, entries){
     const yOf = v => PAD.t + cH - ((v-lo)/(hi-lo))*cH;
     const mapped = pts.map((p,i) => ({x:xOf(i), y:yOf(p.price), ...p}));
 
-    // Background
-    const bgG = ctx.createLinearGradient(0,0,0,H);
-    if(isDark){ bgG.addColorStop(0,'#0d1f3c'); bgG.addColorStop(1,'#050d1f'); }
-    else       { bgG.addColorStop(0,'#f0f5ff'); bgG.addColorStop(1,'#e8eeff'); }
-    ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
+    // Background — dark mode only; light mode inherits the card surface
+    if(isDark){
+      const bgG = ctx.createLinearGradient(0,0,0,H);
+      bgG.addColorStop(0,'#0d1f3c'); bgG.addColorStop(1,'#050d1f');
+      ctx.fillStyle = bgG; ctx.fillRect(0,0,W,H);
+    } else {
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
+    }
 
     // Grid
     for(let i=0;i<=4;i++){
@@ -6545,8 +6553,9 @@ function drawZseChart(canvas, h, pts, entries){
     if(pts.length>=2){
       // Area fill
       const aG = ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
-      aG.addColorStop(0, isUp?'rgba(16,185,129,0.40)':'rgba(239,68,68,0.40)');
-      aG.addColorStop(1, isUp?'rgba(16,185,129,0.03)':'rgba(239,68,68,0.03)');
+      aG.addColorStop(0, isUp?'rgba(0,200,83,0.36)':'rgba(239,68,68,0.36)');
+      aG.addColorStop(0.55, isUp?'rgba(0,200,83,0.10)':'rgba(239,68,68,0.10)');
+      aG.addColorStop(1, isUp?'rgba(0,200,83,0.01)':'rgba(239,68,68,0.01)');
       ctx.beginPath();
       ctx.moveTo(mapped[0].x, PAD.t+cH);
       ctx.lineTo(mapped[0].x, mapped[0].y);
@@ -6559,31 +6568,25 @@ function drawZseChart(canvas, h, pts, entries){
       ctx.closePath(); ctx.fillStyle=aG; ctx.fill();
 
       // Line
-      const lG = ctx.createLinearGradient(PAD.l,0,PAD.l+cW,0);
-      lG.addColorStop(0, isUp?'#10b981':'#ef4444');
-      lG.addColorStop(1, isUp?'#34d399':'#f87171');
       ctx.beginPath(); ctx.moveTo(mapped[0].x,mapped[0].y);
       for(let i=1;i<mapped.length-1;i++){
         const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
         ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
       }
       ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.strokeStyle=lG; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+      ctx.strokeStyle=isUp?'#00C853':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
     }
 
-    // Dots
-    mapped.forEach((p,i)=>{
-      const isEdge=(i===0||i===mapped.length-1), r=isEdge?5:3.5;
-      if(i===mapped.length-1){
-        ctx.beginPath(); ctx.arc(p.x,p.y,11,0,Math.PI*2);
-        ctx.fillStyle=isUp?'rgba(52,211,153,0.18)':'rgba(248,113,113,0.18)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2);
-        ctx.fillStyle=isUp?'rgba(52,211,153,0.28)':'rgba(248,113,113,0.28)'; ctx.fill();
-      }
-      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
-      ctx.fillStyle=isEdge?(isUp?'#34d399':'#f87171'):(isDark?'rgba(255,255,255,0.55)':'rgba(16,185,129,0.7)');
-      ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
-    });
+    // Endpoint glow only — no per-point dots
+    if(mapped.length>=1){
+      const lpt=mapped[mapped.length-1];
+      const dotCol=isUp?'#00C853':'#ef4444';
+      const glowCol=isUp?'rgba(0,200,83,':'rgba(239,68,68,';
+      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,13,0,Math.PI*2); ctx.fillStyle=glowCol+'0.10)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,8,0,Math.PI*2);  ctx.fillStyle=glowCol+'0.20)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,4,0,Math.PI*2);  ctx.fillStyle=dotCol; ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=1.5; ctx.stroke();
+    }
 
     // Entry arrows — one per lot buy date
     if(entries&&entries.length>1){
@@ -6624,7 +6627,7 @@ function drawZseChart(canvas, h, pts, entries){
     ctx.fillText(h.exchange,19,38);
     if(pctChg!==null){
       ctx.font='11px system-ui';
-      ctx.fillStyle=pctChg>=0?'#34d399':'#f87171';
+      ctx.fillStyle=pctChg>=0?'#00C853':'#ef4444';
       ctx.fillText((pctChg>=0?'\u25b2 +':'\u25bc ')+Math.abs(pctChg).toFixed(2)+'%',W-14,38);
     }
     // Hold duration

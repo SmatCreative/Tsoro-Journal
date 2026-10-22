@@ -14,6 +14,7 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/motion@14.6.0/dist/motion.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 :root{
@@ -133,8 +134,8 @@ body.zen-mode .zen-value:hover{filter:none}
 .anim-num{animation:numPop .52s cubic-bezier(.22,1,.36,1) both}
 .anim-card{animation:cardEnter .45s cubic-bezier(.22,1,.36,1) both}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:22px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;transition:background .12s,border-color .12s,transform .18s,box-shadow .18s}
-.stat-card:hover{background:var(--surface2);border-color:var(--border-s);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.22)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;transition:background .12s,border-color .12s,box-shadow .18s}
+.stat-card:hover{background:var(--surface2);border-color:var(--border-s);box-shadow:0 6px 24px rgba(0,0,0,.22)}
 .stat-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:10px}
 .stat-value{font-size:28px;font-weight:700;line-height:1;letter-spacing:-.035em}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--blue)}
@@ -147,7 +148,7 @@ body.zen-mode .zen-value:hover{filter:none}
 .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-value{font-size:22px;font-weight:700;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s,transform .2s,box-shadow .2s;box-shadow:var(--card-glow)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s,box-shadow .2s;box-shadow:var(--card-glow)}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .card-title{font-size:13px;font-weight:700;letter-spacing:-.15px;color:var(--text)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -263,8 +264,8 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 
 /* ── Wallet ── */
 .wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s,background .15s,border-color .15s}
-.wallet-sum-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25);border-color:var(--border-s)}
+.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:box-shadow .18s,background .15s,border-color .15s}
+.wallet-sum-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.25);border-color:var(--border-s)}
 .wallet-sum-card:hover{background:var(--surface2)}
 .wallet-sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:8px}
 .wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
@@ -2553,7 +2554,18 @@ async function importCSV(){ const file=document.getElementById('csv-file').files
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
 function fmtNum(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6}); }
 function fmtMoney(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function countUp(el,target,dur,fmt){if(!el||target==null||isNaN(target))return;dur=dur||780;const neg=target<0,abs=Math.abs(target);const f=fmt||(v=>'$'+fmtMoney(neg?-v:v));const t0=performance.now();(function run(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=f(abs*e);if(p<1)requestAnimationFrame(run);else el.textContent=f(abs);})(t0);}
+function countUp(el,target,dur,fmt){
+  if(!el||target==null||isNaN(target))return;
+  dur=dur||780;
+  const neg=target<0,abs=Math.abs(target);
+  const f=fmt||(v=>'$'+fmtMoney(neg?-v:v));
+  if(typeof Motion!=='undefined'){
+    Motion.animate(0,abs,{duration:dur/1000,ease:'easeOut',onUpdate:v=>{el.textContent=f(v);}});
+  } else {
+    const t0=performance.now();
+    (function run(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=f(abs*e);if(p<1)requestAnimationFrame(run);else el.textContent=f(abs);})(t0);
+  }
+}
 function animateCards(container,delay){(container||document).querySelectorAll('.wallet-sum-card,.card,.stat-card').forEach((c,i)=>{c.style.animationDelay=((delay||0)+i*65)+'ms';c.classList.add('anim-card');});}
 function fmtDateShort(d){ if(!d)return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); }
 function pnlClass(n){ return n==null?'pnl-zero':n>0?'pnl-pos':'pnl-neg'; }
@@ -3403,7 +3415,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='giving')renderGiving(); }
+function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='giving')renderGiving(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -7149,6 +7161,26 @@ function viewImage(url){
   }
   overlay.querySelector('img').src=url;
 }
+
+function applyMotionInteractions(root){
+  if(typeof Motion==='undefined') return;
+  const {animate:mA,hover:mH,press:mP}=Motion;
+  (root||document).querySelectorAll('.card,.stat-card,.wallet-sum-card,.wallet-card').forEach(el=>{
+    if(el.dataset.mh) return; el.dataset.mh='1';
+    mH(el,()=>{
+      mA(el,{y:-3},{type:'spring',visualDuration:0.25,bounce:0});
+      return ()=>mA(el,{y:0},{type:'spring',visualDuration:0.2,bounce:0});
+    });
+  });
+  (root||document).querySelectorAll('.btn-primary,.auth-btn').forEach(el=>{
+    if(el.dataset.mp) return; el.dataset.mp='1';
+    mP(el,()=>{
+      mA(el,{scale:0.97},{type:'spring',stiffness:600,damping:45});
+      return ()=>mA(el,{scale:1},{type:'spring',stiffness:600,damping:45});
+    });
+  });
+}
+setTimeout(()=>applyMotionInteractions(),400);
 </script>
 <script>
 if('serviceWorker' in navigator){

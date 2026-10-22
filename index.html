@@ -83,6 +83,9 @@ html[data-theme="light"] canvas{filter:none}
 .topbar{height:56px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0;background:var(--surface);position:relative}
 .topbar-mobile-brand{display:none;align-items:center;gap:8px;flex-shrink:0}
 .content{flex:1;overflow-y:auto;padding:28px;-webkit-overflow-scrolling:touch}
+/* Zen Mode — blur all monetary values for screenshots */
+body.zen-mode .zen-value{filter:blur(6px);transition:filter .2s}
+body.zen-mode .zen-value:hover{filter:none}
 /* ── Sidebar ── */
 .sidebar{width:228px}
 .sidebar-brand{padding:18px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
@@ -487,6 +490,7 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
       <!-- Dashboard -->
       <div class="page active" id="page-dashboard">
         <div id="db-hero" style="margin-bottom:18px"></div>
+        <div id="db-period" style="margin-bottom:18px"></div>
         <div id="db-tithe" style="margin-bottom:18px"></div>
         <div class="stats-row" id="db-stats"></div>
         <div id="db-winbar" style="margin-bottom:16px"></div>
@@ -2665,7 +2669,7 @@ function renderDashboard(){
   document.getElementById('db-hero').innerHTML=`
     <div style="padding:22px 26px 20px;border-bottom:1px solid var(--border);margin-bottom:4px">
       <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px">Total Portfolio</div>
-      <div style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
+      <div class="zen-value" style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px">
         ${todayHas
           ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${todayPnL>=0?'var(--green)':'var(--red)'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${todayArrow}</svg><span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:${todayPnL>=0?'var(--green)':'var(--red)'}">${todayPnL>=0?'+':''}${fmtPnL(todayPnL)}</span><span style="font-size:12px;color:var(--muted)">today</span>`
@@ -2675,12 +2679,32 @@ function renderDashboard(){
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${bkHtml}</div>
     </div>`;
+  // Period P&L strip (Ghostfolio pattern)
+  const dbNow=new Date(); const dbNowStr=dbNow.toISOString().slice(0,10);
+  function dbPnlSince(ds){ return closed.filter(t=>t.entryDate>=ds).reduce((s,t)=>s+(calcPnL(t)||0),0); }
+  const dbDow=dbNow.getDay(); const dbMon=new Date(dbNow); dbMon.setDate(dbNow.getDate()-(dbDow===0?6:dbDow-1));
+  const dbWtd=dbPnlSince(dbMon.toISOString().slice(0,10));
+  const dbMtd=dbPnlSince(dbNowStr.slice(0,7)+'-01');
+  const dbYtd=dbPnlSince(dbNowStr.slice(0,4)+'-01-01');
+  document.getElementById('db-period').innerHTML=`<div class="card" style="padding:14px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Realised P&L</div>
+      <button onclick="document.body.classList.toggle('zen-mode')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;font-family:inherit" title="Zen Mode — blur all values">Zen</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>(t.entryDate||'').slice(0,10)===d).reduce((s,t)=>s+(calcPnL(t)||0),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
+        .map(([l,v])=>`<div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:8px">
+          <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${l}</div>
+          <div class="zen-value" style="font-size:16px;font-weight:700;color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'+':''}$${fmtMoney(v)}</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
   document.getElementById('db-stats').innerHTML=[
     {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
-  ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.val}</div></div>`).join('');
+  ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls} zen-value">${s.val}</div></div>`).join('');
   // Win / Loss bar
   const winCount  = wins.length;
   const lossCount = losses.length;
@@ -2889,6 +2913,82 @@ function renderAnalytics(){
   const pnlStdDev=pnls.length?Math.sqrt(pnls.reduce((s,v)=>s+(v-pnlMean)**2,0)/pnls.length):0;
   const sharpe=pnlStdDev>0?pnlMean/pnlStdDev:null;
 
+  // ── Extended risk metrics (FinanceToolkit / Ghostfolio patterns) ─
+  // Sortino: penalise only downside deviation
+  const downside=pnls.filter(v=>v<0);
+  const downsideStd=downside.length?Math.sqrt(downside.reduce((s,v)=>s+v*v,0)/downside.length):0;
+  const sortino=downsideStd>0?pnlMean/downsideStd:null;
+
+  // Calmar: mean return / max drawdown
+  const calmar=maxDD>0?pnlMean/maxDD:null;
+
+  // VaR 95% and CVaR 95% (historical simulation)
+  const sortedPnl=[...pnls].sort((a,b)=>a-b);
+  const varIdx=Math.floor(sortedPnl.length*0.05);
+  const var95=sortedPnl.length>=20?Math.abs(sortedPnl[varIdx]||0):null;
+  const cvar95=sortedPnl.length>=20&&varIdx>0?Math.abs(sortedPnl.slice(0,varIdx+1).reduce((s,v)=>s+v,0)/(varIdx+1)):null;
+
+  // Expectancy per trade
+  const expectancy=closed.length?(wr/100*avgWin-(1-wr/100)*avgLoss):null;
+
+  // Average R-multiple (reward per unit of risk)
+  const rMultiples=closed.filter(t=>t.sl&&t.entry&&t.exit!=null).map(t=>{
+    const risk=Math.abs(Number(t.entry)-Number(t.sl));
+    if(!risk) return null;
+    const pnl=calcPnL(t)||0;
+    return pnl/(risk*Number(t.qty||1));
+  }).filter(v=>v!=null);
+  const avgR=rMultiples.length?rMultiples.reduce((s,v)=>s+v,0)/rMultiples.length:null;
+
+  // Kelly Criterion: optimal fraction f* = W/L - (1-W)/W (simplified)
+  const kelly=avgWin>0&&avgLoss>0?(wr/100)/avgLoss-(1-wr/100)/avgWin:null;
+  const kellyPct=kelly!=null?Math.max(0,Math.min(kelly*100,50)):null; // cap at 50%
+
+  // Consecutive streak
+  const sortedCl=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
+  let streak=0,streakDir='';
+  for(let i=sortedCl.length-1;i>=0;i--){
+    const p=calcPnL(sortedCl[i])||0;
+    const d=p>0?'W':'L';
+    if(!streakDir) streakDir=d;
+    if(d===streakDir) streak++; else break;
+  }
+
+  // Monthly P&L map
+  const monthlyPnL={};
+  sortedCl.forEach(t=>{
+    const key=(t.entryDate||'').slice(0,7);
+    if(!key) return;
+    monthlyPnL[key]=(monthlyPnL[key]||0)+(calcPnL(t)||0);
+  });
+
+  // Rolling 10-trade win rate
+  const rolling10=sortedCl.length>=5?sortedCl.map((_,i,arr)=>{
+    if(i<4) return null;
+    const window=arr.slice(Math.max(0,i-9),i+1);
+    return window.filter(t=>(calcPnL(t)||0)>0).length/window.length*100;
+  }).filter(v=>v!=null):[];
+
+  // Equity curve with drawdown series
+  let cum2=0,peak2=0;
+  const eqSeries=sortedCl.map(t=>{cum2+=calcPnL(t)||0;if(cum2>peak2)peak2=cum2;return{eq:cum2,dd:peak2>0?(cum2-peak2)/peak2*100:0};});
+
+  // Ulcer Index: sqrt(mean(drawdown^2)) — downside volatility measure
+  const ulcer=eqSeries.length?Math.sqrt(eqSeries.reduce((s,p)=>s+p.dd*p.dd,0)/eqSeries.length):null;
+
+  // Skewness & Kurtosis of P&L distribution
+  const skew=pnls.length>=4?(()=>{const m=pnlMean,s=pnlStdDev||1;return pnls.reduce((a,v)=>a+((v-m)/s)**3,0)/pnls.length;})():null;
+  const kurt=pnls.length>=4?(()=>{const m=pnlMean,s=pnlStdDev||1;return pnls.reduce((a,v)=>a+((v-m)/s)**4,0)/pnls.length-3;})():null;
+
+  // Time-period P&L (Ghostfolio pattern)
+  const now=new Date(); const nowStr=now.toISOString().slice(0,10);
+  function pnlSince(dateStr){ return sortedCl.filter(t=>t.entryDate>=dateStr).reduce((s,t)=>s+(calcPnL(t)||0),0); }
+  const dow=now.getDay(); const daysSinceMon=dow===0?6:dow-1;
+  const wtdStart=new Date(now); wtdStart.setDate(now.getDate()-daysSinceMon);
+  const wtdPnL=pnlSince(wtdStart.toISOString().slice(0,10));
+  const mtdPnL=pnlSince(nowStr.slice(0,7)+'-01');
+  const ytdPnL=pnlSince(nowStr.slice(0,4)+'-01-01');
+
   // ── Per-trade issue detection ───────────────────────────────────
   function detectIssues(t){
     const flags=[];
@@ -3028,10 +3128,12 @@ function renderAnalytics(){
       {l:'Net P&L',v:(netPnL>=0?'+':'')+'$'+fmtMoney(netPnL),col:netPnL>=0?'var(--green)':'var(--red)'},
       {l:'Profit Factor',v:pf!=null?pf.toFixed(3):'—',col:pfCol},
       {l:'Max Drawdown',v:'−$'+fmtMoney(maxDD),col:'var(--red)'},
-      {l:'No SL Trades',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
-      {l:'Avg Winner',v:wins.length?'+$'+fmtMoney(avgWin):'—',col:'var(--green)'},
-      {l:'Avg Loser',v:losses.length?'−$'+fmtMoney(avgLoss):'—',col:'var(--red)'},
+      {l:'Expectancy',v:expectancy!=null?(expectancy>=0?'+':'')+'$'+fmtMoney(expectancy):'—',col:expectancy!=null&&expectancy>=0?'var(--green)':'var(--red)'},
+      {l:'Sortino',v:sortino!=null?sortino.toFixed(2):'—',col:sortino!=null&&sortino>=1?'var(--green)':sortino!=null&&sortino>=0?'var(--yellow)':'var(--red)'},
       {l:'Sharpe',v:sharpe!=null?sharpe.toFixed(2):'—',col:sharpe!=null&&sharpe>=1?'var(--green)':sharpe!=null&&sharpe>=0?'var(--yellow)':'var(--red)'},
+      {l:'Avg R',v:avgR!=null?avgR.toFixed(2)+'R':'—',col:avgR!=null&&avgR>=1?'var(--green)':avgR!=null&&avgR>=0?'var(--yellow)':'var(--red)'},
+      {l:'Streak',v:streak?(streakDir==='W'?streak+'W':streak+'L'):'—',col:streakDir==='W'?'var(--green)':'var(--red)'},
+      {l:'No SL',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
       {l:'Closed',v:closed.length,col:'var(--text)'},
     ].map(s=>'<div class="kpi-item"><div class="kpi-label">'+s.l+'</div><div class="kpi-value" style="color:'+s.col+'">'+s.v+'</div></div>').join('')
   +'</div>';
@@ -3058,23 +3160,85 @@ function renderAnalytics(){
       +'<span style="color:var(--muted2)">'+p+'</span></div>').join('')
     +'</div>':'';
 
+  // ── Time-period P&L strip (Ghostfolio pattern) ──────────────────
+  const periodStrip='<div class="kpi-strip" style="grid-column:1/-1">'
+    +[{l:'This Week',v:wtdPnL,d:true},{l:'This Month',v:mtdPnL,d:true},{l:'This Year',v:ytdPnL,d:true},{l:'All Time',v:netPnL,d:true}]
+    .map(s=>`<div class="kpi-item"><div class="kpi-label">${s.l}</div><div class="kpi-value" style="color:${s.v>=0?'var(--green)':'var(--red)'}">${s.v>=0?'+':''}$${fmtMoney(s.v)}</div></div>`).join('')
+    +'</div>';
+
+  // ── Risk metrics card (FinanceToolkit / OpenBB patterns) ─────────
+  const riskCard='<div class="card"><div class="card-header"><div class="card-title">Risk metrics</div><div style="font-size:11px;color:var(--muted)">Requires ≥20 closed trades for VaR</div></div>'
+    +`<div class="risk-grid">`
+    +[['Sortino Ratio',sortino!=null?sortino.toFixed(3):'—'],
+      ['Calmar Ratio',calmar!=null?calmar.toFixed(3):'—'],
+      ['VaR 95%',var95!=null?'−$'+fmtMoney(var95):'Need 20+ trades'],
+      ['CVaR 95%',cvar95!=null?'−$'+fmtMoney(cvar95):'Need 20+ trades'],
+      ['Ulcer Index',ulcer!=null?ulcer.toFixed(2)+'%':'—'],
+      ['Skewness',skew!=null?skew.toFixed(3):'—'],
+      ['Kurtosis (excess)',kurt!=null?kurt.toFixed(3):'—'],
+      ['Avg R-Multiple',avgR!=null?avgR.toFixed(2)+'R':'—'],
+    ].map(([k,v])=>`<div class="risk-row"><span class="risk-key">${k}</span><span class="risk-val">${v}</span></div>`).join('')
+    +'</div></div>';
+
+  // ── Kelly Criterion card ──────────────────────────────────────────
+  const kellyCard='<div class="card"><div class="card-header"><div class="card-title">Kelly Criterion</div><div style="font-size:11px;color:var(--muted)">Optimal position sizing</div></div>'
+    +(closed.length<5?'<div style="padding:20px;color:var(--muted);font-size:13px">Need more closed trades to compute Kelly.</div>'
+    :`<div style="padding:4px 0 14px">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+        <span style="font-size:38px;font-weight:800;letter-spacing:-1px;color:${kellyPct!=null&&kellyPct>0?'var(--accent)':'var(--muted)'}">${kellyPct!=null?kellyPct.toFixed(1)+'%':'—'}</span>
+        <span style="font-size:13px;color:var(--muted)">full Kelly</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted2);margin-bottom:12px">Half-Kelly (recommended): <strong style="color:var(--text)">${kellyPct!=null?(kellyPct/2).toFixed(1)+'%':'—'}</strong> of account per trade</div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted2)">
+        Kelly = (WR × AvgWin − (1−WR) × AvgLoss) / AvgWin<br>
+        <span style="color:var(--text);margin-top:4px;display:block">${wr.toFixed(1)}% WR · $${fmtMoney(avgWin)} avg win · $${fmtMoney(avgLoss)} avg loss</span>
+      </div>
+    </div>`)
+  +'</div>';
+
+  // ── Monthly P&L heatmap (Ghostfolio-style calendar) ───────────────
+  const monthKeys=Object.keys(monthlyPnL).sort();
+  const maxAbsMo=Math.max(...Object.values(monthlyPnL).map(Math.abs),1);
+  const monthHtml=monthKeys.length?monthKeys.map(k=>{
+    const v=monthlyPnL[k]; const pct=Math.abs(v)/maxAbsMo;
+    const bg=v>0?`rgba(0,200,83,${0.15+pct*0.55})`:`rgba(239,68,68,${0.15+pct*0.55})`;
+    const [yr,mo]=k.split('-'); const moName=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mo-1];
+    return `<div style="background:${bg};border-radius:8px;padding:10px 12px;text-align:center;min-width:72px">
+      <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px">${moName} ${yr.slice(2)}</div>
+      <div style="font-size:14px;font-weight:700;margin-top:4px;color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'+':''}$${fmtMoney(v)}</div>
+    </div>`;
+  }).join(''):'<div style="padding:20px;color:var(--muted);font-size:13px">No closed trades yet</div>';
+  const heatmapCard='<div class="card" style="grid-column:1/-1"><div class="card-header"><div class="card-title">Monthly P&L</div></div>'
+    +`<div style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:4px">${monthHtml}</div></div>`;
+
+  // ── Rolling win rate card ─────────────────────────────────────────
+  const rollingCard='<div class="card" style="grid-column:1/-1"><div class="card-header"><div class="card-title">Rolling 10-trade win rate</div>'
+    +'<div style="font-size:11px;color:var(--muted)">Each point = win rate across last 10 trades</div></div>'
+    +'<canvas id="an-rolling-chart" height="100"></canvas></div>';
+
+  // ── Summary stats card (extended) ────────────────────────────────
   const summaryCard='<div class="card"><div class="card-header"><div class="card-title">Summary statistics</div></div>'
     +[['Total closed',closed.length],['Win rate',closed.length?wr.toFixed(1)+'%':'—'],['Profit factor',pf!=null?pf.toFixed(2):'—'],
       ['Gross profit','+$'+fmtMoney(grossP)],['Gross loss','−$'+fmtMoney(grossL)],['Max drawdown','−$'+fmtMoney(maxDD)],
-      ['Sharpe ratio',sharpe!=null?sharpe.toFixed(2):'—'],
+      ['Sharpe ratio',sharpe!=null?sharpe.toFixed(2):'—'],['Sortino ratio',sortino!=null?sortino.toFixed(2):'—'],
+      ['Expectancy/trade',expectancy!=null?(expectancy>=0?'+':'')+'$'+fmtMoney(expectancy):'—'],
+      ['Kelly % (half)',kellyPct!=null?(kellyPct/2).toFixed(1)+'%':'—'],
       ['Best trade',bestPnL!=null?'+$'+fmtMoney(bestPnL):'—'],['Worst trade',worstPnL!=null?'−$'+fmtMoney(Math.abs(worstPnL)):'—'],
       ['Avg winner',wins.length?'+$'+fmtMoney(avgWin):'—'],['Avg loser',losses.length?'−$'+fmtMoney(avgLoss):'—'],
+      ['Current streak',streak?(streakDir==='W'?streak+' wins':streak+' losses'):'—'],
     ].map(([k,v])=>'<div class="perf-row"><span class="perf-key">'+k+'</span><span class="perf-val">'+v+'</span></div>').join('')
     +'</div>';
 
   document.getElementById('analytics-grid').innerHTML =
-    statsRow + chartCard + deepDive + patternsCard + posCard + openExposureCard() +
+    periodStrip + statsRow + chartCard +
+    heatmapCard + rollingCard +
+    deepDive + patternsCard + posCard + openExposureCard() +
     perfCard('By Market', Object.entries(byMarket).sort((a,b)=>b[1].pnl-a[1].pnl)) +
     perfCard('By Exchange', Object.entries(byExchange).sort((a,b)=>b[1].pnl-a[1].pnl)) +
     perfCard('By Strategy', Object.entries(byStrategy).sort((a,b)=>b[1].pnl-a[1].pnl)) +
     perfCard('Long vs Short', Object.entries(byDir)) +
     perfCard('By Day of Week', DAYS.map(d=>[d,byDow[d]||{pnl:0,count:0,wins:0}]).filter(([,v])=>v.count>0)) +
-    summaryCard + zseAnalyticsCard();
+    riskCard + kellyCard + summaryCard + zseAnalyticsCard();
 
   // ── Draw P&L bar chart ──────────────────────────────────────────
   setTimeout(()=>{
@@ -3119,6 +3283,45 @@ function renderAnalytics(){
     ctx.fillStyle=lastV>=0?themeVal('#10b981','#059669'):themeVal('#e01010','#cc0a0a');
     ctx.font='600 10px Inter,system-ui'; ctx.textAlign='center';
     ctx.fillText((lastV>=0?'+':'')+fmtMoney(lastV), lastX, baseline-(lastV>=0?1:-1)*( Math.abs(lastV)/maxAbs*(H-padT-padB)/2+12));
+
+    // ── Rolling 10-trade win rate chart ─────────────────────────────
+    const rc=document.getElementById('an-rolling-chart');
+    if(rc&&rolling10.length>=2){
+      const RW=rc.parentElement.clientWidth-44,RH=100;
+      rc.width=RW; rc.height=RH;
+      const rx=rc.getContext('2d'); rx.clearRect(0,0,RW,RH);
+      const rpad={l:40,r:12,t:10,b:20};
+      const riw=RW-rpad.l-rpad.r, rih=RH-rpad.t-rpad.b;
+      // grid: 0%, 50%, 100%
+      [0,50,100].forEach(v=>{
+        const ry=rpad.t+rih*(1-v/100);
+        rx.strokeStyle=themeVal('#1e2f4d','#dce6f2'); rx.lineWidth=1;
+        rx.beginPath(); rx.moveTo(rpad.l,ry); rx.lineTo(RW-rpad.r,ry); rx.stroke();
+        rx.fillStyle=themeVal('#5a7090','#8da4c0'); rx.font='9px Inter,system-ui'; rx.textAlign='right';
+        rx.fillText(v+'%',rpad.l-4,ry+3);
+      });
+      // 50% target line
+      const ry50=rpad.t+rih*0.5;
+      rx.setLineDash([4,3]); rx.strokeStyle='rgba(0,200,83,0.4)'; rx.lineWidth=1;
+      rx.beginPath(); rx.moveTo(rpad.l,ry50); rx.lineTo(RW-rpad.r,ry50); rx.stroke();
+      rx.setLineDash([]);
+      // line
+      rx.beginPath();
+      rolling10.forEach((v,i)=>{
+        const x=rpad.l+i/(rolling10.length-1)*riw;
+        const y=rpad.t+rih*(1-v/100);
+        i===0?rx.moveTo(x,y):rx.lineTo(x,y);
+      });
+      rx.strokeStyle='#38BDF8'; rx.lineWidth=2; rx.lineJoin='round'; rx.stroke();
+      // dots at first/last
+      [[0,rolling10[0]],[rolling10.length-1,rolling10[rolling10.length-1]]].forEach(([i,v])=>{
+        const x=rpad.l+i/(rolling10.length-1)*riw, y=rpad.t+rih*(1-v/100);
+        rx.beginPath(); rx.arc(x,y,3.5,0,Math.PI*2);
+        rx.fillStyle='#38BDF8'; rx.fill();
+        rx.fillStyle=themeVal('#1a2336','#eef2f7'); rx.font='600 9px Inter,system-ui'; rx.textAlign='center';
+        rx.fillText(v.toFixed(0)+'%',x,y-(i<rolling10.length/2?8:-14));
+      });
+    } else if(rc){ rc.style.display='none'; rc.insertAdjacentHTML('afterend','<div style="padding:20px;color:var(--muted);font-size:13px">Need 5+ closed trades for rolling win rate.</div>'); }
 
     // ── ZSE allocation bar chart ──────────────────────────────────
     const allocCanvas=document.getElementById('zse-alloc-chart'); if(!allocCanvas) return;

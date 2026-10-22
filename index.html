@@ -513,28 +513,14 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
             <div id="daily-chart" style="height:160px;width:100%"></div>
           </div>
         </div>
-        <!-- Market Sessions + Position Size Calculator -->
-        <div class="grid-2" style="margin-bottom:16px">
+        <!-- Market Sessions -->
+        <div style="margin-bottom:16px">
           <div class="card" id="sessions-card">
             <div class="card-header">
               <div class="card-title">Market Sessions</div>
               <span id="sessions-clock" style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums"></span>
             </div>
-            <div id="sessions-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><div class="card-title">Position Size Calculator</div><button class="btn btn-ghost btn-sm" onclick="openPosCalc()">Open full ↗</button></div>
-            <div id="psc-mini" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Account Balance ($)</label><input class="form-input" id="psc-bal" type="number" placeholder="e.g. 100" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
-              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Risk %</label><input class="form-input" id="psc-risk" type="number" placeholder="1" value="1" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
-              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Entry Price</label><input class="form-input" id="psc-entry" type="number" placeholder="e.g. 1.2345" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
-              <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Stop Loss Price</label><input class="form-input" id="psc-sl" type="number" placeholder="e.g. 1.2300" oninput="calcPosSize()" style="padding:8px 10px;font-size:13px"></div>
-              <div style="grid-column:1/-1;background:var(--surface2);border-radius:var(--r-sm);padding:12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Risk $</div><div id="psc-risk-usd" style="font-size:16px;font-weight:700;color:var(--red)">—</div></div>
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Units</div><div id="psc-units" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
-                <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Lots</div><div id="psc-lots" style="font-size:16px;font-weight:700;color:var(--accent2)">—</div></div>
-              </div>
-            </div>
+            <div id="sessions-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
           </div>
         </div>
         <div class="grid-2">
@@ -719,29 +705,6 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         </div>
         <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="capital-table"></div></div></div>
 
-        <!-- Money Flow Report -->
-        <div style="margin-top:28px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-            <div>
-              <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Money Flow Report</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">All deposits, withdrawals and transfers across every wallet</div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <select class="form-select" id="mfr-wallet-filter" onchange="renderMoneyFlowReport()" style="padding:7px 10px;font-size:12px;width:auto">
-                <option value="all">All Wallets</option>
-              </select>
-              <select class="form-select" id="mfr-type-filter" onchange="renderMoneyFlowReport()" style="padding:7px 10px;font-size:12px;width:auto">
-                <option value="all">All Types</option>
-                <option value="deposit">Deposits</option>
-                <option value="withdrawal">Withdrawals</option>
-                <option value="transfer_in">Transfers In</option>
-                <option value="transfer_out">Transfers Out</option>
-              </select>
-            </div>
-          </div>
-          <div id="mfr-summary" style="margin-bottom:16px"></div>
-          <div class="card" style="padding:0;overflow:hidden"><div id="mfr-table"></div></div>
-        </div>
 
         <!-- Loans & Debts (embedded in Portfolio & Wallet) -->
         <div style="margin-top:28px">

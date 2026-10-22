@@ -513,16 +513,6 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
             <div id="daily-chart" style="height:160px;width:100%"></div>
           </div>
         </div>
-        <!-- Market Sessions -->
-        <div style="margin-bottom:16px">
-          <div class="card" id="sessions-card">
-            <div class="card-header">
-              <div class="card-title">Market Sessions</div>
-              <span id="sessions-clock" style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums"></span>
-            </div>
-            <div id="sessions-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"></div>
-          </div>
-        </div>
         <div class="grid-2">
           <div class="card"><div class="card-header"><div class="card-title">P&amp;L by Asset</div></div><div id="asset-bars" class="bar-list"></div></div>
           <div class="card">
@@ -2605,8 +2595,6 @@ function filtered(type,search,market,exchange,dir,status){ return allTrades().fi
 
 // ── Dashboard ──────────────────────────────────────────────────────
 function renderDashboard(){
-  startSessionsTicker();
-  calcPosSize();
   const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
   const allPnL=closed.map(t=>calcPnL(t)||0);
   const totalPnL=allPnL.reduce((s,v)=>s+v,0);
@@ -5153,13 +5141,15 @@ function openPosCalc(){
 document.getElementById('pos-calc-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.target.classList.remove('open');});
 
 function calcPosSize(){
-  const bal    = parseFloat(document.getElementById('psc-bal').value);
+  const balEl=document.getElementById('psc-bal'); if(!balEl) return;
+  const bal    = parseFloat(balEl.value);
   const riskPct= parseFloat(document.getElementById('psc-risk').value)||1;
   const entry  = parseFloat(document.getElementById('psc-entry').value);
   const sl     = parseFloat(document.getElementById('psc-sl').value);
   const riskUsd= document.getElementById('psc-risk-usd');
   const unitsEl= document.getElementById('psc-units');
   const lotsEl = document.getElementById('psc-lots');
+  if(!riskUsd||!unitsEl||!lotsEl) return;
   if(isNaN(bal)||isNaN(entry)||isNaN(sl)||entry===sl){
     riskUsd.textContent='—'; unitsEl.textContent='—'; lotsEl.textContent='—'; return;
   }

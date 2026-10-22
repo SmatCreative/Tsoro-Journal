@@ -1809,7 +1809,15 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
           <option value="Long-Term">Long-Term / Investing</option>
           <option value="Crypto">Crypto Spot</option>
           <option value="Futures">Futures / Derivatives</option>
+          <option value="Ecocash">Ecocash / Mobile Money</option>
+          <option value="ZIPIT">ZIPIT</option>
+          <option value="Business">Business Account</option>
         </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Business / Group <span class="opt">(optional — groups multiple accounts under one business)</span></label>
+        <input class="form-input" id="w-business-group" placeholder="e.g. SmatCreative, Farm Operations…" autocomplete="off" list="w-business-list">
+        <datalist id="w-business-list"></datalist>
       </div>
       <div class="form-group full">
         <label class="form-label">Notes <span class="opt">(optional)</span></label>
@@ -3515,17 +3523,26 @@ function openWalletModal(id){
     document.getElementById('w-color').value     = w.color||'#00C853';
     document.getElementById('w-type').value      = w.account_type||'';
     document.getElementById('w-notes').value     = w.notes||'';
+    document.getElementById('w-business-group').value = w.business_group||'';
   } else {
-    ['w-name','w-platform','w-exchange','w-notes'].forEach(id=>document.getElementById(id).value='');
+    ['w-name','w-platform','w-exchange','w-notes','w-business-group'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('w-balance').value  = '';
     document.getElementById('w-currency').value = 'USD';
     document.getElementById('w-updated').value  = new Date().toISOString().slice(0,10);
     document.getElementById('w-color').value    = '#00C853';
     document.getElementById('w-type').value     = '';
   }
+  // Populate business group suggestions from existing wallets
+  const bgDl=document.getElementById('w-business-list');
+  if(bgDl){ const groups=[...new Set(wallets.map(w=>w.business_group).filter(Boolean))]; bgDl.innerHTML=groups.map(g=>'<option value="'+escapeHtml(g)+'">').join(''); }
   document.getElementById('wallet-modal').classList.add('open');
 }
 function closeWalletModal(){ document.getElementById('wallet-modal').classList.remove('open'); showModalErr('w-error',''); }
+
+function openWalletModalForGroup(groupName){
+  openWalletModal();
+  document.getElementById('w-business-group').value=groupName||'';
+}
 
 function openTransferModal(){
   // Populate wallet dropdowns
@@ -3937,8 +3954,9 @@ async function saveWallet(){
     currency     : document.getElementById('w-currency').value||'USD',
     updated_at   : document.getElementById('w-updated').value||new Date().toISOString().slice(0,10),
     color        : document.getElementById('w-color').value||'#00C853',
-    account_type : document.getElementById('w-type').value||null,
-    notes        : document.getElementById('w-notes').value.trim()||null,
+    account_type   : document.getElementById('w-type').value||null,
+    notes          : document.getElementById('w-notes').value.trim()||null,
+    business_group : document.getElementById('w-business-group').value.trim()||null,
   };
   try {
     if(id){
@@ -4373,7 +4391,55 @@ function _renderWallet(){
   if(!wallets.length){
     cardsEl.innerHTML='<div class="empty-state" style="padding:32px"><div class="empty-icon">'+IC.inbox+'</div><h3>No wallets yet</h3><p>Click <strong>Add Wallet</strong> and enter your Deriv / MT5 / ZSE broker balance. Profits and losses from your trades will automatically update it.</p></div>';
   } else {
-    cardsEl.innerHTML=wallets.map(function(w){
+    // Split wallets into business groups and ungrouped
+    const bizGroups={};
+    const ungroupedWallets=[];
+    wallets.forEach(w=>{ if(w.business_group){ (bizGroups[w.business_group]=bizGroups[w.business_group]||[]).push(w); } else { ungroupedWallets.push(w); } });
+
+    const bizCards=Object.entries(bizGroups).map(([name,gWallets])=>{
+      const totalUSD=gWallets.reduce((s,w)=>s+walletToUSD(w),0);
+      const subRows=gWallets.map(w=>{
+        const color=w.color||'#00C853';
+        const typeLabel=w.account_type||'';
+        const usdEquiv=(w.currency!=='USD'&&w.currency!=='USDT')&&getLatestRate(w.currency)?'<span style="font-size:10px;color:var(--muted2);margin-left:4px">≈ $'+fmtMoney(walletToUSD(w))+'</span>':'';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border)">'
+          +'<div style="width:3px;height:34px;border-radius:2px;background:'+color+';flex-shrink:0"></div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:13px;font-weight:600;line-height:1.2">'+(w.wallet_name||w.platform||'Account')+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);margin-top:1px">'+(typeLabel?typeLabel+' · ':'')+w.currency+'</div>'
+          +'</div>'
+          +'<div style="text-align:right;min-width:0">'
+            +'<div style="font-size:15px;font-weight:700;color:'+color+';font-variant-numeric:tabular-nums">'+ccySym(w.currency)+fmtMoney(w.balance)+usdEquiv+'</div>'
+          +'</div>'
+          +'<div style="display:flex;gap:5px;flex-shrink:0">'
+            +'<button class="btn btn-sm" style="padding:5px 9px;font-size:11px;background:rgba(0,200,83,.10);color:var(--accent);border:1px solid rgba(0,200,83,.22)" onclick="openFlowModal(\''+w.id+'\',\'in\')">Deposit</button>'
+            +'<button class="btn btn-sm" style="padding:5px 9px;font-size:11px;background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.22)" onclick="openFlowModal(\''+w.id+'\',\'out\')">Withdraw</button>'
+            +'<button class="btn btn-sm btn-ghost" style="padding:5px 9px;font-size:11px" onclick="openWalletTxModal(\''+w.id+'\')">History</button>'
+            +'<button class="btn btn-sm btn-ghost" style="padding:5px 7px" onclick="openWalletModal(\''+w.id+'\')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+          +'</div>'
+        +'</div>';
+      }).join('');
+      return '<div style="grid-column:1/-1;border-radius:var(--r);overflow:hidden;border:1px solid rgba(0,200,83,.35);box-shadow:0 2px 12px rgba(0,0,0,.2)">'
+        +'<div style="background:var(--surface2);padding:15px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)">'
+          +'<div style="width:38px;height:38px;border-radius:10px;background:rgba(0,200,83,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+            +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#00C853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'
+          +'</div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:15px;font-weight:700;letter-spacing:-.02em">'+escapeHtml(name)+'</div>'
+            +'<div style="font-size:11px;color:var(--muted)">Business · '+gWallets.length+' account'+(gWallets.length!==1?'s':'')+' · USD equiv.</div>'
+          +'</div>'
+          +'<div style="text-align:right">'
+            +'<div style="font-size:22px;font-weight:800;color:var(--accent);letter-spacing:-.04em;font-variant-numeric:tabular-nums">$'+fmtMoney(totalUSD)+'</div>'
+          +'</div>'
+        +'</div>'
+        +subRows
+        +'<div style="background:var(--surface);padding:10px 18px">'
+          +'<button class="btn btn-sm btn-ghost" style="font-size:12px" onclick="openWalletModalForGroup('+JSON.stringify(name)+')">+ Add Account to '+escapeHtml(name)+'</button>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+
+    cardsEl.innerHTML=bizCards+(ungroupedWallets.length?ungroupedWallets.map(function(w){
       const pos=posByWallet[w.id]||{val:0,items:[]};
       const totalVal=Number(w.balance)+pos.val;
       const usd=capToUSD(totalVal, w.currency);
@@ -4453,7 +4519,7 @@ function _renderWallet(){
           +'<button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deleteWallet(\''+w.id+'\')">'+IC.trash+'</button>'
         +'</div>'
         +'</div>';
-    }).join('');
+    }).join(''):'');
   }
 
   // Donut chart
@@ -5921,11 +5987,38 @@ async function deletePrivInvest(id){
 const PI_CAT_ICON={'Business':'💼','Farm':'🌾','Project':'🛠','Real Estate':'🏠','Startup':'🚀','Other':'📦'};
 function renderPrivInvest(){
   const el=document.getElementById('priv-invest-list'); if(!el) return;
-  if(!privInvest.length){
+
+  // Business wallet groups shown at top of private investments
+  const bizGroups={};
+  wallets.forEach(w=>{ if(w.business_group){ (bizGroups[w.business_group]=bizGroups[w.business_group]||[]).push(w); } });
+  const bizGroupCards=Object.entries(bizGroups).map(([name,gWallets])=>{
+    const totalUSD=gWallets.reduce((s,w)=>s+walletToUSD(w),0);
+    const accounts=gWallets.map(w=>'<div style="font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between"><span>'+(w.wallet_name||w.account_type||w.platform||'Account')+'</span><span style="font-weight:600;color:var(--fg)">'+(w.currency!=='USD'?ccySym(w.currency)+fmtMoney(w.balance)+' ':'')+'≈ $'+fmtMoney(walletToUSD(w))+'</span></div>').join('');
+    return `<div class="card" style="padding:18px 20px;border:1px solid rgba(0,200,83,.28)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,200,83,.13);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00C853" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700">${escapeHtml(name)}</div>
+          <div style="font-size:11px;color:var(--muted)">Business · ${gWallets.length} wallet account${gWallets.length!==1?'s':''}</div>
+        </div>
+        <span class="badge" style="background:rgba(0,200,83,.13);color:var(--accent);font-size:11px;font-weight:700">BIZ</span>
+      </div>
+      <div style="font-size:26px;font-weight:800;color:var(--accent);letter-spacing:-.04em;font-variant-numeric:tabular-nums;margin-bottom:8px">$${fmtMoney(totalUSD)} <span style="font-size:12px;font-weight:500;color:var(--muted)">USD equiv.</span></div>
+      <div style="border-top:1px solid var(--border);padding-top:8px">${accounts}</div>
+      <div style="margin-top:12px">
+        <button class="btn btn-sm btn-ghost" style="font-size:12px" onclick="openWalletModalForGroup(${JSON.stringify(name)})">+ Add Account</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(!privInvest.length && !bizGroupCards){
     el.innerHTML='<div class="card" style="padding:16px 20px;font-size:13px;color:var(--muted2)">No private investments yet — track money you have put into unlisted businesses, farms or projects alongside your trading capital.</div>';
     return;
   }
-  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+privInvest.map(p=>{
+  const grid='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">'+bizGroupCards;
+  el.innerHTML=grid+(privInvest.length?privInvest.map(p=>{
     const cur=Number(p.current_value??p.amount_invested);
     const gain=cur-Number(p.amount_invested);
     const gainPct=p.amount_invested>0?gain/p.amount_invested*100:0;
@@ -5950,7 +6043,7 @@ function renderPrivInvest(){
         <button class="btn btn-sm" style="background:transparent;color:var(--muted);border:1px solid var(--border)" onclick="deletePrivInvest('${p.id}')">Remove</button>
       </div>
     </div>`;
-  }).join('')+'</div>';
+  }).join(''):'')+'</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════════

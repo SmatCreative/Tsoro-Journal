@@ -2280,7 +2280,6 @@ async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
     await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving()]);
-    await seedDefaultSecurities();
     renderAll();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -2957,14 +2956,16 @@ function renderAnalytics(){
     return pos;
   }
 
-  // ── Breakdown maps ──────────────────────────────────────────────
+  // ── Breakdown maps — use all trades (open + closed + ZSE holdings) ──
+  const allForBreakdown=allTrades();
   const byMarket={},byExchange={},byStrategy={},byDir={},byDow={};
-  closed.forEach(t=>{
+  allForBreakdown.forEach(t=>{
     const p=calcPnL(t)||0;
-    (byMarket[t.market]=byMarket[t.market]||{pnl:0,count:0,wins:0}).pnl+=p; byMarket[t.market].count++; if(p>0)byMarket[t.market].wins++;
+    const mkt=t.market||'Unknown';
+    (byMarket[mkt]=byMarket[mkt]||{pnl:0,count:0,wins:0}).pnl+=p; byMarket[mkt].count++; if(p>0)byMarket[mkt].wins++;
     if(t.exchange){(byExchange[t.exchange]=byExchange[t.exchange]||{pnl:0,count:0,wins:0}).pnl+=p; byExchange[t.exchange].count++; if(p>0)byExchange[t.exchange].wins++;}
     const s=t.strategy||'No Strategy';(byStrategy[s]=byStrategy[s]||{pnl:0,count:0,wins:0}).pnl+=p; byStrategy[s].count++; if(p>0)byStrategy[s].wins++;
-    (byDir[t.direction]=byDir[t.direction]||{pnl:0,count:0,wins:0}).pnl+=p; byDir[t.direction].count++; if(p>0)byDir[t.direction].wins++;
+    if(t.direction){(byDir[t.direction]=byDir[t.direction]||{pnl:0,count:0,wins:0}).pnl+=p; byDir[t.direction].count++; if(p>0)byDir[t.direction].wins++;}
     const dow=DAYS[new Date(t.entryDate||Date.now()).getDay()];
     (byDow[dow]=byDow[dow]||{pnl:0,count:0,wins:0}).pnl+=p; byDow[dow].count++; if(p>0)byDow[dow].wins++;
   });

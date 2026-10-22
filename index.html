@@ -214,6 +214,9 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
 .badge-day{background:rgba(56,189,248,.12);color:var(--blue)}
 .badge-long-term{background:rgba(168,85,247,.12);color:var(--purple)}
 .badge-market{background:var(--surface3);color:var(--muted2)}
+.badge-etf{background:rgba(56,189,248,.13);color:#38bdf8}
+.badge-reit{background:rgba(251,146,60,.13);color:#fb923c}
+.badge-stock{background:var(--surface3);color:var(--muted2)}
 .pnl-pos{color:var(--green);font-weight:600}.pnl-neg{color:var(--red);font-weight:600}.pnl-zero{color:var(--muted)}
 
 /* ── Modals ── */
@@ -1545,7 +1548,7 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
       <input type="hidden" id="f-type" value="day">
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Symbol / Asset</label><input class="form-input" id="f-symbol" placeholder="BTC, AAPL, EUR/USD…" list="sym-list" required autocomplete="off"><datalist id="sym-list"><option value="BTC/USD"><option value="ETH/USD"><option value="BNB/USD"><option value="SOL/USD"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="XAU/USD"><option value="XAG/USD"><option value="WTI/USD"><option value="AAPL"><option value="TSLA"><option value="NVDA"><option value="AMZN"><option value="MSFT"><option value="GOOGL"><option value="META"><option value="SPY"><option value="QQQ"><option value="GLD"></datalist></div>
-        <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Crypto">Crypto</option><option value="Stocks">Stocks</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="ETF">ETF</option><option value="Bonds">Bonds</option></select></div>
+        <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Stock">Stock</option><option value="ETF">ETF</option><option value="REIT">REIT</option><option value="Crypto">Crypto</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="Bonds">Bonds</option><option value="Forex">Forex</option><option value="Preference Share">Preference Share</option></select></div>
         <div class="form-group"><label class="form-label">Exchange <span class="opt">(optional)</span></label><input class="form-input" id="f-exchange" placeholder="ZSE, NYSE, NASDAQ…" list="exch-list" autocomplete="off"><datalist id="exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="LSE"><option value="NSE"><option value="BSE"><option value="ASX"><option value="TSX"><option value="HKEX"><option value="SSE"><option value="Euronext"><option value="XETRA"><option value="SGX"><option value="KSE"><option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX"><option value="CME"><option value="CBOE"><option value="ICE"><option value="OTC"></datalist></div>
         <div class="form-group"><label class="form-label">Currency</label><select class="form-select" id="f-currency"><option value="USD">USD — US Dollar ($)</option><option value="ZiG">ZiG — Zimbabwe Gold</option><option value="ZAR">ZAR — South African Rand (R)</option><option value="GBP">GBP — British Pound (£)</option><option value="EUR">EUR — Euro (€)</option><option value="NGN">NGN — Nigerian Naira (₦)</option><option value="INR">INR — Indian Rupee (₹)</option><option value="KES">KES — Kenyan Shilling</option><option value="AUD">AUD — Australian Dollar</option><option value="CAD">CAD — Canadian Dollar</option><option value="HKD">HKD — Hong Kong Dollar</option><option value="CNY">CNY — Chinese Yuan (¥)</option><option value="SGD">SGD — Singapore Dollar</option><option value="JPY">JPY — Japanese Yen (¥)</option><option value="USDT">USDT — Tether</option><option value="PKR">PKR — Pakistani Rupee (₨)</option><option value="GHS">GHS — Ghanaian Cedi (₵)</option><option value="BRL">BRL — Brazilian Real</option><option value="EGP">EGP — Egyptian Pound</option><option value="BTC">BTC — Bitcoin (₿)</option><option value="ETH">ETH — Ethereum (Ξ)</option></select></div>
         <div class="form-group"><label class="form-label">Direction</label><select class="form-select" id="f-dir"><option value="Long">Long (Buy)</option><option value="Short">Short (Sell)</option></select></div>
@@ -1638,8 +1641,20 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
     <input type="hidden" id="zh-edit-id">
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group">
-        <label class="form-label">Stock Symbol</label>
-        <input class="form-input" id="zh-symbol" placeholder="e.g. DELTA, OK, CBZ" autocomplete="off" style="text-transform:uppercase">
+        <label class="form-label">Symbol</label>
+        <input class="form-input" id="zh-symbol" placeholder="e.g. DELTA, OK, FMWG.VX" autocomplete="off" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Instrument Type</label>
+        <select class="form-select" id="zh-instrument-type">
+          <option value="Stock">Stock / Equity</option>
+          <option value="ETF">ETF — Exchange Traded Fund</option>
+          <option value="REIT">REIT — Real Estate Investment Trust</option>
+          <option value="Preference Share">Preference Share</option>
+          <option value="Bond">Bond / Fixed Income</option>
+          <option value="Index Fund">Index Fund</option>
+          <option value="Fund">Other Fund</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Exchange</label>
@@ -2907,7 +2922,7 @@ function renderTable(containerId,list){
     const rr=t.sl&&t.tp&&t.entry?((Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)).toFixed(1)+'R'):'—';
     return `<tr>
       <td><div class="symbol-cell"><div class="symbol-icon" style="background:${c}22;color:${c}">${escapeHtml(t.symbol.slice(0,3))}</div><div><div style="font-weight:600">${escapeHtml(t.symbol)}</div><div style="font-size:11px;color:var(--muted)">${escapeHtml(t.strategy||'')}</div></div></div></td>
-      <td><span class="badge badge-market">${escapeHtml(t.market)}</span></td>
+      <td><span class="badge ${t.market==='ETF'?'badge-etf':t.market==='REIT'?'badge-reit':'badge-market'}">${escapeHtml(t.market)}</span></td>
       <td>${t.exchange?`<span class="badge badge-market" style="font-weight:600;color:var(--accent2)">${escapeHtml(t.exchange)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="badge ${t.type==='day'?'badge-day':'badge-long-term'}">${t.type==='day'?IC.zap+' Day':IC.arrowUpRight+' Long'}</span></td>
       <td><span class="badge ${t.direction==='Long'?'badge-long':'badge-short'}">${t.direction}</span></td>
@@ -2949,7 +2964,7 @@ function zseHoldingsAsTrades(){
       .filter(h=>!realSymbols.has(h.symbol.toUpperCase()))
       .map(h=>({
         id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
-        market:h.exchange==='ZSE'?'ETF':'Stock', direction:'Long', type:'long', status:'open',
+        market:h.instrumentType||'Stock', direction:'Long', type:'long', status:'open',
         entry:h.buyPrice, qty:h.shares,
         currency:h.exchange==='ZSE'?'ZiG':'USD',
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
@@ -5637,10 +5652,10 @@ function zseSaveLocal(){try{localStorage.setItem(zseKey('holdings'),JSON.stringi
 function zseChargesSaveLocal(){try{localStorage.setItem(zseKey('charges'),JSON.stringify(zseCharges));}catch(_){}}
 
 function fromZseHolding(r){
-  return {id:r.id,symbol:r.symbol,exchange:r.exchange,shares:Number(r.shares),buyPrice:Number(r.buy_price),buyDate:r.buy_date||null,currentPrice:r.current_price!=null?Number(r.current_price):null,priceDate:r.price_date||null,notes:r.notes||''};
+  return {id:r.id,symbol:r.symbol,exchange:r.exchange,shares:Number(r.shares),buyPrice:Number(r.buy_price),buyDate:r.buy_date||null,currentPrice:r.current_price!=null?Number(r.current_price):null,priceDate:r.price_date||null,notes:r.notes||'',instrumentType:r.instrument_type||'Stock'};
 }
 function toZseHoldingRow(h){
-  return {id:h.id,user_id:currentUser.id,symbol:h.symbol,exchange:h.exchange,shares:h.shares,buy_price:h.buyPrice,buy_date:h.buyDate||null,current_price:h.currentPrice??null,price_date:h.priceDate||null,notes:h.notes||''};
+  return {id:h.id,user_id:currentUser.id,symbol:h.symbol,exchange:h.exchange,shares:h.shares,buy_price:h.buyPrice,buy_date:h.buyDate||null,current_price:h.currentPrice??null,price_date:h.priceDate||null,notes:h.notes||'',instrument_type:h.instrumentType||'Stock'};
 }
 
 async function loadZseHoldings(){
@@ -5703,17 +5718,19 @@ function openZseHoldingModal(id){
   const today = new Date().toISOString().slice(0,10);
   if(id){
     const h = zseHoldings.find(x=>x.id===id); if(!h) return;
-    document.getElementById('zh-symbol').value        = h.symbol||'';
-    document.getElementById('zh-exchange').value      = h.exchange||'ZSE';
-    document.getElementById('zh-shares').value        = h.shares||'';
-    document.getElementById('zh-buy-price').value     = h.buyPrice||'';
-    document.getElementById('zh-buy-date').value      = h.buyDate||'';
-    document.getElementById('zh-current-price').value = h.currentPrice||'';
-    document.getElementById('zh-price-date').value    = h.priceDate||today;
-    document.getElementById('zh-notes').value         = h.notes||'';
+    document.getElementById('zh-symbol').value           = h.symbol||'';
+    document.getElementById('zh-exchange').value         = h.exchange||'ZSE';
+    document.getElementById('zh-instrument-type').value  = h.instrumentType||'Stock';
+    document.getElementById('zh-shares').value           = h.shares||'';
+    document.getElementById('zh-buy-price').value        = h.buyPrice||'';
+    document.getElementById('zh-buy-date').value         = h.buyDate||'';
+    document.getElementById('zh-current-price').value    = h.currentPrice||'';
+    document.getElementById('zh-price-date').value       = h.priceDate||today;
+    document.getElementById('zh-notes').value            = h.notes||'';
   } else {
     ['zh-symbol','zh-notes'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('zh-exchange').value='ZSE';
+    document.getElementById('zh-instrument-type').value='Stock';
     document.getElementById('zh-shares').value='';
     document.getElementById('zh-buy-price').value='';
     document.getElementById('zh-buy-date').value='';
@@ -5736,15 +5753,16 @@ async function saveZseHolding(){
   const curPrice = parseFloat(document.getElementById('zh-current-price').value);
   const buyDate  = document.getElementById('zh-buy-date').value;
   const priceDate= document.getElementById('zh-price-date').value;
-  const notes    = document.getElementById('zh-notes').value.trim();
+  const notes         = document.getElementById('zh-notes').value.trim();
+  const instrumentType= document.getElementById('zh-instrument-type').value||'Stock';
 
   if(!symbol)            { zHoldingErr('Please enter a stock symbol.'); return; }
   if(!shares||shares<=0) { zHoldingErr('Please enter number of shares.'); return; }
   if(isNaN(buyPrice)||buyPrice<0){ zHoldingErr('Please enter a valid buy price.'); return; }
 
   const holding = id
-    ? {...(zseHoldings.find(x=>x.id===id)||{}),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes}
-    : {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes};
+    ? {...(zseHoldings.find(x=>x.id===id)||{}),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes,instrumentType}
+    : {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),symbol,exchange,shares,buyPrice,buyDate:buyDate||null,currentPrice:isNaN(curPrice)?null:curPrice,priceDate:priceDate||null,notes,instrumentType};
 
   let sbOk=false;
   try{
@@ -7168,6 +7186,7 @@ function renderZse(){
               <div style="font-weight:600;font-size:14px">${escapeHtml(g.symbol)}</div>
               <div style="font-size:11px;margin-top:2px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
                 <span class="badge" style="background:${g.exchange==='ZSE'?'rgba(0,200,83,.13)':'rgba(56,189,248,.13)'};color:${g.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-size:10px;font-weight:600">${escapeHtml(g.exchange)}</span>
+                ${(()=>{const t=g.lots[0].instrumentType||'Stock';const cls=t==='ETF'?'badge-etf':t==='REIT'?'badge-reit':'badge-stock';return t!=='Stock'?`<span class="badge ${cls}" style="font-size:10px;font-weight:600">${t}</span>`:''})()}
                 ${holdLabel?`<span style="font-size:10px;color:var(--muted);font-weight:500">${holdLabel}</span>`:''}
                 ${multi?`<span style="font-size:10px;color:var(--muted)">${g.lots.length} lots</span>`:''}
               </div>

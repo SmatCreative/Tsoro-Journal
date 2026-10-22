@@ -4424,10 +4424,10 @@ function _renderWallet(){
   // Donut chart
   drawWalletDonut(totalCashUSD, deployedUSD);
 
-  // Deployed bar chart
+  // Deployed bar chart — use combinedDeployedUSD (journal + ZSE/VFEX) and all open positions
   document.getElementById('wallet-deployed-meta').textContent=
     grandTotal>0 ? `${cashPct.toFixed(1)}% idle · ${deployPct.toFixed(1)}% deployed` : '';
-  drawDeployedBar(totalCashUSD, deployedUSD, openTrades);
+  drawDeployedBar(totalCashUSD, combinedDeployedUSD, allOpenPositions);
 }
 
 // Brand-blue palette for holdings list dots
@@ -4535,11 +4535,14 @@ function drawDeployedBar(cashUSD, deployedUSD, openTrades){
   // Open positions list under the bar
   const listEl=document.getElementById('wallet-open-list');
   if(listEl){
-    listEl.innerHTML=openTrades.length?openTrades.map(t=>{
-      const usd=toUSD(t.entry*t.qty,t.currency);
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px">
-        <div><span style="font-weight:600">${t.symbol}</span> <span style="font-size:11px;color:var(--muted)">${t.exchange||t.market||''} · ${t.direction}</span></div>
-        <div style="text-align:right"><span style="font-weight:500">${ccySym(t.currency)}${fmtMoney(t.entry*t.qty)}</span>${usd!=null&&t.currency!=='USD'?' <span style="font-size:11px;color:var(--muted)">$'+fmtMoney(usd)+'</span>':''}</div>
+    listEl.innerHTML=openTrades.length?openTrades.map((t,i)=>{
+      const price=t.exit??t.entry;
+      const val=price*t.qty;
+      const usd=toUSD(val,t.currency);
+      const tag=t._synthetic?`<span style="font-size:10px;background:rgba(56,189,248,.12);color:var(--blue);border-radius:4px;padding:1px 5px;margin-left:4px">${t.exchange||'ZSE'}</span>`:'';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--border);font-size:13px;animation:cardEnter .35s cubic-bezier(.22,1,.36,1) ${i*45}ms both">
+        <div><span style="font-weight:600">${t.symbol}</span>${tag}<span style="font-size:11px;color:var(--muted);margin-left:4px">${t._synthetic?t.qty+' shares':t.direction}</span></div>
+        <div style="text-align:right"><span style="font-weight:500">${ccySym(t.currency)}${fmtMoney(val)}</span>${usd!=null&&t.currency!=='USD'?' <span style="font-size:11px;color:var(--muted)">≈$'+fmtMoney(usd)+'</span>':''}</div>
       </div>`;
     }).join(''):'<div style="font-size:12px;color:var(--muted);padding-top:4px">No open positions</div>';
   }

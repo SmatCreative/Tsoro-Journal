@@ -2989,21 +2989,40 @@ function renderDashboard(){
   const todayArrow=todayPnL>=0
     ?'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>'
     :'<line x1="12" y1="5" x2="12" y2="19"/><polyline points="5 12 12 19 19 12"/>';
+  // Breakdown by category
+  const bizCashUSD=wallets.filter(w=>w.business_group).reduce((s,w)=>s+(walletToUSD(w)||0),0);
+  const plainCashUSD=walletCashUSD-bizCashUSD;
+  const zseUSD=zseHoldingsValueUSD();
+  const privUSD=privInvestValueUSD();
+  const grandTotalUSD=walletCashUSD+deployedUSD+zseUSD+privUSD;
+  const bkItems=[
+    {label:'Cash',val:plainCashUSD,icon:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',show:true},
+    {label:'Business',val:bizCashUSD,icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',show:true},
+    {label:'Active Trades',val:deployedUSD,icon:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',show:true},
+    {label:'ZSE / VFEX',val:zseUSD,icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',show:zseUSD>0},
+    {label:'Private',val:privUSD,icon:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',show:privUSD>0},
+  ];
+  const bkHtml=bkItems.filter(b=>b.show).map(b=>`
+    <div style="flex:1;min-width:100px;padding:11px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${b.icon}</svg>
+        <span style="font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600">${b.label}</span>
+      </div>
+      <div style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)">$${fmtMoney(b.val)}</div>
+      ${grandTotalUSD>0?`<div style="font-size:10px;color:var(--muted2);margin-top:2px">${(b.val/grandTotalUSD*100).toFixed(1)}%</div>`:''}
+    </div>`).join('');
   document.getElementById('db-hero').innerHTML=`
-    <div style="padding:20px 24px 18px;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px">Total Portfolio</div>
-      <div style="font-size:42px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:12px;color:var(--text)">$${fmtMoney(accountValueUSD)}</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+    <div style="padding:22px 26px 20px;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px">Total Portfolio</div>
+      <div style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px">
         ${todayHas
           ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${todayPnL>=0?'var(--green)':'var(--red)'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${todayArrow}</svg><span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:${todayPnL>=0?'var(--green)':'var(--red)'}">${todayPnL>=0?'+':''}${fmtPnL(todayPnL)}</span><span style="font-size:12px;color:var(--muted)">today</span>`
           :`<span style="font-size:13px;color:var(--muted)">No trades closed today</span>`
         }
+        ${wr!=null?`<span style="font-size:12px;color:var(--muted);margin-left:12px">· Win rate <strong style="color:var(--text)">${wr}%</strong></span>`:''}
       </div>
-      <div style="display:flex;gap:28px;flex-wrap:wrap">
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Available Cash</div><div style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">$${fmtMoney(walletCashUSD)}</div></div>
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">In Positions</div><div style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">$${fmtMoney(deployedUSD)}</div></div>
-        ${wr!=null?`<div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Win Rate</div><div style="font-size:13px;font-weight:600">${wr}%</div></div>`:''}
-      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${bkHtml}</div>
     </div>`;
   document.getElementById('db-stats').innerHTML=[
     {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},

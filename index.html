@@ -123,11 +123,17 @@ body.zen-mode .zen-value:hover{filter:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── Pages ── */
-@keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.page{display:none}.page.active{display:block;animation:fadeSlideIn .2s cubic-bezier(.22,1,.36,1)}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.page{display:none}.page.active{display:block;animation:fadeSlideIn .28s cubic-bezier(.22,1,.36,1)}
+/* ── Motion system ── */
+@keyframes numPop{0%{opacity:0;transform:translateY(8px) scale(.92)}65%{opacity:1;transform:translateY(-1px) scale(1.01)}100%{opacity:1;transform:none}}
+@keyframes cardEnter{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes barReveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0% 0 0)}}
+.anim-num{animation:numPop .52s cubic-bezier(.22,1,.36,1) both}
+.anim-card{animation:cardEnter .45s cubic-bezier(.22,1,.36,1) both}
 .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:22px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;transition:background .12s,border-color .12s}
-.stat-card:hover{background:var(--surface2);border-color:var(--border-s)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;transition:background .12s,border-color .12s,transform .18s,box-shadow .18s}
+.stat-card:hover{background:var(--surface2);border-color:var(--border-s);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.22)}
 .stat-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:10px}
 .stat-value{font-size:28px;font-weight:700;line-height:1;letter-spacing:-.035em}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--blue)}
@@ -140,7 +146,7 @@ body.zen-mode .zen-value:hover{filter:none}
 .kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-value{font-size:21px;font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s,transform .2s,box-shadow .2s}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .card-title{font-size:13px;font-weight:700;letter-spacing:-.15px;color:var(--text)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -256,7 +262,8 @@ tbody tr:hover td{background:rgba(255,255,255,.035)}
 
 /* ── Wallet ── */
 .wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s}
+.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s,background .15s,border-color .15s}
+.wallet-sum-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25);border-color:var(--border-s)}
 .wallet-sum-card:hover{background:var(--surface2)}
 .wallet-sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:8px}
 .wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
@@ -2545,6 +2552,8 @@ async function importCSV(){ const file=document.getElementById('csv-file').files
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
 function fmtNum(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6}); }
 function fmtMoney(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function countUp(el,target,dur,fmt){if(!el||target==null||isNaN(target))return;dur=dur||780;const neg=target<0,abs=Math.abs(target);const f=fmt||(v=>'$'+fmtMoney(neg?-v:v));const t0=performance.now();(function run(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=f(abs*e);if(p<1)requestAnimationFrame(run);else el.textContent=f(abs);})(t0);}
+function animateCards(container,delay){(container||document).querySelectorAll('.wallet-sum-card,.card,.stat-card').forEach((c,i)=>{c.style.animationDelay=((delay||0)+i*65)+'ms';c.classList.add('anim-card');});}
 function fmtDateShort(d){ if(!d)return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); }
 function pnlClass(n){ return n==null?'pnl-zero':n>0?'pnl-pos':'pnl-neg'; }
 function pnlStr(n){ if(n==null)return '—'; return (n>=0?'+':'')+fmtNum(n); }
@@ -2669,7 +2678,7 @@ function renderDashboard(){
   document.getElementById('db-hero').innerHTML=`
     <div style="padding:22px 26px 20px;border-bottom:1px solid var(--border);margin-bottom:4px">
       <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px">Total Portfolio</div>
-      <div class="zen-value" style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
+      <div class="zen-value" id="db-grand-total" style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px">
         ${todayHas
           ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${todayPnL>=0?'var(--green)':'var(--red)'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${todayArrow}</svg><span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:${todayPnL>=0?'var(--green)':'var(--red)'}">${todayPnL>=0?'+':''}${fmtPnL(todayPnL)}</span><span style="font-size:12px;color:var(--muted)">today</span>`
@@ -2679,6 +2688,10 @@ function renderDashboard(){
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${bkHtml}</div>
     </div>`;
+  setTimeout(()=>{
+    countUp(document.getElementById('db-grand-total'),grandTotalUSD,1000);
+    document.querySelectorAll('#db-hero [style*="min-width:100px"]').forEach((c,i)=>{c.style.animationDelay=(i*55)+'ms';c.classList.add('anim-card');});
+  },30);
   // Period P&L strip (Ghostfolio pattern)
   const dbNow=new Date(); const dbNowStr=dbNow.toISOString().slice(0,10);
   function dbPnlSince(ds){ return closed.filter(t=>t.entryDate>=ds).reduce((s,t)=>s+(calcPnL(t)||0),0); }
@@ -2693,9 +2706,9 @@ function renderDashboard(){
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
       ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>(t.entryDate||'').slice(0,10)===d).reduce((s,t)=>s+(calcPnL(t)||0),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
-        .map(([l,v])=>`<div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:8px">
+        .map(([l,v],i)=>`<div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:8px;animation:cardEnter .4s cubic-bezier(.22,1,.36,1) ${i*60}ms both">
           <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${l}</div>
-          <div class="zen-value" style="font-size:16px;font-weight:700;color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'+':''}$${fmtMoney(v)}</div>
+          <div class="zen-value anim-num" style="font-size:16px;font-weight:700;color:${v>=0?'var(--green)':'var(--red)'};animation-delay:${i*60+120}ms">${v>=0?'+':''}$${fmtMoney(v)}</div>
         </div>`).join('')}
     </div>
   </div>`;
@@ -2704,7 +2717,7 @@ function renderDashboard(){
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
-  ].map(s=>`<div class="stat-card ${s.card}"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls} zen-value">${s.val}</div></div>`).join('');
+  ].map((s,i)=>`<div class="stat-card ${s.card}" style="animation:cardEnter .45s cubic-bezier(.22,1,.36,1) ${i*65}ms both"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls} zen-value anim-num" style="animation-delay:${i*65+130}ms">${s.val}</div></div>`).join('');
   // Win / Loss bar
   const winCount  = wins.length;
   const lossCount = losses.length;
@@ -2765,8 +2778,8 @@ function chartGrid(ctx, W, H, pad){
   ctx.strokeStyle=themeVal('#1a2336','#eef2f7'); ctx.lineWidth=1;
   for(let i=0;i<=4;i++){const y=pad+(i/4)*(H-pad*2);ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();}
 }
-function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);chartGrid(ctx,W,H,pad);const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,themeVal('rgba(0,200,83,.22)','rgba(0,168,67,.2)'));grad.addColorStop(1,themeVal('rgba(0,200,83,0)','rgba(0,168,67,0)'));const xy=pts.map((v,i)=>({x:sx(i),y:sy(v)}));ctx.beginPath();smoothPath(ctx,xy);ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();smoothPath(ctx,xy);ctx.strokeStyle=themeVal('#00C853','#00A843');ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),8,0,Math.PI*2);ctx.fillStyle=themeVal('rgba(0,200,83,.25)','rgba(0,168,67,.18)');ctx.fill();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),4,0,Math.PI*2);ctx.fillStyle=themeVal('#00C853','#00A843');ctx.fill(); }
-function drawDailyChart(closed){ const canvas=document.getElementById('daily-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const byDay={};closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const days=Object.keys(byDay).sort().slice(-30);if(!days.length){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No data yet',W/2,H/2);return;}const vals=days.map(d=>byDay[d]);const maxAbs=Math.max(...vals.map(Math.abs),1);const pad=20;const barW=Math.max(3,Math.floor((W-pad*2)/days.length)-2);const baseline=H/2;ctx.strokeStyle=themeVal('#1a2336','#eef2f7');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();days.forEach((d,i)=>{const x=pad+i*((W-pad*2)/days.length);const v=vals[i];const barH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad));ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.75)','rgba(22,163,74,.75)'):themeVal('rgba(239,68,68,.75)','rgba(220,38,38,.75)');if(v>=0)ctx.fillRect(x,baseline-barH,barW,barH);else ctx.fillRect(x,baseline,barW,barH);}); }
+function drawEquityChart(closed){ const canvas=document.getElementById('equity-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));const pts=[0];let cum=0;sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});if(pts.length<2){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No closed trades yet',W/2,H/2);return;}const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1,pad=20;const sx=i=>(i/(pts.length-1))*(W-pad*2)+pad,sy=v=>H-pad-(v-min)/range*(H-pad*2);chartGrid(ctx,W,H,pad);const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,themeVal('rgba(0,200,83,.22)','rgba(0,168,67,.2)'));grad.addColorStop(1,themeVal('rgba(0,200,83,0)','rgba(0,168,67,0)'));const xy=pts.map((v,i)=>({x:sx(i),y:sy(v)}));ctx.beginPath();smoothPath(ctx,xy);ctx.lineTo(sx(pts.length-1),H);ctx.lineTo(sx(0),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();smoothPath(ctx,xy);ctx.strokeStyle=themeVal('#00C853','#00A843');ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),8,0,Math.PI*2);ctx.fillStyle=themeVal('rgba(0,200,83,.25)','rgba(0,168,67,.18)');ctx.fill();ctx.beginPath();ctx.arc(sx(pts.length-1),sy(pts[pts.length-1]),4,0,Math.PI*2);ctx.fillStyle=themeVal('#00C853','#00A843');ctx.fill();canvas.style.animation='none';requestAnimationFrame(()=>{canvas.style.animation='barReveal .75s cubic-bezier(.22,1,.36,1) both';}); }
+function drawDailyChart(closed){ const canvas=document.getElementById('daily-chart');if(!canvas)return;const W=canvas.parentElement.clientWidth-40,H=160;canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);const byDay={};closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});const days=Object.keys(byDay).sort().slice(-30);if(!days.length){ctx.fillStyle=themeVal('#64748b','#8891a8');ctx.font='13px Inter,system-ui';ctx.textAlign='center';ctx.fillText('No data yet',W/2,H/2);return;}const vals=days.map(d=>byDay[d]);const maxAbs=Math.max(...vals.map(Math.abs),1);const pad=20;const barW=Math.max(3,Math.floor((W-pad*2)/days.length)-2);const baseline=H/2;ctx.strokeStyle=themeVal('#1a2336','#eef2f7');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();const t0Daily=performance.now(),durDaily=700;(function runBars(now){const prog=Math.min(1,(now-t0Daily)/durDaily),ease=1-Math.pow(1-prog,3);ctx.clearRect(0,baseline-H/2+pad,W,H-pad*2);ctx.strokeStyle=themeVal('#1a2336','#eef2f7');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,baseline);ctx.lineTo(W-pad,baseline);ctx.stroke();days.forEach((d,i)=>{const x=pad+i*((W-pad*2)/days.length);const v=vals[i];const fullH=Math.max(2,Math.abs(v)/maxAbs*(H/2-pad));const animH=fullH*ease;ctx.fillStyle=v>=0?themeVal('rgba(34,197,94,.75)','rgba(22,163,74,.75)'):themeVal('rgba(239,68,68,.75)','rgba(220,38,38,.75)');if(v>=0)ctx.fillRect(x,baseline-animH,barW,animH);else ctx.fillRect(x,baseline,barW,animH);});if(prog<1)requestAnimationFrame(runBars);})(t0Daily); }
 
 // ── Analytics ──────────────────────────────────────────────────────
 // Live snapshot of open positions + wallet cash so Analytics is useful
@@ -3135,7 +3148,7 @@ function renderAnalytics(){
       {l:'Streak',v:streak?(streakDir==='W'?streak+'W':streak+'L'):'—',col:streakDir==='W'?'var(--green)':'var(--red)'},
       {l:'No SL',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
       {l:'Closed',v:closed.length,col:'var(--text)'},
-    ].map(s=>'<div class="kpi-item"><div class="kpi-label">'+s.l+'</div><div class="kpi-value" style="color:'+s.col+'">'+s.v+'</div></div>').join('')
+    ].map((s,i)=>'<div class="kpi-item" style="animation:cardEnter .4s cubic-bezier(.22,1,.36,1) '+(i*40)+'ms both"><div class="kpi-label">'+s.l+'</div><div class="kpi-value anim-num" style="color:'+s.col+';animation-delay:'+(i*40+100)+'ms">'+s.v+'</div></div>').join('')
   +'</div>';
 
   const chartCard='<div class="card" style="grid-column:1/-1">'
@@ -3321,6 +3334,7 @@ function renderAnalytics(){
         rx.fillStyle=themeVal('#1a2336','#eef2f7'); rx.font='600 9px Inter,system-ui'; rx.textAlign='center';
         rx.fillText(v.toFixed(0)+'%',x,y-(i<rolling10.length/2?8:-14));
       });
+      rc.style.animation='none'; requestAnimationFrame(()=>{ rc.style.animation='barReveal .8s cubic-bezier(.22,1,.36,1) both'; });
     } else if(rc){ rc.style.display='none'; rc.insertAdjacentHTML('afterend','<div style="padding:20px;color:var(--muted);font-size:13px">Need 5+ closed trades for rolling win rate.</div>'); }
 
     // ── ZSE allocation bar chart ──────────────────────────────────
@@ -4171,34 +4185,44 @@ function _renderWallet(){
   const openTrades = trades.filter(t=>t.status==='open');
   const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty, t.currency)??t.entry*t.qty),0);
   const zseStocksUSD = zseHoldingsValueUSD();
+  const allOpenPositions = allTrades().filter(t=>t.status==='open');
+  const combinedDeployedUSD = deployedUSD + zseStocksUSD;
   const grandTotal = totalCashUSD + deployedUSD + zseStocksUSD;
   const cashPct = grandTotal>0 ? totalCashUSD/grandTotal*100 : 0;
-  const deployPct = grandTotal>0 ? deployedUSD/grandTotal*100 : 0;
+  const deployPct = grandTotal>0 ? combinedDeployedUSD/grandTotal*100 : 0;
 
   // Summary bar
   document.getElementById('wallet-summary').innerHTML=`
     <div class="wallet-summary-grid">
       <div class="wallet-sum-card" style="border-top:2px solid var(--green)">
         <div class="wallet-sum-lbl">Total Available Cash</div>
-        <div class="wallet-sum-val pnl-pos">$${fmtMoney(totalCashUSD)}</div>
+        <div class="wallet-sum-val pnl-pos" id="ws-cash">$${fmtMoney(totalCashUSD)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${wallets.length} wallet${wallets.length!==1?'s':''} · USD equiv.</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--yellow)">
         <div class="wallet-sum-lbl">Deployed in Trades</div>
-        <div class="wallet-sum-val" style="color:var(--yellow)">$${fmtMoney(deployedUSD)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">${openTrades.length} open position${openTrades.length!==1?'s':''}</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)" id="ws-dep">$${fmtMoney(combinedDeployedUSD)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${allOpenPositions.length} open position${allOpenPositions.length!==1?'s':''}</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--accent)">
         <div class="wallet-sum-lbl">Total Tracked Funds</div>
-        <div class="wallet-sum-val" style="color:var(--accent2)">$${fmtMoney(grandTotal)}</div>
+        <div class="wallet-sum-val" style="color:var(--accent2)" id="ws-tot">$${fmtMoney(grandTotal)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">Cash · trades · stocks</div>
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--muted)">
         <div class="wallet-sum-lbl">Cash Utilisation</div>
-        <div class="wallet-sum-val" style="color:var(--text)">${grandTotal>0?deployPct.toFixed(1):'0'}%</div>
+        <div class="wallet-sum-val" style="color:var(--text)" id="ws-pct">${grandTotal>0?deployPct.toFixed(1):'0'}%</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">in active trades</div>
       </div>
     </div>`;
+  // Animate summary cards
+  setTimeout(()=>{
+    document.querySelectorAll('#wallet-summary .wallet-sum-card').forEach((c,i)=>{c.style.animationDelay=(i*70)+'ms';c.classList.add('anim-card');});
+    countUp(document.getElementById('ws-cash'),totalCashUSD);
+    countUp(document.getElementById('ws-dep'),combinedDeployedUSD);
+    countUp(document.getElementById('ws-tot'),grandTotal);
+    countUp(document.getElementById('ws-pct'),grandTotal>0?deployPct:0,750,v=>v.toFixed(1)+'%');
+  },10);
 
   // Currency breakdown strip
   const breakdownEl=document.getElementById('wallet-currency-breakdown');
@@ -4430,7 +4454,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
 
   // Update hero total
   const totalEl=document.getElementById('wallet-donut-total');
-  if(totalEl) totalEl.textContent=total?'$'+fmtMoney(total):'$0.00';
+  if(totalEl){ if(total) countUp(totalEl,total,950); else totalEl.textContent='$0.00'; }
 
   // Breakdown change line (placeholder — can wire to historical data later)
   const changeEl=document.getElementById('portfolio-breakdown-change');
@@ -4449,7 +4473,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
 
   // Bar width for the inline share bar
   legendEl.innerHTML=segments.map((sg,i)=>`
-    <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0;padding:9px 18px;border-top:${i>0?'1px solid var(--border)':'none'};transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+    <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0;padding:9px 18px;border-top:${i>0?'1px solid var(--border)':'none'};transition:background .15s;animation:cardEnter .38s cubic-bezier(.22,1,.36,1) ${i*55}ms both" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
       <div style="display:flex;align-items:center;gap:10px;min-width:0">
         <div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${sg.color}"></div>
         <span style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
@@ -4487,21 +4511,26 @@ function drawDeployedBar(cashUSD, deployedUSD, openTrades){
   const cashCol=themeVal('#1a2e1e','#d1f0e0');
   const depCol=themeVal('#00C853','#00A843');
 
-  // Track background
-  ctx.beginPath(); rrect(ctx,pad,y,W-pad*2,barH,[7,7,7,7]); ctx.fillStyle=cashCol; ctx.fill();
-  // Deployed segment (brand blue, drawn from the right)
-  if(deployW>2){
-    ctx.beginPath(); rrect(ctx,W-pad-deployW,y,deployW,barH,[deployW>=W-pad*2-2?7:0,7,7,deployW>=W-pad*2-2?7:0]); ctx.fillStyle=depCol; ctx.fill();
+  function drawFrame(progress){
+    ctx.clearRect(0,0,W,H);
+    const animDeploy=deployW*progress;
+    // Track background
+    ctx.beginPath(); rrect(ctx,pad,y,W-pad*2,barH,[7,7,7,7]); ctx.fillStyle=cashCol; ctx.fill();
+    // Deployed segment animates from right edge inward
+    if(animDeploy>2){
+      ctx.beginPath(); rrect(ctx,W-pad-animDeploy,y,animDeploy,barH,[animDeploy>=W-pad*2-2?7:0,7,7,animDeploy>=W-pad*2-2?7:0]); ctx.fillStyle=depCol; ctx.fill();
+    }
+    // Labels
+    ctx.font='500 11px Inter,system-ui';
+    ctx.fillStyle=themeVal('#94a3b8','#475569');
+    ctx.textAlign='left';  ctx.fillText('CASH '+(cashUSD/total*100).toFixed(1)+'%', pad, y-9);
+    ctx.textAlign='right'; ctx.fillText((openTrades.length?openTrades.length+' TRADE'+(openTrades.length!==1?'S':'')+' · ':'')+'DEPLOYED '+(deployedUSD/total*100).toFixed(1)+'%', W-pad, y-9);
+    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='11px Inter,system-ui';
+    ctx.textAlign='left';  ctx.fillText('$'+fmtMoney(cashUSD)+' available', pad, y+barH+18);
+    ctx.textAlign='right'; ctx.fillText('$'+fmtMoney(deployedUSD)+' in positions', W-pad, y+barH+18);
   }
-
-  // Clean labels above + below, no text crammed inside the bar
-  ctx.font='500 11px Inter,system-ui';
-  ctx.fillStyle=themeVal('#94a3b8','#475569');
-  ctx.textAlign='left';  ctx.fillText('CASH '+(cashUSD/total*100).toFixed(1)+'%', pad, y-9);
-  ctx.textAlign='right'; ctx.fillText((openTrades.length?openTrades.length+' TRADE'+(openTrades.length!==1?'S':'')+' · ':'')+'DEPLOYED '+(deployedUSD/total*100).toFixed(1)+'%', W-pad, y-9);
-  ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='11px Inter,system-ui';
-  ctx.textAlign='left';  ctx.fillText('$'+fmtMoney(cashUSD)+' available', pad, y+barH+18);
-  ctx.textAlign='right'; ctx.fillText('$'+fmtMoney(deployedUSD)+' in positions', W-pad, y+barH+18);
+  const t0=performance.now(),dur=800;
+  (function run(now){const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,3);drawFrame(e);if(p<1)requestAnimationFrame(run);})(t0);
 
   // Open positions list under the bar
   const listEl=document.getElementById('wallet-open-list');
@@ -6752,10 +6781,15 @@ function renderZse(){
       </div>
       <div class="wallet-sum-card" style="border-top:2px solid var(--yellow)">
         <div class="wallet-sum-lbl">Net After All Charges</div>
-        <div class="wallet-sum-val" style="color:var(--yellow)">${totalUSD?(()=>{const np=calcNetProceeds(totalUSD,charges);return '$'+fmtMoney(np.afterWithdraw);})():'—'}</div>
+        <div class="wallet-sum-val" style="color:var(--yellow)" id="zse-net-val">${totalUSD?(()=>{const np=calcNetProceeds(totalUSD,charges);return '$'+fmtMoney(np.afterWithdraw);})():'—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">If you sell &amp; withdraw everything</div>
       </div>
     </div>`;
+  setTimeout(()=>{
+    document.querySelectorAll('#zse-summary .wallet-sum-card').forEach((c,i)=>{c.style.animationDelay=(i*65)+'ms';c.classList.add('anim-card');});
+    if(hasAllPrices&&totalUSD) countUp(document.querySelector('#zse-summary .wallet-sum-card:first-child .wallet-sum-val'),totalUSD);
+    if(totalCostUSD) countUp(document.querySelector('#zse-summary .wallet-sum-card:nth-child(2) .wallet-sum-val'),totalCostUSD);
+  },10);
 
   // ── Holdings table — grouped by symbol ──
   const el = document.getElementById('zse-holdings-table');
@@ -6866,6 +6900,7 @@ function renderZse(){
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div></div>`;
+    setTimeout(()=>{ el.querySelectorAll('tbody tr[data-sym]').forEach((r,i)=>{ r.style.animation='cardEnter .35s cubic-bezier(.22,1,.36,1) '+(i*50)+'ms both'; }); },10);
   }
 
   // ── Withdrawal calculator ──

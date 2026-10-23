@@ -364,9 +364,26 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .kpi-item{min-width:140px;scroll-snap-align:start}
   /* Tables full-width on mobile */
   .grid-2{grid-template-columns:1fr}
+  .ticker-bar{height:30px}
+  .ticker-item{padding:0 16px;font-size:11px}
   .table-wrap{border-radius:var(--r-sm)}
   .modal{width:100vw;max-width:100vw;border-radius:var(--r) var(--r) 0 0;position:fixed;bottom:0;left:0;max-height:90vh}
 }
+</style>
+<style>
+.ticker-bar{height:34px;background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;flex-shrink:0;position:relative}
+.ticker-bar::before,.ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none}
+.ticker-bar::before{left:0;background:linear-gradient(to right,var(--surface),transparent)}
+.ticker-bar::after{right:0;background:linear-gradient(to left,var(--surface),transparent)}
+.ticker-bar.empty{display:none}
+.ticker-track{display:flex;align-items:center;white-space:nowrap;animation:ticker-scroll 50s linear infinite;will-change:transform}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:8px;padding:0 22px;font-size:12px;height:34px;font-variant-numeric:tabular-nums;border-right:1px solid var(--border)}
+.ticker-sym{font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.04em}
+.ticker-price{font-weight:600;color:var(--text)}
+.ticker-chg{font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:2px}
+.ticker-chg.up{color:var(--green)}.ticker-chg.down{color:var(--red)}.ticker-chg.flat{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -490,6 +507,11 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <!-- Global DB error banner -->
     <div id="global-error-banner" style="display:none;background:#ef4444;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;position:sticky;top:0;z-index:999;cursor:pointer" onclick="this.style.display='none'" title="Click to dismiss"></div>
+
+    <!-- Holdings Ticker -->
+    <div class="ticker-bar empty" id="ticker-bar">
+      <div class="ticker-track" id="ticker-track"></div>
+    </div>
 
     <div class="content">
 
@@ -2235,6 +2257,7 @@ async function loadAllData(){
   try {
     await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving()]);
     renderAll();
+    renderTicker();
   } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
 }
@@ -5033,6 +5056,52 @@ const CURRENCIES_FULL={
 };
 
 function renderAll(){ renderPage(document.querySelector('.page.active')?.id?.replace('page-','')||'dashboard'); }
+
+function renderTicker(){
+  const bar=document.getElementById('ticker-bar');
+  const track=document.getElementById('ticker-track');
+  if(!bar||!track) return;
+
+  // Group holdings by symbol+exchange
+  const grpMap={};
+  zseHoldings.forEach(h=>{
+    const k=h.symbol+'|'+h.exchange;
+    if(!grpMap[k]) grpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]};
+    grpMap[k].lots.push(h);
+  });
+
+  // Build ticker items — only show holdings with a current price
+  const items=Object.values(grpMap).map(g=>{
+    const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+    const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+    const avgBuy=totalCost/totalShares;
+    // Latest price from price history or holding
+    const history=zsePriceHistory.filter(r=>r.symbol===g.symbol&&r.exchange===g.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
+    const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
+    const cp=history.length?Number(history[0].price):(latestHolding?.currentPrice??null);
+    if(cp==null) return null;
+    const chgPct=((cp-avgBuy)/avgBuy)*100;
+    const isUp=chgPct>0.005, isDown=chgPct<-0.005;
+    const arrow=isUp?'▲':isDown?'▼':'';
+    const cls=isUp?'up':isDown?'down':'flat';
+    const ccy=g.exchange==='VFEX'?'$':'ZiG ';
+    return `<div class="ticker-item">
+      <span class="ticker-sym">${g.symbol}</span>
+      <span class="ticker-price">${ccy}${Number(cp).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4})}</span>
+      <span class="ticker-chg ${cls}">${arrow} ${isUp?'+':''}${chgPct.toFixed(2)}%</span>
+    </div>`;
+  }).filter(Boolean);
+
+  if(!items.length){ bar.classList.add('empty'); return; }
+  bar.classList.remove('empty');
+  // Duplicate for seamless loop
+  const html=items.join('');
+  track.innerHTML=html+html;
+
+  // Adjust speed based on content count (wider = slower)
+  const dur=Math.max(20, items.length*6);
+  track.style.animationDuration=dur+'s';
+}
 window.addEventListener('resize',()=>{
   if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();
   ['equity-chart','daily-chart','an-pnl-chart','an-rolling-chart'].forEach(id=>{
@@ -5413,9 +5482,9 @@ async function saveZseHolding(){
   }
   // Record current price snapshot (today)
   if(!isNaN(curPrice) && curPrice>0){
-    recordZsePrice(symbol,exchange,curPrice,ccy,priceDate||new Date().toISOString().slice(0,10),'Price update').then(()=>renderZsePriceCharts());
+    recordZsePrice(symbol,exchange,curPrice,ccy,priceDate||new Date().toISOString().slice(0,10),'Price update').then(()=>{renderZsePriceCharts();renderTicker();});
   }
-  renderZse();
+  renderZse(); renderTicker();
 }
 
 async function deleteZseHolding(id){
@@ -5428,7 +5497,7 @@ async function deleteZseHolding(id){
   }catch(e){if(!zseTableMissing(e)){showToast('Delete failed: '+e.message,'error');return;}}
   zseHoldings=zseHoldings.filter(x=>x.id!==id);
   if(!sbOk) zseSaveLocal();
-  renderZse();
+  renderZse(); renderTicker();
 }
 
 // Inline price update — updates ALL lots for this symbol
@@ -5448,8 +5517,8 @@ async function openZsePriceUpdate(symbol, exchange){
     if(error) throw error;
   }catch(e){ if(zseTableMissing(e)){zseSaveLocal();}else{showToast('Price save failed: '+e.message,'error');} }
   const ccy=exchange==='VFSE'?'USD':'ZiG';
-  recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>renderZsePriceCharts());
-  renderZse();
+  recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>{renderZsePriceCharts();renderTicker();});
+  renderZse(); renderTicker();
   showToast(symbol+' price updated to '+p,'success');
 }
 

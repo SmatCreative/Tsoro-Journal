@@ -619,7 +619,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
             </div>
           </div>
           <div id="wh-stats" style="display:flex;gap:24px;margin-bottom:12px;flex-wrap:wrap"></div>
-          <canvas id="wallet-perf-chart" height="220"></canvas>
+          <div id="wallet-perf-chart" style="height:220px"></div>
         </div>
         <!-- Stock Portfolio Performance -->
         <div class="card" style="margin-bottom:16px;display:none" id="zse-perf-card">
@@ -669,6 +669,9 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         </div>
         <!-- Hidden donut canvas kept for compat (not displayed) -->
         <canvas id="wallet-donut" style="display:none"></canvas>
+
+        <!-- Business Finance CFO Dashboard -->
+        <div id="biz-cfo-section" style="display:none;margin-bottom:28px"></div>
 
         <!-- Private / unlisted investments -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;margin-top:4px">
@@ -2764,12 +2767,14 @@ function drawAnPnlChart(sorted2){
       axisLabel:{color:tc,fontSize:9,interval:sorted2.length>14?'auto':0,rotate:sorted2.length>20?30:0}},
     yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},
       axisLabel:{color:tc,fontSize:9,formatter:v=>v>=1000?'$'+Math.round(v/1000)+'k':v<=-1000?'-$'+Math.round(-v/1000)+'k':'$'+v.toFixed(0)}},
-    tooltip:{trigger:'axis',backgroundColor:isDark?'rgba(12,19,38,.92)':'rgba(255,255,255,.96)',
-      borderColor:isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)',
+    tooltip:{trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(0,168,78,0.5)',width:1},label:{backgroundColor:'#00A84E',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(0,168,78,.3)':'rgba(0,138,60,.2)',
       textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
-      formatter:p=>{const v=p[0].value;return`<div style="font-size:11px;color:${tc}">${p[0].name}</div><div style="font-weight:700;color:${v>=0?'#00A84E':'#EF4444'}">${v>=0?'+':'-'}$${fmtMoney(Math.abs(v))}</div>`;}},
+      formatter:p=>{const v=p[0].value;return`<div style="font-size:11px;color:${tc}">${p[0].name}</div><div style="font-weight:800;font-size:14px;color:${v>=0?'#00E676':'#FF5252'}">${v>=0?'+':'-'}$${fmtMoney(Math.abs(v))}</div>`;}},
     series:[{type:'bar',data:vals.map(v=>({value:v,
-      itemStyle:{color:v>=0?'rgba(0,168,78,.82)':'rgba(239,68,68,.82)',borderRadius:v>=0?[3,3,0,0]:[0,0,3,3]}})),barMaxWidth:18}]
+      itemStyle:{color:v>=0?{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#00E676'},{offset:1,color:'#00A84E'}]}:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#FF5252'},{offset:1,color:'#D32F2F'}]},borderRadius:v>=0?[4,4,0,0]:[0,0,4,4]}})),barMaxWidth:20}]
   });
 }
 function drawAnRollingChart(rolling10){
@@ -2785,12 +2790,14 @@ function drawAnRollingChart(rolling10){
       axisLabel:{color:tc,fontSize:9,interval:Math.max(0,Math.floor(rolling10.length/6)-1)}},
     yAxis:{type:'value',min:0,max:100,splitLine:{lineStyle:{color:gc}},
       axisLabel:{color:tc,fontSize:9,formatter:v=>v+'%'}},
-    tooltip:{trigger:'axis',backgroundColor:isDark?'rgba(12,19,38,.92)':'rgba(255,255,255,.96)',
-      borderColor:isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)',
+    tooltip:{trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(56,189,248,0.5)',width:1},label:{backgroundColor:'#38BDF8',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(56,189,248,.3)':'rgba(56,189,248,.25)',
       textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
-      formatter:p=>`<div style="font-size:11px;color:${tc}">Trade ${p[0].name}</div><div style="font-weight:700">${p[0].value.toFixed(1)}% win rate</div>`},
-    series:[{type:'line',data:rolling10,smooth:0.3,symbolSize:5,
-      lineStyle:{color:'#38BDF8',width:2},itemStyle:{color:'#38BDF8'},
+      formatter:p=>`<div style="font-size:11px;color:${tc}">Trade ${p[0].name}</div><div style="font-weight:800;font-size:14px;color:#38BDF8">${p[0].value.toFixed(1)}% win rate</div>`},
+    series:[{type:'line',data:rolling10,smooth:0.3,symbolSize:6,
+      lineStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#0EA5E9'},{offset:1,color:'#38BDF8'}]},width:2.5},itemStyle:{color:'#38BDF8'},
       areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,
         colorStops:[{offset:0,color:'rgba(56,189,248,.15)'},{offset:1,color:'rgba(56,189,248,0)'}]}},
       markLine:{silent:true,lineStyle:{color:'rgba(0,168,78,.4)',type:'dashed',width:1},
@@ -2815,14 +2822,17 @@ function drawEquityChart(closed){
       axisLabel:{color:tc,fontSize:10,interval:Math.max(1,Math.floor(labels.length/6)-1)}},
     yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},
       axisLabel:{color:tc,fontSize:10,formatter:v=>v>=1000?'$'+Math.round(v/1000)+'k':v<=-1000?'-$'+Math.round(-v/1000)+'k':'$'+v.toFixed(0)}},
-    tooltip:{trigger:'axis',backgroundColor:isDark?'rgba(12,19,38,.92)':'rgba(255,255,255,.96)',
-      borderColor:isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)',
+    tooltip:{trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(0,168,78,0.5)',width:1},label:{backgroundColor:'#00A84E',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(0,168,78,.3)':'rgba(0,138,60,.2)',
       textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
-      formatter:p=>`<div style="font-size:11px;color:${tc}">${p[0].name||''}</div><div style="font-weight:700">${p[0].value>=0?'+':'-'}$${fmtMoney(Math.abs(p[0].value))}</div>`},
-    series:[{type:'line',data:pts,smooth:0.4,symbol:'none',
-      lineStyle:{color:lc,width:2.5},
+      formatter:p=>`<div style="font-size:11px;color:${tc};margin-bottom:2px">${p[0].name||''}</div><div style="font-weight:800;font-size:15px;color:${lc}">${p[0].value>=0?'+':'-'}$${fmtMoney(Math.abs(p[0].value))}</div>`},
+    series:[{type:'line',data:pts,smooth:0.4,symbol:'circle',symbolSize:0,
+      lineStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:isDark?'#008A3C':'#006830'},{offset:1,color:lc}]},width:3},
+      emphasis:{itemStyle:{symbolSize:8,borderWidth:2,borderColor:'#fff'}},
       areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,
-        colorStops:[{offset:0,color:at},{offset:1,color:'rgba(0,168,78,0)'}]}}}]
+        colorStops:[{offset:0,color:at+'0.40)'},{offset:0.55,color:at+'0.12)'},{offset:1,color:'rgba(0,168,78,0)'}]}}}]
   });
 }
 function drawDailyChart(closed){
@@ -2842,12 +2852,15 @@ function drawDailyChart(closed){
       axisLabel:{color:tc,fontSize:9,interval:Math.max(0,Math.floor(days.length/8)-1)}},
     yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},
       axisLabel:{color:tc,fontSize:9,formatter:v=>v>=1000?'$'+Math.round(v/1000)+'k':v<=-1000?'-$'+Math.round(-v/1000)+'k':'$'+v.toFixed(0)}},
-    tooltip:{trigger:'axis',backgroundColor:isDark?'rgba(12,19,38,.92)':'rgba(255,255,255,.96)',
-      borderColor:isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)',
-      textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12}},
+    tooltip:{trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(0,168,78,0.5)',width:1},label:{backgroundColor:'#00A84E',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(0,168,78,.3)':'rgba(0,138,60,.2)',
+      textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
+      formatter:p=>{const v=p[0].value;return`<div style="font-size:11px;color:${tc};margin-bottom:2px">${p[0].axisValue||''}</div><div style="font-weight:800;font-size:14px;color:${v>=0?'#00E676':'#FF5252'}">${v>=0?'+':'-'}$${fmtMoney(Math.abs(v))}</div>`;}},
     series:[{type:'bar',data:vals.map(v=>({value:v,
-      itemStyle:{color:v>=0?'rgba(0,168,78,.82)':'rgba(239,68,68,.82)',borderRadius:v>=0?[3,3,0,0]:[0,0,3,3]}})),
-      barMaxWidth:18}]
+      itemStyle:{color:v>=0?{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#00E676'},{offset:1,color:'#00A84E'}]}:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#FF5252'},{offset:1,color:'#D32F2F'}]},borderRadius:v>=0?[4,4,0,0]:[0,0,4,4]}})),
+      barMaxWidth:20}]
   });
 }
 
@@ -3874,6 +3887,7 @@ function renderWallet(){
   }
   try { syncWalletPerfSelector(); renderWalletPerf(); } catch(e){ console.error('wallet perf chart:',e); }
   try { renderZsePerformanceCard(); } catch(e){ console.error('stock perf card:',e); }
+  try { renderBizCFO(); } catch(e){ console.error('biz cfo:',e); }
   try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
   try { renderLoans(); } catch(e){ console.error('loans section:',e); }
@@ -3960,24 +3974,57 @@ function renderWalletPerf(){
 }
 
 function drawWalletPerfChart(series, ccy){
-  const canvas=document.getElementById('wallet-perf-chart'); if(!canvas) return;
-  const W=canvas.parentElement.clientWidth-40, H=220; canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
+  const el=document.getElementById('wallet-perf-chart'); if(!el) return;
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tc=isDark?'#6B7A99':'#64748b', gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)';
+  let chart=echarts.getInstanceByDom(el); if(!chart) chart=echarts.init(el,null,{renderer:'canvas'});
   if(series.length<2){
-    ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='13px Inter,system-ui'; ctx.textAlign='center';
-    ctx.fillText(series.length===1?'Balance history starts now — update a balance to grow this chart':'No balance history yet',W/2,H/2);
+    chart.setOption({
+      backgroundColor:'transparent',
+      graphic:[{type:'text',left:'center',top:'middle',style:{text:series.length===1?'Balance history starts here — update a balance to grow this chart':'No balance history yet',fill:tc,font:'13px Inter,system-ui'}}]
+    });
     return;
   }
   const vals=series.map(p=>p.v);
-  const minV=Math.min(...vals), maxV=Math.max(...vals);
-  const range=(maxV-minV)||Math.abs(maxV)||1;
-  const yMin=minV-range*.08, yMax=maxV+range*.08, yRange=yMax-yMin;
-  const padB=26, padT=10, padR=16, padL=58;
-  const t0=series[0].t.getTime(), t1=series[series.length-1].t.getTime(), tRange=(t1-t0)||1;
-  const sx=t=>padL+(t-t0)/tRange*(W-padL-padR);
-  const sy=v=>H-padB-(v-yMin)/yRange*(H-padB-padT);
+  const isUp=vals[vals.length-1]>=vals[0];
+  const lc=isUp?'#00E676':'#FF5252';
+  const at=isUp?'rgba(0,200,83,':'rgba(255,82,82,';
+  const dates=series.map(p=>p.t.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  chart.setOption({
+    animation:true,animationDuration:900,animationEasing:'cubicOut',
+    backgroundColor:'transparent',
+    grid:{left:58,right:12,top:14,bottom:28,containLabel:false},
+    tooltip:{
+      trigger:'axis',
+      axisPointer:{
+        type:'cross',
+        crossStyle:{color:'rgba(0,168,78,0.6)',width:1},
+        label:{backgroundColor:'#00A84E',color:'#fff',fontSize:11}
+      },
+      backgroundColor:isDark?'rgba(10,16,32,0.97)':'rgba(255,255,255,0.97)',
+      borderColor:isDark?'rgba(0,168,78,0.35)':'rgba(0,138,60,0.25)',
+      textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
+      formatter:p=>`<div style="font-size:11px;color:${tc};margin-bottom:3px">${p[0]?.axisValue||''}</div><div style="font-weight:800;font-size:15px;color:${lc}">${ccySym(ccy)}${fmtMoney(p[0]?.value||0)}</div>`
+    },
+    xAxis:{type:'category',data:dates,axisLine:{show:false},axisTick:{show:false},axisLabel:{color:tc,fontSize:10,interval:Math.max(1,Math.floor(dates.length/6)-1)}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},axisLabel:{color:tc,fontSize:10,formatter:v=>{const sym=ccySym(ccy);return v>=1000?sym+Math.round(v/1000)+'k':sym+v.toFixed(0);}}},
+    series:[{
+      type:'line',data:vals,smooth:0.4,symbol:'circle',symbolSize:0,
+      lineStyle:{color:lc,width:3},
+      itemStyle:{color:lc},
+      emphasis:{itemStyle:{symbolSize:7,borderWidth:2,borderColor:'#fff'}},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+        {offset:0,color:at+'0.40)'},{offset:0.5,color:at+'0.14)'},{offset:1,color:at+'0)'}
+      ]}}
+    }]
+  });
+  // dummy placeholder to keep original code path from erroring
+  const _W=el.parentElement?.clientWidth-40||300, _H=220;
+  if(false){
+  const canvas=null;
+  const W=_W, H=_H; canvas?.getContext;
   // Grid + y labels
-  ctx.strokeStyle=themeVal('#1a2336','#eef2f7'); ctx.lineWidth=1;
+  let ctx=null; ctx?.strokeStyle;
   ctx.fillStyle=themeVal('#64748b','#8891a8'); ctx.font='10px Inter,system-ui';
   for(let i=0;i<=4;i++){
     const v=yMin+yRange*i/4, y=sy(v);
@@ -4013,7 +4060,8 @@ function drawWalletPerfChart(series, ccy){
   // End label
   ctx.font='600 11px Inter,system-ui'; ctx.textAlign='right'; ctx.fillStyle=lineCol;
   ctx.fillText(ccySym(ccy)+fmtMoney(lp.v), W-padR, Math.max(sy(lp.v)-8,12));
-}
+  } // end if(false) dead-code block
+} // end drawWalletPerfChart
 // ── Stock portfolio performance card ──────────────────────────────────
 function renderZsePerformanceCard(){
   const card=document.getElementById('zse-perf-card'); if(!card) return;
@@ -5780,6 +5828,227 @@ function renderPrivInvest(){
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// BUSINESS CFO DASHBOARD
+// ═══════════════════════════════════════════════════════════════════
+
+function renderBizCFO(){
+  const sec=document.getElementById('biz-cfo-section'); if(!sec) return;
+  const bizGroups={};
+  wallets.forEach(w=>{ if(w.business_group)(bizGroups[w.business_group]=bizGroups[w.business_group]||[]).push(w); });
+  if(!Object.keys(bizGroups).length){ sec.style.display='none'; return; }
+
+  const bizWalletIds=new Set(Object.values(bizGroups).flat().map(w=>w.id));
+  const bizHistory=walletHistory.filter(h=>bizWalletIds.has(h.wallet_id)&&h.tx_type);
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+
+  let totalIn=0,totalOut=0;
+  bizHistory.forEach(h=>{
+    const amt=Number(h.amount)||0;
+    const w=wallets.find(x=>x.id===h.wallet_id);
+    const usdAmt=w?(capToUSD(amt,w.currency)||amt):amt;
+    if(h.tx_type==='deposit'||h.tx_type==='transfer_in') totalIn+=usdAmt;
+    else if(h.tx_type==='withdrawal'||h.tx_type==='transfer_out') totalOut+=usdAmt;
+  });
+  const netCash=totalIn-totalOut;
+  const bizWalletBalance=Object.values(bizGroups).flat().reduce((s,w)=>s+walletToUSD(w),0);
+
+  const monthlyData={};
+  bizHistory.forEach(h=>{
+    if(!h.recorded_at) return;
+    const month=h.recorded_at.slice(0,7);
+    if(!monthlyData[month]) monthlyData[month]={in:0,out:0};
+    const amt=Number(h.amount)||0;
+    const w=wallets.find(x=>x.id===h.wallet_id);
+    const usdAmt=w?(capToUSD(amt,w.currency)||amt):amt;
+    if(h.tx_type==='deposit'||h.tx_type==='transfer_in') monthlyData[month].in+=usdAmt;
+    else if(h.tx_type==='withdrawal'||h.tx_type==='transfer_out') monthlyData[month].out+=usdAmt;
+  });
+  const months=Object.keys(monthlyData).sort();
+  const last3=months.slice(-3);
+  const avgMonthlyBurn=last3.length>0?last3.reduce((s,m)=>s+monthlyData[m].out,0)/last3.length:0;
+  const runway=avgMonthlyBurn>0?bizWalletBalance/avgMonthlyBurn:null;
+
+  const assets=privInvest.filter(p=>p.category&&p.category.toLowerCase().includes('asset'));
+  const totalAssets=assets.reduce((s,p)=>s+(capToUSD(Number(p.current_value??p.amount_invested),p.currency)||0),0);
+  const totalDepreciationUSD=assets.reduce((s,p)=>{
+    const d=Math.max(0,Number(p.amount_invested)-Number(p.current_value??p.amount_invested));
+    return s+(capToUSD(d,p.currency)||d);
+  },0);
+
+  const latestByWallet={};
+  const dailyBiz={};
+  [...walletHistory].filter(h=>bizWalletIds.has(h.wallet_id))
+    .sort((a,b)=>new Date(a.recorded_at)-new Date(b.recorded_at))
+    .forEach(h=>{
+      latestByWallet[h.wallet_id]={balance:Number(h.balance),currency:h.currency};
+      const date=h.recorded_at.slice(0,10);
+      let tot=0;
+      for(const wid in latestByWallet){ const lw=latestByWallet[wid]; tot+=capToUSD(lw.balance,lw.currency)||0; }
+      dailyBiz[date]=tot;
+    });
+  const bizBalDates=Object.keys(dailyBiz).sort();
+
+  const groupNames=Object.keys(bizGroups).join(', ');
+  const kpis=[
+    {lbl:'Total Revenue',val:'$'+fmtMoney(totalIn),sub:bizHistory.filter(h=>h.tx_type==='deposit'||h.tx_type==='transfer_in').length+' inflows',col:'#00E676'},
+    {lbl:'Total Expenses',val:'$'+fmtMoney(totalOut),sub:bizHistory.filter(h=>h.tx_type==='withdrawal'||h.tx_type==='transfer_out').length+' outflows',col:'#FF5252'},
+    {lbl:'Net Cash Flow',val:(netCash>=0?'+':'-')+'$'+fmtMoney(Math.abs(netCash)),sub:netCash>=0?'Positive':'Negative',col:netCash>=0?'#00E676':'#FF5252'},
+    {lbl:'Avg Monthly Burn',val:avgMonthlyBurn>0?'$'+fmtMoney(avgMonthlyBurn):'—',sub:'Last 3 months avg',col:'#FFC107'},
+    {lbl:'Cash Runway',val:runway!=null?(runway>36?'> 3 yrs':runway.toFixed(1)+' mo'):'—',sub:avgMonthlyBurn>0?'Months of cash':'No burn data',col:runway!=null&&runway<3?'#FF5252':runway!=null&&runway<6?'#FFC107':'#00A84E'},
+    {lbl:'Total Assets',val:'$'+fmtMoney(totalAssets),sub:assets.length+' asset'+(assets.length!==1?'s':'')+' tracked',col:'#00A84E'},
+  ];
+
+  const assetRows=assets.length===0
+    ?'<div style="padding:24px 20px;font-size:13px;color:var(--muted)">No assets yet — add a Private Investment with category <strong>Fixed Asset</strong> to track it here.</div>'
+    :`<div class="table-wrap"><table class="data-table" style="width:100%"><thead><tr>
+        <th>Asset</th><th style="text-align:right">Cost</th><th style="text-align:right">Book Value</th>
+        <th style="text-align:right">Depreciation</th><th style="text-align:right">Since</th><th></th>
+      </tr></thead><tbody>${assets.map(p=>{
+        const cost=Number(p.amount_invested),book=Number(p.current_value??p.amount_invested);
+        const depr=Math.max(0,cost-book),deprPct=cost>0?depr/cost*100:0,sym=ccySym(p.currency);
+        return `<tr>
+          <td><div style="font-weight:600;font-size:13px">${escapeHtml(p.name)}</div>
+          <div style="font-size:11px;color:var(--muted)">${escapeHtml(p.category)}${p.ownership_pct?' · '+p.ownership_pct+'% owned':''}</div></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums">${sym}${fmtMoney(cost)}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;color:#00A84E;font-weight:700">${sym}${fmtMoney(book)}</td>
+          <td style="text-align:right"><span style="color:${depr>0?'#FF5252':'var(--muted2)'};font-weight:600">${depr>0?'-'+sym+fmtMoney(depr):'—'}</span>
+            ${deprPct>0?`<div style="font-size:10px;color:var(--muted)">${deprPct.toFixed(1)}%</div>`:''}</td>
+          <td style="text-align:right;color:var(--muted);font-size:12px">${new Date(p.invest_date+'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'})}</td>
+          <td><button class="btn btn-sm btn-ghost" style="font-size:11px" onclick="openPrivInvestModal('${p.id}')">Edit</button></td>
+        </tr>`;
+      }).join('')}
+      <tfoot><tr style="border-top:2px solid var(--border)">
+        <td style="font-weight:700;padding:10px 14px">Total (USD equiv.)</td>
+        <td style="text-align:right;font-weight:700">$${fmtMoney(assets.reduce((s,p)=>s+(capToUSD(Number(p.amount_invested),p.currency)||0),0))}</td>
+        <td style="text-align:right;font-weight:700;color:#00A84E">$${fmtMoney(totalAssets)}</td>
+        <td style="text-align:right;font-weight:700;color:#FF5252">${totalDepreciationUSD>0?'-$'+fmtMoney(totalDepreciationUSD):'—'}</td>
+        <td colspan="2"></td>
+      </tr></tfoot></tbody></table></div>`;
+
+  sec.style.display='block';
+  sec.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-size:15px;font-weight:700;letter-spacing:-.2px;display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(0,168,78,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+          </div>
+          Business Finance
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px">${escapeHtml(groupNames)} · CFO Dashboard</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-bottom:20px">
+      ${kpis.map(k=>`<div class="card" style="padding:14px 16px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">${k.lbl}</div>
+        <div style="font-size:19px;font-weight:800;color:${k.col};letter-spacing:-.04em;font-variant-numeric:tabular-nums">${k.val}</div>
+        <div style="font-size:11px;color:var(--muted2);margin-top:3px">${k.sub}</div>
+      </div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card" style="padding:18px 20px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">Monthly Cash Flow</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Inflows vs outflows by month</div>
+        <div id="biz-cashflow-chart" style="height:210px"></div>
+      </div>
+      <div class="card" style="padding:18px 20px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">Business Balance Over Time</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Combined business wallet balance (USD equiv.)</div>
+        <div id="biz-balance-chart" style="height:210px"></div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:600">Asset Register</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">Tag a Private Investment as <strong>"Fixed Asset"</strong> or <strong>"Asset"</strong> to include it here</div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="openPrivInvestModal()">+ Add Asset</button>
+      </div>
+      ${assetRows}
+    </div>`;
+
+  requestAnimationFrame(()=>{
+    _drawBizCashFlowChart(months,monthlyData,isDark);
+    _drawBizBalanceChart(bizBalDates,dailyBiz,isDark);
+  });
+}
+
+function _drawBizCashFlowChart(months,monthlyData,isDark){
+  const el=document.getElementById('biz-cashflow-chart'); if(!el) return;
+  if(!months.length){ el.innerHTML='<div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)">No transactions yet</div>'; return; }
+  let chart=echarts.getInstanceByDom(el); if(!chart) chart=echarts.init(el,null,{renderer:'canvas'});
+  const tc=isDark?'#6B7A99':'#64748b', gc=isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.06)';
+  const lbls=months.map(m=>{ const d=new Date(m+'-01'); return d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}); });
+  const ins=months.map(m=>+monthlyData[m].in.toFixed(2));
+  const outs=months.map(m=>+monthlyData[m].out.toFixed(2));
+  const nets=months.map(m=>+(monthlyData[m].in-monthlyData[m].out).toFixed(2));
+  chart.setOption({
+    animation:true,animationDuration:700,animationEasing:'cubicOut',
+    backgroundColor:'transparent',
+    grid:{left:54,right:12,top:32,bottom:28,containLabel:false},
+    legend:{data:['Inflow','Outflow','Net'],textStyle:{color:tc,fontSize:11},top:0,right:0,icon:'roundRect',itemWidth:10,itemHeight:10},
+    tooltip:{
+      trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(0,168,78,0.5)',width:1},label:{backgroundColor:'#00A84E',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(0,168,78,.3)':'rgba(0,138,60,.2)',
+      textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
+      formatter:p=>{
+        const lbl=p[0]?.axisValue||'';
+        const inAmt=p.find(x=>x.seriesName==='Inflow')?.value||0;
+        const outAmt=p.find(x=>x.seriesName==='Outflow')?.value||0;
+        const net=inAmt-outAmt;
+        return `<div style="font-weight:700;font-size:12px;margin-bottom:5px">${lbl}</div>`
+          +`<div style="color:#00E676">▲ Inflow: $${fmtMoney(inAmt)}</div>`
+          +`<div style="color:#FF5252">▼ Outflow: $${fmtMoney(outAmt)}</div>`
+          +`<div style="border-top:1px solid rgba(255,255,255,.1);margin-top:5px;padding-top:5px;font-weight:800;color:${net>=0?'#00E676':'#FF5252'}">Net: ${net>=0?'+':'-'}$${fmtMoney(Math.abs(net))}</div>`;
+      }
+    },
+    xAxis:{type:'category',data:lbls,axisLine:{show:false},axisTick:{show:false},axisLabel:{color:tc,fontSize:10}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},axisLabel:{color:tc,fontSize:10,formatter:v=>v>=1000?'$'+Math.round(v/1000)+'k':'$'+v.toFixed(0)}},
+    series:[
+      {name:'Inflow',type:'bar',data:ins,barMaxWidth:18,itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#00E676'},{offset:1,color:'#00A84E'}]},borderRadius:[4,4,0,0]}},
+      {name:'Outflow',type:'bar',data:outs,barMaxWidth:18,itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#FF5252'},{offset:1,color:'#D32F2F'}]},borderRadius:[4,4,0,0]}},
+      {name:'Net',type:'line',data:nets,smooth:0.3,symbol:'circle',symbolSize:5,
+        lineStyle:{color:'#FFC107',width:2.5},itemStyle:{color:'#FFC107'}}
+    ]
+  });
+}
+
+function _drawBizBalanceChart(dates,dailyData,isDark){
+  const el=document.getElementById('biz-balance-chart'); if(!el) return;
+  if(!dates.length){ el.innerHTML='<div style="height:200px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)">No balance history yet</div>'; return; }
+  let chart=echarts.getInstanceByDom(el); if(!chart) chart=echarts.init(el,null,{renderer:'canvas'});
+  const tc=isDark?'#6B7A99':'#64748b', gc=isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.06)';
+  const vals=dates.map(d=>+dailyData[d].toFixed(2));
+  const lbls=dates.map(d=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+  chart.setOption({
+    animation:true,animationDuration:900,animationEasing:'cubicOut',
+    backgroundColor:'transparent',
+    grid:{left:58,right:12,top:14,bottom:28,containLabel:false},
+    tooltip:{
+      trigger:'axis',
+      axisPointer:{type:'cross',crossStyle:{color:'rgba(0,168,78,0.5)',width:1},label:{backgroundColor:'#00A84E',fontSize:11}},
+      backgroundColor:isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)',
+      borderColor:isDark?'rgba(0,168,78,.3)':'rgba(0,138,60,.2)',
+      textStyle:{color:isDark?'#ECF1FC':'#08132A',fontSize:12},
+      formatter:p=>`<div style="font-size:11px;color:${tc};margin-bottom:2px">${p[0]?.axisValue||''}</div><div style="font-weight:800;font-size:15px;color:#00E676">$${fmtMoney(p[0]?.value||0)}</div>`
+    },
+    xAxis:{type:'category',data:lbls,axisLine:{show:false},axisTick:{show:false},axisLabel:{color:tc,fontSize:10,interval:'auto'}},
+    yAxis:{type:'value',splitLine:{lineStyle:{color:gc}},axisLabel:{color:tc,fontSize:10,formatter:v=>v>=1000?'$'+Math.round(v/1000)+'k':'$'+v.toFixed(0)}},
+    series:[{
+      type:'line',data:vals,smooth:0.4,symbol:'circle',symbolSize:0,
+      lineStyle:{color:{type:'linear',x:0,y:0,x2:1,y2:0,colorStops:[{offset:0,color:'#008A3C'},{offset:1,color:'#00E676'}]},width:3},
+      emphasis:{itemStyle:{symbolSize:8,borderWidth:2,borderColor:'#fff'}},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[
+        {offset:0,color:'rgba(0,200,83,0.38)'},{offset:0.55,color:'rgba(0,168,78,0.12)'},{offset:1,color:'rgba(0,168,78,0)'}
+      ]}}
+    }]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // DIVIDENDS & TITHE
 // ═══════════════════════════════════════════════════════════════════
 
@@ -6554,10 +6823,32 @@ function renderZsePriceCharts(){
   });
 
   const canvasId=sym=>'zph-'+sym.replace(/[^a-zA-Z0-9]/g,'-');
+  const histId=sym=>'zph-hist-'+sym.replace(/[^a-zA-Z0-9]/g,'-');
   el.innerHTML=`
     <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
-      ${stocks.map(s=>`<div style="border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)"><canvas id="${canvasId(s.symbol)}" style="display:block;width:100%"></canvas></div>`).join('')}
+      ${stocks.map(s=>{
+        const dbPts=zsePriceHistory.filter(r=>r.symbol===s.symbol&&r.exchange===s.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
+        const ccy=s.exchange==='VFEX'?'$':'ZiG ';
+        const histRows=dbPts.length?dbPts.map(r=>`
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px" id="zph-row-${r.id}">
+            <div style="flex:1;color:var(--muted)">${r.recorded_date}</div>
+            <div style="font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${ccy}${Number(r.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})}</div>
+            ${r.note?`<div style="font-size:11px;color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.note)}</div>`:''}
+            <button class="btn btn-sm btn-ghost" style="padding:3px 7px;font-size:10px" onclick="editZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Edit</button>
+            <button class="btn btn-sm" style="padding:3px 7px;font-size:10px;background:transparent;color:var(--red);border:1px solid var(--border)" onclick="deleteZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Del</button>
+          </div>`).join('')
+          :'<div style="padding:8px 12px;font-size:12px;color:var(--muted)">No price history logged — click Update Price to start.</div>';
+        return `<div style="border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)">
+          <canvas id="${canvasId(s.symbol)}" style="display:block;width:100%"></canvas>
+          <div style="background:var(--surface2);border-top:1px solid var(--border)">
+            <div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Price Log (${dbPts.length})</div>
+            </div>
+            <div id="${histId(s.symbol)}" style="max-height:180px;overflow-y:auto">${histRows}</div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
 
   setTimeout(()=>{
@@ -6571,6 +6862,35 @@ function renderZsePriceCharts(){
       drawZseChart(canvas,synthH,pts.length?pts:fallback,entryMap[s.symbol]||[]);
     });
   },60);
+}
+
+async function editZsePriceEntry(id,symbol,exchange){
+  const r=zsePriceHistory.find(x=>x.id===id); if(!r) return;
+  const newPrice=prompt(`Edit price for ${symbol} on ${r.recorded_date}:`,r.price);
+  if(newPrice===null) return;
+  const p=parseFloat(newPrice);
+  if(isNaN(p)||p<0){showToast('Invalid price','error');return;}
+  const newDate=prompt('Edit date (YYYY-MM-DD):',r.recorded_date);
+  if(!newDate) return;
+  try{
+    const{error}=await sb.from('zse_price_history').update({price:p,recorded_date:newDate}).eq('id',id);
+    if(error) throw error;
+    const idx=zsePriceHistory.findIndex(x=>x.id===id);
+    if(idx>=0) zsePriceHistory[idx]={...zsePriceHistory[idx],price:p,recorded_date:newDate};
+    renderZsePriceCharts(); renderTicker();
+    showToast(`${symbol} price on ${newDate} updated to ${p}`,'success');
+  }catch(e){showToast('Update failed: '+e.message,'error');}
+}
+
+async function deleteZsePriceEntry(id,symbol,exchange){
+  if(!confirm(`Delete this price entry for ${symbol}?`)) return;
+  try{
+    const{error}=await sb.from('zse_price_history').delete().eq('id',id);
+    if(error) throw error;
+    zsePriceHistory=zsePriceHistory.filter(x=>x.id!==id);
+    renderZsePriceCharts(); renderTicker();
+    showToast(`Price entry deleted`,'success');
+  }catch(e){showToast('Delete failed: '+e.message,'error');}
 }
 
 // ═══════════════════════════════════════════════════════════════════

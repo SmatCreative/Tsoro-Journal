@@ -437,21 +437,13 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
       <span>Portfolio &amp; Wallet</span>
     </button>
-    <button class="nav-item" data-page="rates">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-      <span>Rates</span>
-    </button>
     <button class="nav-item" data-page="zse">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
       <span>ZSE / VFEX</span>
     </button>
-    <button class="nav-item" data-page="goals">
+    <button class="nav-item" data-page="goals-giving">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
-      <span>Goals</span>
-    </button>
-    <button class="nav-item" data-page="giving">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
-      <span>Giving</span>
+      <span>Goals &amp; Giving</span>
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -505,7 +497,6 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <div class="page active" id="page-dashboard">
         <div id="db-hero" style="margin-bottom:18px"></div>
         <div id="db-period" style="margin-bottom:18px"></div>
-        <div id="db-tithe" style="margin-bottom:18px"></div>
         <div class="stats-row" id="db-stats"></div>
         <div id="db-winbar" style="margin-bottom:16px"></div>
         <div class="grid-2" style="margin-bottom:16px">
@@ -724,20 +715,22 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
           </div>
           <div id="loans-list"></div>
         </div>
-      </div>
 
-      <!-- Rates -->
-      <div class="page" id="page-rates">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-          <div style="font-size:13px;color:var(--muted)">Track currency rates — used across all pages to convert values to USD</div>
-          <button class="btn btn-primary btn-sm" onclick="openRateModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Rate
-          </button>
+        <!-- Exchange Rates (embedded) -->
+        <div style="margin-top:28px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div>
+              <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Exchange Rates</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Currency rates used to convert all values to USD</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openRateModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Rate
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px" id="rates-current"></div>
+          <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px" id="rates-current"></div>
-        <div style="font-size:13px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Rate History</div>
-        <div class="card" style="padding:0;overflow:hidden"><div class="table-wrap"><div id="rates-table"></div></div></div>
       </div>
 
       <!-- ZSE / VFSE Tracker -->
@@ -780,25 +773,27 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         </div>
       </div>
 
-      <!-- Investment Goals -->
-      <div class="page" id="page-goals">
+      <!-- Goals & Giving (merged) -->
+      <div class="page" id="page-goals-giving">
+        <!-- Goals section -->
         <div id="goals-summary" style="margin-bottom:20px"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div>
-            <div style="font-size:15px;font-weight:600;letter-spacing:-.2px">My Investment Goals</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Quarterly and yearly targets — progress is measured against your total account value (wallets + open positions)</div>
+            <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Investment Goals</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Quarterly and yearly targets — measured against your total account value</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openGoalModal()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Goal
           </button>
         </div>
-        <div id="goals-list"></div>
-      </div>
+        <div id="goals-list" style="margin-bottom:36px"></div>
 
-      <!-- Giving -->
-      <div class="page" id="page-giving">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <!-- Tithe summary (moved from Dashboard) -->
+        <div id="db-tithe" style="margin-bottom:28px"></div>
+
+        <!-- Giving section -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div>
             <div style="font-size:15px;font-weight:700;letter-spacing:-.2px">Giving</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px">Track your generosity — tithes, donations, offerings &amp; gifts</div>
@@ -855,21 +850,9 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>Analytics</span>
       </button>
-      <button class="mobile-more-item" id="mmore-rates" onclick="navigate('rates')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        <span>Rates</span>
-      </button>
-      <button class="mobile-more-item" id="mmore-goals" onclick="navigate('goals')">
+      <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        <span>Goals</span>
-      </button>
-      <button class="mobile-more-item" id="mmore-loans" onclick="navigate('loans')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
-        <span>Loans</span>
-      </button>
-      <button class="mobile-more-item" id="mmore-giving" onclick="navigate('giving')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <span>Giving</span>
+        <span>Goals &amp; Giving</span>
       </button>
     </div>
   </div>
@@ -2309,8 +2292,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',wallet:'Portfolio & Wallet',investments:'Other Investments',rates:'Exchange Rates',zse:'ZSE / VFEX Tracker',goals:'Investment Goals',loans:'Loans & Debts',giving:'Giving'};
-const MOBILE_MORE_PAGES=new Set(['analytics','rates','goals','loans','giving']);
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trade Journal',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving'};
+const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving']);
 function toggleMobileSidebar(){
   const sb=document.querySelector('.sidebar');
   const ov=document.getElementById('mobile-sidebar-overlay');
@@ -2722,7 +2705,6 @@ function renderDashboard(){
         <span style="color:var(--red);font-weight:600">${lossPct.toFixed(1)}% loss rate</span>
       </div>
     </div>` : '';
-  renderTithe();
   drawEquityChart(closed); drawDailyChart(closed);
   const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(calcPnL(t)||0);});
   const entries=Object.entries(byAsset).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,7);
@@ -3371,7 +3353,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='rates')renderRates(); else if(page==='zse')renderZse(); else if(page==='goals')renderGoals(); else if(page==='loans')renderLoans(); else if(page==='giving')renderGiving(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -3874,7 +3856,7 @@ function renderWallet(){
   try { renderPrivInvest(); } catch(e){ console.error('private investments:',e); }
   try { renderPortfolio(); } catch(e){ console.error('portfolio section:',e); }
   try { renderLoans(); } catch(e){ console.error('loans section:',e); }
-  try { renderMoneyFlowReport(); } catch(e){ console.error('money flow report:',e); }
+  try { renderRates(); } catch(e){ console.error('rates section:',e); }
 }
 
 // ── Wallet performance chart ───────────────────────────────────────

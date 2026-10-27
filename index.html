@@ -5202,7 +5202,7 @@ function renderTicker(){
     const isUp=chgPct>0.005, isDown=chgPct<-0.005;
     const arrow=isUp?'▲':isDown?'▼':'';
     const cls=isUp?'up':isDown?'down':'flat';
-    const ccy=g.exchange==='VFEX'?'$':'ZiG ';
+    const ccy=g.exchange==='VFSE'?'$':'ZiG ';
     return `<div class="ticker-item">
       <span class="ticker-sym">${g.symbol}</span>
       <span class="ticker-price">${ccy}${Number(cp).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4})}</span>

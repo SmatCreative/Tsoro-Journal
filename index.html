@@ -539,6 +539,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
             <div id="recent-list"></div>
           </div>
         </div>
+        <div id="db-movers" style="margin-top:16px"></div>
       </div>
 
       <!-- Journal -->
@@ -2731,6 +2732,104 @@ function renderDashboard(){
   document.getElementById('asset-bars').innerHTML=entries.length?entries.map(([sym,pnl])=>`<div class="bar-row"><div class="bar-label">${sym}</div><div class="bar-track"><div class="bar-fill ${pnl>=0?'pos':'neg'}" style="width:${(Math.abs(pnl)/maxAbs*100).toFixed(1)}%">${Math.abs(pnl)>maxAbs*.18?pnlStr(pnl):''}</div></div><div class="bar-val ${pnlClass(pnl)}">${pnlStr(pnl)}</div></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:28px;font-size:13px">No closed trades yet</div>';
   const recent=allTrades().slice(0,6);
   document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);const c=getColor(t.symbol);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div class="symbol-icon" style="background:${c}22;color:${c};width:34px;height:34px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${t.symbol.slice(0,3)}</div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:600">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
+  const moversEl=document.getElementById('db-movers');
+  if(moversEl) moversEl.innerHTML=zseMoversCard();
+}
+
+function zseMoversCard(){
+  if(!zseHoldings.length) return '';
+
+  // Group holdings by symbol+exchange
+  const grpMap={};
+  zseHoldings.forEach(h=>{
+    const k=h.symbol+'|'+h.exchange;
+    if(!grpMap[k]) grpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]};
+    grpMap[k].lots.push(h);
+  });
+
+  const movers=Object.values(grpMap).map(g=>{
+    const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
+    const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
+    const avgBuy=totalCost/totalShares;
+    const isVFEX=g.exchange==='VFSE';
+
+    // Price history sorted most-recent first
+    const hist=zsePriceHistory
+      .filter(r=>r.symbol===g.symbol&&r.exchange===g.exchange)
+      .sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
+
+    const latestFromHist=hist.length?Number(hist[0].price):null;
+    const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
+    const cp=latestFromHist??(latestHolding?.currentPrice??avgBuy);
+
+    // Day change: use 2nd most-recent price entry; fallback to cost basis
+    let prevPrice, usingCost=false;
+    if(hist.length>=2){ prevPrice=Number(hist[1].price); }
+    else { prevPrice=avgBuy; usingCost=true; }
+
+    const chgAmt=cp-prevPrice;
+    const chgPct=prevPrice?(chgAmt/prevPrice)*100:0;
+
+    // Sparkline: up to 12 chronological price points
+    const sparkPts=[...hist].reverse().slice(-12).map(r=>Number(r.price));
+    if(!sparkPts.length) sparkPts.push(cp,cp);
+    else if(sparkPts.length===1) sparkPts.push(sparkPts[0]);
+
+    return {symbol:g.symbol,isVFEX,cp,chgAmt,chgPct,sparkPts,usingCost};
+  });
+
+  const sorted=[...movers].sort((a,b)=>b.chgPct-a.chgPct);
+  const gainers=sorted.filter(m=>m.chgPct>0).slice(0,5);
+  const losers=[...movers].sort((a,b)=>a.chgPct-b.chgPct).filter(m=>m.chgPct<0).slice(0,5);
+  if(!gainers.length&&!losers.length) return '';
+
+  function spark(pts,isUp){
+    const W=80,H=32,pad=2;
+    const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1;
+    const n=pts.length;
+    const xs=pts.map((_,i)=>pad+i/(n-1)*(W-pad*2));
+    const ys=pts.map(p=>H-pad-((p-min)/range*(H-pad*2)));
+    const line='M'+xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join('L');
+    const fill=line+`L${xs[n-1]},${H} L${xs[0]},${H} Z`;
+    const lc=isUp?'#00C853':'#FF5252';
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" preserveAspectRatio="none"><path d="${fill}" fill="${isUp?'rgba(0,200,83,.2)':'rgba(255,82,82,.2)'}"/><path d="${line}" stroke="${lc}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+
+  function row(m){
+    const up=m.chgPct>=0;
+    const clr=up?'var(--green)':'var(--red)';
+    const sign=up?'+':'';
+    const fmt=v=>Math.abs(v)>=1?Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4}):Number(v).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4});
+    const ccy=m.isVFEX?'$':'ZiG ';
+    const xBadge=m.isVFEX
+      ?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(16,185,129,.18);color:var(--green);font-weight:600">VFEX</span>'
+      :'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(0,168,78,.15);color:var(--accent);font-weight:600">ZSE</span>';
+    return `<div style="display:grid;grid-template-columns:1fr 88px auto;align-items:center;gap:10px;padding:11px 18px;border-top:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--accent);letter-spacing:.01em">${escapeHtml(m.symbol)}</div>
+        <div style="display:flex;gap:4px;align-items:center;margin-top:3px">${xBadge}${m.usingCost?'<span style="font-size:9px;color:var(--muted)">vs cost</span>':''}</div>
+      </div>
+      <div>${spark(m.sparkPts,up)}</div>
+      <div style="text-align:right">
+        <div style="font-size:15px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap">${ccy}${fmt(m.cp)}</div>
+        <div style="font-size:12px;font-weight:700;color:${clr};margin-top:2px;white-space:nowrap">${sign}${fmt(m.chgAmt)} (${sign}${m.chgPct.toFixed(2)}%)</div>
+      </div>
+    </div>`;
+  }
+
+  const gHTML=gainers.map(row).join('');
+  const lHTML=losers.map(row).join('');
+  const both=gainers.length&&losers.length;
+  return `<div style="display:grid;grid-template-columns:${both?'1fr 1fr':'1fr'};gap:16px">
+    ${gainers.length?`<div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:18px;font-weight:800;color:var(--text)">Top gainers</span>
+      </div>${gHTML}</div>`:''}
+    ${losers.length?`<div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:18px;font-weight:800;color:var(--text)">Top losers</span>
+      </div>${lHTML}</div>`:''}
+  </div>`;
 }
 
 function themeVal(darkVal, lightVal){ return document.documentElement.getAttribute('data-theme')==='light' ? lightVal : darkVal; }

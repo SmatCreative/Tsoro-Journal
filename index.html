@@ -364,25 +364,29 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .kpi-item{min-width:140px;scroll-snap-align:start}
   /* Tables full-width on mobile */
   .grid-2{grid-template-columns:1fr}
-  .ticker-bar{height:30px}
-  .ticker-item{padding:0 16px;font-size:11px}
+  .ticker-bar{height:54px}
+  .ticker-item{padding:0 14px}
+  .ticker-inner{min-width:110px}
+  .ticker-price{font-size:13px}
   .table-wrap{border-radius:var(--r-sm)}
   .modal{width:100vw;max-width:100vw;border-radius:var(--r) var(--r) 0 0;position:fixed;bottom:0;left:0;max-height:90vh}
 }
 </style>
 <style>
-.ticker-bar{height:34px;background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;flex-shrink:0;position:relative}
-.ticker-bar::before,.ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:48px;z-index:2;pointer-events:none}
+.ticker-bar{height:72px;background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;flex-shrink:0;position:relative}
+.ticker-bar::before,.ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:56px;z-index:2;pointer-events:none}
 .ticker-bar::before{left:0;background:linear-gradient(to right,var(--surface),transparent)}
 .ticker-bar::after{right:0;background:linear-gradient(to left,var(--surface),transparent)}
 .ticker-bar.empty{display:none}
 .ticker-track{display:flex;align-items:center;white-space:nowrap;animation:ticker-scroll 50s linear infinite;will-change:transform}
 .ticker-track:hover{animation-play-state:paused}
 @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-item{display:inline-flex;align-items:center;gap:8px;padding:0 22px;font-size:12px;height:34px;font-variant-numeric:tabular-nums;border-right:1px solid var(--border)}
-.ticker-sym{font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.04em}
-.ticker-price{font-weight:600;color:var(--text)}
-.ticker-chg{font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:2px}
+.ticker-item{display:inline-flex;align-items:center;padding:0 22px;height:72px;font-variant-numeric:tabular-nums;border-right:1px solid var(--border);gap:0}
+.ticker-inner{display:flex;flex-direction:column;justify-content:center;min-width:140px}
+.ticker-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:3px}
+.ticker-sym{font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:.05em;flex-shrink:0}
+.ticker-price{font-size:15px;font-weight:700;color:var(--text);display:block;line-height:1.2}
+.ticker-chg{font-size:11px;font-weight:700;display:block;margin-top:1px}
 .ticker-chg.up{color:var(--green)}.ticker-chg.down{color:var(--red)}.ticker-chg.flat{color:var(--muted)}
 </style>
 </head>
@@ -5279,7 +5283,6 @@ function renderTicker(){
   const track=document.getElementById('ticker-track');
   if(!bar||!track) return;
 
-  // Group holdings by symbol+exchange
   const grpMap={};
   zseHoldings.forEach(h=>{
     const k=h.symbol+'|'+h.exchange;
@@ -5287,36 +5290,63 @@ function renderTicker(){
     grpMap[k].lots.push(h);
   });
 
-  // Build ticker items — only show holdings with a current price
+  function tickerSpark(pts, isUp){
+    if(pts.length<2) return '';
+    const W=72,H=28,pad=2;
+    const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1;
+    const n=pts.length;
+    const xs=pts.map((_,i)=>pad+i/(n-1)*(W-pad*2));
+    const ys=pts.map(p=>H-pad-((p-min)/range*(H-pad*2)));
+    const line='M'+xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join('L');
+    const fill=line+`L${xs[n-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
+    const lc=isUp?'#00C853':'#FF5252';
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" style="flex-shrink:0"><path d="${fill}" fill="${isUp?'rgba(0,200,83,.18)':'rgba(255,82,82,.18)'}"/><path d="${line}" stroke="${lc}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+
   const items=Object.values(grpMap).map(g=>{
     const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
     const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
     const avgBuy=totalCost/totalShares;
-    // Latest price from price history or holding
+
     const history=zsePriceHistory.filter(r=>r.symbol===g.symbol&&r.exchange===g.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
     const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
     const cp=history.length?Number(history[0].price):(latestHolding?.currentPrice??null);
     if(cp==null) return null;
-    const chgPct=((cp-avgBuy)/avgBuy)*100;
+
+    // Day change: latest vs previous price entry; fallback vs avg buy
+    let prevPrice=history.length>=2?Number(history[1].price):avgBuy;
+    const chgAmt=cp-prevPrice;
+    const chgPct=prevPrice?(chgAmt/prevPrice)*100:0;
     const isUp=chgPct>0.005, isDown=chgPct<-0.005;
-    const arrow=isUp?'▲':isDown?'▼':'';
     const cls=isUp?'up':isDown?'down':'flat';
+    const arrow=isUp?'▲':isDown?'▼':'—';
+    const sign=isUp?'+':'';
+
+    // Sparkline from price history (chronological, last 12 pts)
+    const sparkPts=[...history].reverse().slice(-12).map(r=>Number(r.price));
+    if(sparkPts.length<2) sparkPts.push(cp);
+    const spark=tickerSpark(sparkPts,isUp||(!isDown));
+
     const ccy=g.exchange==='VFSE'?'$':'ZiG ';
+    const fmt=v=>Number(v).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4});
+
     return `<div class="ticker-item">
-      <span class="ticker-sym">${g.symbol}</span>
-      <span class="ticker-price">${ccy}${Number(cp).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4})}</span>
-      <span class="ticker-chg ${cls}">${arrow} ${isUp?'+':''}${chgPct.toFixed(2)}%</span>
+      <div class="ticker-inner">
+        <div class="ticker-top">
+          <span class="ticker-sym">${g.symbol}</span>
+          ${spark}
+        </div>
+        <span class="ticker-price">${ccy}${fmt(cp)}</span>
+        <span class="ticker-chg ${cls}">${arrow} ${sign}${fmt(Math.abs(chgAmt))} (${sign}${chgPct.toFixed(2)}%)</span>
+      </div>
     </div>`;
   }).filter(Boolean);
 
   if(!items.length){ bar.classList.add('empty'); return; }
   bar.classList.remove('empty');
-  // Duplicate for seamless loop
   const html=items.join('');
   track.innerHTML=html+html;
-
-  // Adjust speed based on content count (wider = slower)
-  const dur=Math.max(20, items.length*6);
+  const dur=Math.max(30, items.length*9);
   track.style.animationDuration=dur+'s';
 }
 window.addEventListener('resize',()=>{

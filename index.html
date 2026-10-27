@@ -652,13 +652,8 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
               <div id="wallet-donut-total" style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1"></div>
               <div id="portfolio-breakdown-change" style="font-size:12px;color:rgba(255,255,255,.75);margin-top:4px"></div>
             </div>
-            <!-- Holdings list -->
-            <div style="padding:14px 0">
-              <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;padding:0 16px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)">
-                <span>Holding</span><span style="text-align:right;padding-right:20px">Value</span><span style="text-align:right">Share</span>
-              </div>
-              <div id="wallet-legend"></div>
-            </div>
+            <!-- Holdings view switcher — all content rendered by drawWalletDonut -->
+            <div id="portfolio-holdings-wrap"><div id="wallet-legend"></div></div>
           </div>
           <!-- Open Positions card -->
           <div class="card" style="align-self:start">
@@ -4471,15 +4466,48 @@ function _renderWallet(){
   drawDeployedBar(totalCashUSD, combinedDeployedUSD, allOpenPositions);
 }
 
-// Brand-blue palette for holdings list dots
+// Brand-blue palette for holdings
 const DONUT_BLUES=['#00A84E','#38BDF8','#A855F7','#F59E0B','#EF4444','#14B8A6','#F97316','#6366F1','#EC4899','#84CC16'];
 
+let _portfolioView='list';
+let _pvCashUSD=0, _pvDeployedUSD=0;
+
+const SYMBOL_LOGOS={
+  'AXIA.VX':'/logos/AXIA.VX.png',
+  'FCA.VX':'/logos/FCA.VX.png',
+  'FMWG.VX':'/logos/FMWG.VX.webp',
+  'INN.VX':'/logos/INN.VX.png',
+  'INFR.VX':'/logos/infr.png',
+  'MCMS.ZW':'/logos/MCMS.ZW.png',
+  'SCIL.VX':'/logos/SCIL.VX.png',
+  'SIM.VX':'/logos/SIM.VX.png',
+  'VFEX':'/logos/VFEX.png',
+};
+
+function setPortfolioView(v){ _portfolioView=v; drawWalletDonut(_pvCashUSD, _pvDeployedUSD); }
+
+function _pvToggles(){
+  const defs=[
+    ['list','List','<svg width="13" height="13" viewBox="0 0 13 13"><rect y="0" width="13" height="2.2" rx="1.1" fill="currentColor"/><rect y="4.2" width="13" height="2.2" rx="1.1" fill="currentColor"/><rect y="8.4" width="13" height="2.2" rx="1.1" fill="currentColor"/></svg>'],
+    ['donut','Donut','<svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>'],
+    ['treemap','Treemap','<svg width="13" height="13" viewBox="0 0 13 13"><rect x="0" y="0" width="7" height="7" rx="1" fill="currentColor" opacity=".85"/><rect x="8" y="0" width="5" height="7" rx="1" fill="currentColor" opacity=".65"/><rect x="0" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".55"/><rect x="6" y="8" width="7" height="5" rx="1" fill="currentColor" opacity=".45"/></svg>'],
+    ['bars','Bars','<svg width="13" height="13" viewBox="0 0 13 13"><rect y="0" width="13" height="2.2" rx="1.1" fill="currentColor"/><rect y="4.2" width="9" height="2.2" rx="1.1" fill="currentColor"/><rect y="8.4" width="6" height="2.2" rx="1.1" fill="currentColor"/></svg>'],
+  ];
+  return '<div style="display:flex;gap:3px;flex-shrink:0">'+defs.map(([k,tip,svg])=>{
+    const a=_portfolioView===k;
+    return `<button onclick="setPortfolioView('${k}')" title="${tip}" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid ${a?'var(--accent)':'var(--border)'};background:${a?'var(--accent)':'transparent'};color:${a?'#fff':'var(--muted)'};cursor:pointer;padding:0;transition:all .15s">${svg}</button>`;
+  }).join('')+'</div>';
+}
+
 function drawWalletDonut(cashUSD, deployedUSD){
+  if(cashUSD!=null) _pvCashUSD=cashUSD;
+  if(deployedUSD!=null) _pvDeployedUSD=deployedUSD;
+  cashUSD=_pvCashUSD; deployedUSD=_pvDeployedUSD;
+
   let segments=[];
   wallets.forEach(w=>{ const usd=walletToUSD(w); if(usd>0) segments.push({label:(w.wallet_name||w.platform||'Wallet'),val:usd,type:'wallet'}); });
   if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,type:'trades'});
   privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v,type:'invest'}); });
-  // ZSE/VFEX stock positions — grouped by symbol
   const _zseGrpMap={};
   zseHoldings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
   Object.values(_zseGrpMap).forEach(g=>{
@@ -4493,43 +4521,87 @@ function drawWalletDonut(cashUSD, deployedUSD){
 
   const total=segments.reduce((s,sg)=>s+sg.val,0);
 
-  // Update hero total
   const totalEl=document.getElementById('wallet-donut-total');
   if(totalEl){ if(total) countUp(totalEl,total,950); else totalEl.textContent='$0.00'; }
-
-  // Breakdown change line (placeholder — can wire to historical data later)
   const changeEl=document.getElementById('portfolio-breakdown-change');
   if(changeEl) changeEl.textContent=total?'Total tracked portfolio':'No holdings yet — add wallets to get started';
 
   segments.sort((a,b)=>b.val-a.val);
   segments.forEach((sg,i)=>{ sg.color=DONUT_BLUES[i%DONUT_BLUES.length]; sg.pct=sg.val/total*100; });
 
-  // Holdings list
-  const legendEl=document.getElementById('wallet-legend');
-  if(!legendEl) return;
+  const wrap=document.getElementById('portfolio-holdings-wrap');
+  if(!wrap) return;
+
   if(!total){
-    legendEl.innerHTML='<div style="padding:20px 22px;color:var(--muted);font-size:13px">No holdings yet</div>';
+    wrap.innerHTML='<div style="padding:20px 22px;color:var(--muted);font-size:13px">No holdings yet</div>';
     return;
   }
 
-  // Bar width for the inline share bar
-  legendEl.innerHTML=segments.map((sg,i)=>`
-    <div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0;padding:9px 18px;border-top:${i>0?'1px solid var(--border)':'none'};transition:background .15s;animation:cardEnter .38s cubic-bezier(.22,1,.36,1) ${i*55}ms both" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${sg.color}"></div>
-        <span style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
-      </div>
-      <span style="font-size:13px;font-weight:700;color:var(--text);padding-right:16px;white-space:nowrap">$${fmtMoney(sg.val)}</span>
-      <div style="width:56px;text-align:right">
-        <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:3px">
-          <div style="height:100%;border-radius:2px;background:${sg.color};width:${sg.pct.toFixed(1)}%"></div>
-        </div>
-        <span style="font-size:10px;font-weight:600;color:var(--muted)">${sg.pct.toFixed(1)}%</span>
-      </div>
-    </div>`).join('');
+  const tog=_pvToggles();
 
-  // Sync profile avatar in this card
+  if(_portfolioView==='list'){
+    const rows=segments.map((sg,i)=>{
+      const logo=SYMBOL_LOGOS[sg.label];
+      const indicator=logo
+        ?`<img src="${logo}" width="28" height="28" style="border-radius:6px;object-fit:contain;flex-shrink:0;background:var(--surface)" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" loading="lazy"><div style="display:none;width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${sg.color}"></div>`
+        :`<div style="width:9px;height:9px;border-radius:50%;flex-shrink:0;background:${sg.color}"></div>`;
+      return `<div style="display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0;padding:9px 18px;border-top:${i?'1px solid var(--border)':'none'};transition:background .15s;animation:cardEnter .38s cubic-bezier(.22,1,.36,1) ${i*55}ms both" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">${indicator}<span style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span></div>
+        <span style="font-size:13px;font-weight:700;color:var(--text);padding-right:16px;white-space:nowrap">$${fmtMoney(sg.val)}</span>
+        <div style="width:56px;text-align:right"><div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-bottom:3px"><div style="height:100%;border-radius:2px;background:${sg.color};width:${sg.pct.toFixed(1)}%"></div></div><span style="font-size:10px;font-weight:600;color:var(--muted)">${sg.pct.toFixed(1)}%</span></div>
+      </div>`;
+    }).join('');
+    wrap.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px 6px;border-bottom:1px solid var(--border)"><div style="display:grid;grid-template-columns:1fr auto auto;gap:0;width:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)"><span>Holding</span><span style="text-align:right;padding-right:16px">Value</span><span style="text-align:right">Share</span></div>${tog}</div><div id="wallet-legend">${rows}</div>`;
+  } else {
+    const chartH=_portfolioView==='bars'?Math.max(240,segments.length*38+50):290;
+    wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;align-items:center;padding:8px 16px 6px;border-bottom:1px solid var(--border)">${tog}</div><div id="wallet-legend" style="padding:12px 16px"><div id="pv-chart" style="height:${chartH}px;width:100%"></div></div>`;
+    requestAnimationFrame(()=>_drawPvChart(segments,total));
+  }
+
   syncProfileAvatar();
+}
+
+function _drawPvChart(segments,total){
+  const el=document.getElementById('pv-chart'); if(!el) return;
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const tc=isDark?'#8891a8':'#64748b';
+  const ttpBg=isDark?'#1a1f2e':'#fff', ttpBd=isDark?'#2a3040':'#e2e8f0', ttpTx=isDark?'#e2e8f0':'#1e293b';
+  let ch=echarts.getInstanceByDom(el); if(ch) ch.dispose();
+  ch=echarts.init(el,null,{renderer:'canvas'});
+
+  if(_portfolioView==='donut'){
+    ch.setOption({
+      backgroundColor:'transparent',
+      tooltip:{trigger:'item',formatter:p=>`<b>${p.name}</b><br/>$${fmtMoney(p.value)}<br/><span style="color:${p.color}">${p.percent.toFixed(1)}%</span>`,backgroundColor:ttpBg,borderColor:ttpBd,textStyle:{color:ttpTx,fontSize:12}},
+      legend:{bottom:2,type:'scroll',textStyle:{color:tc,fontSize:11},pageTextStyle:{color:tc}},
+      series:[{type:'pie',radius:['40%','68%'],center:['50%','46%'],
+        data:segments.map(sg=>({name:sg.label,value:sg.val,itemStyle:{color:sg.color}})),
+        label:{show:false},
+        itemStyle:{borderRadius:4,borderColor:isDark?'#0D1015':'#fff',borderWidth:2},
+        emphasis:{itemStyle:{shadowBlur:12,shadowColor:'rgba(0,0,0,.35)'}}}]
+    });
+  } else if(_portfolioView==='treemap'){
+    ch.setOption({
+      backgroundColor:'transparent',
+      tooltip:{formatter:p=>`<b>${p.name}</b><br/>$${fmtMoney(p.value)}<br/>${(p.value/total*100).toFixed(1)}%`,backgroundColor:ttpBg,borderColor:ttpBd,textStyle:{color:ttpTx,fontSize:12}},
+      series:[{type:'treemap',width:'100%',height:'100%',roam:false,nodeClick:false,
+        breadcrumb:{show:false},
+        label:{show:true,formatter:p=>`${p.name}\n$${fmtMoney(p.value)}`,color:'#fff',fontSize:11,fontWeight:700},
+        data:segments.map(sg=>({name:sg.label,value:sg.val,itemStyle:{color:sg.color,borderColor:isDark?'#0D1015':'#fff',borderWidth:2,gapWidth:2}}))}]
+    });
+  } else if(_portfolioView==='bars'){
+    const rev=[...segments].reverse();
+    ch.setOption({
+      backgroundColor:'transparent',
+      grid:{left:8,right:68,top:8,bottom:8,containLabel:true},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},formatter:p=>`<b>${p[0].name}</b><br/>$${fmtMoney(p[0].value)}<br/>${(p[0].value/total*100).toFixed(1)}%`,backgroundColor:ttpBg,borderColor:ttpBd,textStyle:{color:ttpTx,fontSize:12}},
+      xAxis:{type:'value',axisLabel:{show:false},splitLine:{lineStyle:{color:isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)'}}},
+      yAxis:{type:'category',data:rev.map(sg=>sg.label),axisLabel:{color:tc,fontSize:11,fontWeight:500},axisLine:{show:false},axisTick:{show:false}},
+      series:[{type:'bar',barMaxWidth:20,
+        data:rev.map(sg=>({value:sg.val,itemStyle:{color:sg.color,borderRadius:[0,4,4,0]}})),
+        label:{show:true,position:'right',formatter:p=>`$${fmtMoney(p.value)}`,color:tc,fontSize:10,fontWeight:600}}]
+    });
+  }
 }
 function roundRect(ctx,x,y,w,h,rad){ ctx.beginPath(); ctx.moveTo(x+rad,y); ctx.arcTo(x+w,y,x+w,y+h,rad); ctx.arcTo(x+w,y+h,x,y+h,rad); ctx.arcTo(x,y+h,x,y,rad); ctx.arcTo(x,y,x+w,y,rad); ctx.closePath(); }
 function initialsOf(name){

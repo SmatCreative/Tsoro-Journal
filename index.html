@@ -6852,9 +6852,10 @@ function drawZseChart(canvas, h, pts, entries){
     const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
 
     const prices = pts.map(p => p.price);
-    const first = prices[0], last = prices[prices.length-1];
-    const isUp  = last >= first;
-    const minP  = Math.min(...prices), maxP = Math.max(...prices);
+    const last = prices[prices.length-1];
+    const avgBuyP = h.buyPrice > 0 ? h.buyPrice : prices[0];
+    const isUp  = last >= avgBuyP;
+    const minP  = Math.min(...prices, avgBuyP), maxP = Math.max(...prices, avgBuyP);
     const span  = maxP - minP || Math.max(maxP * 0.05, 0.01);
     const lo = minP - span*0.25, hi = maxP + span*0.25;
 
@@ -6882,37 +6883,64 @@ function drawZseChart(canvas, h, pts, entries){
     }
 
     if(pts.length>=2){
-      // Area fill
-      const aG = ctx.createLinearGradient(0,PAD.t,0,PAD.t+cH);
-      aG.addColorStop(0, isUp?'rgba(0,168,78,0.36)':'rgba(239,68,68,0.36)');
-      aG.addColorStop(0.55, isUp?'rgba(0,168,78,0.10)':'rgba(239,68,68,0.10)');
-      aG.addColorStop(1, isUp?'rgba(0,168,78,0.01)':'rgba(239,68,68,0.01)');
-      ctx.beginPath();
-      ctx.moveTo(mapped[0].x, PAD.t+cH);
-      ctx.lineTo(mapped[0].x, mapped[0].y);
-      for(let i=1;i<mapped.length-1;i++){
-        const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
-        ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
-      }
-      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
-      ctx.closePath(); ctx.fillStyle=aG; ctx.fill();
+      const yBuy = yOf(avgBuyP);
 
-      // Line
+      // Helper: draw the filled area path
+      function fillAreaPath(){
+        ctx.beginPath();
+        ctx.moveTo(mapped[0].x, PAD.t+cH);
+        ctx.lineTo(mapped[0].x, mapped[0].y);
+        for(let i=1;i<mapped.length-1;i++){
+          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
+          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
+        }
+        ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
+        ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
+        ctx.closePath();
+      }
+
+      // Green zone: above buy price (smaller Y values)
+      ctx.save();
+      ctx.beginPath(); ctx.rect(PAD.l, PAD.t, cW, Math.max(0, yBuy-PAD.t)); ctx.clip();
+      const gG=ctx.createLinearGradient(0,PAD.t,0,yBuy);
+      gG.addColorStop(0,'rgba(0,200,83,0.38)'); gG.addColorStop(1,'rgba(0,200,83,0.06)');
+      fillAreaPath(); ctx.fillStyle=gG; ctx.fill();
+      ctx.restore();
+
+      // Red zone: below buy price (larger Y values)
+      ctx.save();
+      ctx.beginPath(); ctx.rect(PAD.l, yBuy, cW, Math.max(0, PAD.t+cH-yBuy)); ctx.clip();
+      const rG=ctx.createLinearGradient(0,yBuy,0,PAD.t+cH);
+      rG.addColorStop(0,'rgba(239,68,68,0.28)'); rG.addColorStop(1,'rgba(239,68,68,0.04)');
+      fillAreaPath(); ctx.fillStyle=rG; ctx.fill();
+      ctx.restore();
+
+      // Dashed cost-basis line
+      ctx.save();
+      ctx.setLineDash([5,4]); ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(255,193,7,0.65)';
+      ctx.beginPath(); ctx.moveTo(PAD.l,yBuy); ctx.lineTo(PAD.l+cW,yBuy); ctx.stroke();
+      ctx.setLineDash([]);
+      const ccy2=h.exchange==='VFSE'?'$':'';
+      ctx.font='9px system-ui'; ctx.textAlign='right'; ctx.fillStyle='rgba(255,193,7,0.85)';
+      ctx.fillText('Cost '+ccy2+fmtNum(avgBuyP), PAD.l-3, yBuy-2);
+      ctx.restore();
+
+      // Price line — green if profitable, red if loss
       ctx.beginPath(); ctx.moveTo(mapped[0].x,mapped[0].y);
       for(let i=1;i<mapped.length-1;i++){
         const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
         ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
       }
       ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.strokeStyle=isUp?'#00A84E':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+      ctx.strokeStyle=isUp?'#00C853':'#ef4444'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
     }
 
     // Endpoint glow only — no per-point dots
     if(mapped.length>=1){
       const lpt=mapped[mapped.length-1];
-      const dotCol=isUp?'#00A84E':'#ef4444';
-      const glowCol=isUp?'rgba(0,168,78,':'rgba(239,68,68,';
+      const dotCol=isUp?'#00C853':'#ef4444';
+      const glowCol=isUp?'rgba(0,200,83,':'rgba(239,68,68,';
       ctx.beginPath(); ctx.arc(lpt.x,lpt.y,13,0,Math.PI*2); ctx.fillStyle=glowCol+'0.10)'; ctx.fill();
       ctx.beginPath(); ctx.arc(lpt.x,lpt.y,8,0,Math.PI*2);  ctx.fillStyle=glowCol+'0.20)'; ctx.fill();
       ctx.beginPath(); ctx.arc(lpt.x,lpt.y,4,0,Math.PI*2);  ctx.fillStyle=dotCol; ctx.fill();
@@ -6941,7 +6969,7 @@ function drawZseChart(canvas, h, pts, entries){
 
     // Header
     const ccy=h.exchange==='VFSE'?'$':'ZiG ';
-    const pctChg=prices.length>1?((last-first)/first*100):null;
+    const pctChg=avgBuyP>0?((last-avgBuyP)/avgBuyP*100):null;
     // Symbol (left) + Price (right) on line 1
     ctx.font='bold 14px system-ui'; ctx.textAlign='left';
     ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
@@ -7058,7 +7086,9 @@ function renderZsePriceCharts(){
       const pts=bySymbol[s.symbol]||[];
       // synthetic holding for chart header
       const latestLot=s.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,s.lots[0]);
-      const synthH={symbol:s.symbol,exchange:s.exchange,buyDate:s.buyDate,currentPrice:latestLot.currentPrice,buyPrice:s.lots[0].buyPrice};
+      const totShares=s.lots.reduce((a,h)=>a+h.shares,0);
+      const totCost=s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0);
+      const synthH={symbol:s.symbol,exchange:s.exchange,buyDate:s.buyDate,currentPrice:latestLot.currentPrice,buyPrice:totShares?totCost/totShares:s.lots[0].buyPrice};
       const fallback=s.lots.map(h=>({date:h.buyDate||new Date().toISOString().slice(0,10),price:Number(h.buyPrice)||0,note:'Buy price'}));
       drawZseChart(canvas,synthH,pts.length?pts:fallback,entryMap[s.symbol]||[]);
     });

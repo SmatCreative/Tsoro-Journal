@@ -351,24 +351,19 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .mobile-nav{display:flex!important}
   .topbar-hamburger{display:flex}
   .topbar-mobile-brand{display:flex}
-  .topbar-title{display:none}
   .app{height:100dvh}
   .topbar{padding:env(safe-area-inset-top,0px) 12px 8px;height:auto;min-height:calc(56px + env(safe-area-inset-top,0px));align-items:flex-end;gap:8px}
   .sidebar{height:100dvh;padding-top:env(safe-area-inset-top,0px)}
   #import-btn{display:none}
   .btn-logout{display:none}
   /* Clear bottom nav + safe area */
-  .content{padding:14px;padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))}
+  .content{padding:16px;padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))}
   /* KPI strip scrolls horizontally on narrow screens */
   .kpi-strip{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .kpi-item{min-width:140px;scroll-snap-align:start}
-  /* Tables full-width on mobile */
-  .grid-2{grid-template-columns:1fr}
-  .ticker-bar{height:54px}
-  .ticker-item{padding:0 14px}
-  .ticker-inner{min-width:110px}
-  .ticker-price{font-size:13px}
-  .table-wrap{border-radius:var(--r-sm)}
+  /* Wide tables scroll horizontally rather than wrapping */
+  .table-wrap{overflow-x:auto}
+  /* Modal slides up from bottom on mobile */
   .modal{width:100vw;max-width:100vw;border-radius:var(--r) var(--r) 0 0;position:fixed;bottom:0;left:0;max-height:90vh}
 }
 </style>
@@ -2259,7 +2254,7 @@ async function loadAllData(){
     await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving()]);
     renderAll();
     renderTicker();
-  } catch(e){ showLoadError('Data load failed: '+(e.message||e)); }
+  } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
 }
 sb.auth.onAuthStateChange((event,session)=>{
@@ -2275,7 +2270,7 @@ function showLoadError(msg){
   const b=document.getElementById('global-error-banner');
   if(b){ b.textContent='⚠️ '+msg+' — Click to dismiss'; b.style.display='block'; }
 }
-async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){showLoadError('Trades failed to load: '+error.message);return;} trades=data.map(fromDb); }
+async function loadTrades(){ const{data,error}=await sb.from('trades').select('*').order('created_at',{ascending:false}); if(error){showLoadError('Trades failed to load: '+error.message);return;} trades=(data||[]).map(fromDb); }
 async function loadRates(){ const{data,error}=await sb.from('exchange_rates').select('*').order('effective_date',{ascending:false}); if(error){showLoadError('Rates failed to load: '+error.message);return;} rates=data||[]; }
 async function loadCapital(){ const{data,error}=await sb.from('capital_entries').select('*').order('entry_date',{ascending:true}); if(error){showLoadError('Capital entries failed to load: '+error.message);return;} capital=data||[]; }
 async function loadWallets(){ const{data,error}=await sb.from('wallets').select('*').order('created_at',{ascending:true}); if(error){showLoadError('Wallets failed to load: '+error.message);return;} wallets=data||[]; }
@@ -5607,7 +5602,7 @@ async function loadZseHoldings(){
   try{
     const{data,error}=await sb.from('zse_holdings').select('*').eq('user_id',currentUser.id);
     if(error) throw error;
-    if(!data.length){
+    if(!(data?.length)){
       // One-time migration from localStorage
       const lsRaw=localStorage.getItem(zseKey('holdings'));
       const lsData=lsRaw?JSON.parse(lsRaw):[];

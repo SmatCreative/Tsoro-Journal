@@ -1,3 +1,7 @@
 .vercel
 .DS_Store
 .claude/
+.mcp.json
+.impeccable/
+node_modules/
+package-lock.json

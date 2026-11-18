@@ -371,6 +371,17 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .pulse-filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
 .pulse-filter-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted2);font-size:11px;font-weight:600;cursor:pointer;transition:all .13s;font-family:inherit;letter-spacing:.04em}
 .pulse-filter-btn.active,.pulse-filter-btn:hover{background:rgba(0,168,78,.12);border-color:rgba(0,168,78,.4);color:var(--accent)}
+.sim-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:16px}
+.sim-result-box{background:linear-gradient(135deg,rgba(0,168,78,.08) 0%,rgba(0,168,78,.03) 100%);border:1.5px solid rgba(0,168,78,.25);border-radius:var(--r);padding:24px;margin-top:4px}
+.sim-result-box.loss{background:linear-gradient(135deg,rgba(239,68,68,.08) 0%,rgba(239,68,68,.03) 100%);border-color:rgba(239,68,68,.25)}
+.sim-big{font-size:36px;font-weight:800;letter-spacing:-.8px;line-height:1}
+.sim-gain{color:var(--accent)}.sim-loss{color:var(--red)}
+.sim-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.sim-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.sim-row:last-child{border-bottom:none}
+.sim-quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.sim-quick-btn{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;transition:.15s;font-family:inherit}
+.sim-quick-btn:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -455,6 +466,10 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     <button class="nav-item" data-page="pulse">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
       <span>Pulse</span>
+    </button>
+    <button class="nav-item" data-page="simulator">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span>What If?</span>
     </button>
     <div class="nav-section" id="nav-admin-section" style="display:none">Admin</div>
     <button class="nav-item" id="nav-admin" data-page="admin" style="display:none">
@@ -813,6 +828,20 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <div class="pulse-feed" id="pulse-feed"></div>
       </div>
 
+      <!-- What If? Simulator -->
+      <div class="page" id="page-simulator">
+        <div style="margin-bottom:24px">
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,168,78,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            </div>
+            What If?
+          </div>
+          <div style="font-size:12px;color:var(--muted)">Simulate any investment across any time period</div>
+        </div>
+        <div id="sim-content"></div>
+      </div>
+
       <!-- Admin Panel -->
       <div class="page" id="page-admin">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
@@ -913,6 +942,12 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <button class="mobile-more-item" id="mmore-pulse" onclick="navigate('pulse')">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         <span>Pulse</span>
+      </button>
+      <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')">
+        <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:rgba(0,168,78,.12)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </span>
+        <span style="font-size:12px;font-weight:600">What If?</span>
       </button>
     </div>
   </div>
@@ -2235,7 +2270,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadPriceHistory()]);
     renderAll();
     renderTicker();
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
@@ -2295,8 +2330,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse',admin:'Admin'};
-const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','admin']);
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'What If?',admin:'Admin'};
+const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','simulator','admin']);
 function toggleMobileSidebar(){
   const sb=document.querySelector('.sidebar');
   const ov=document.getElementById('mobile-sidebar-overlay');
@@ -3397,7 +3432,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -5920,6 +5955,8 @@ async function saveAdminPrice(){
     const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()});
     if(error) throw error;
     marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
+    // Log to price_history so the simulator has historical data
+    try{ await sb.from('price_history').insert({symbol,exchange,price,currency,recorded_date:date,recorded_by:currentUser.id}); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
     document.getElementById('ap-symbol').value='';
     document.getElementById('ap-price').value='';
     showToast(`${symbol} price updated to ${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`,'success');
@@ -5936,6 +5973,169 @@ async function deleteAdminPrice(symbol,exchange){
     renderAdmin();
     showToast('Removed.','success');
   }catch(e){ showToast('Failed: '+e.message,'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// WHAT IF? SIMULATOR
+// ═══════════════════════════════════════════════════════════════════
+
+let priceHistory=[];
+
+async function loadPriceHistory(){
+  try{
+    const{data,error}=await sb.from('price_history').select('*').order('recorded_date',{ascending:true});
+    if(error) throw error;
+    priceHistory=data||[];
+  }catch(e){ console.error('[Tsoro] price_history:',e.message); priceHistory=[]; }
+}
+
+function renderSimulator(){
+  const el=document.getElementById('sim-content'); if(!el) return;
+  const allSymbols=[...new Set([...zseHoldings.map(h=>h.symbol+'|'+h.exchange),...Object.keys(marketPrices)])].sort();
+  el.innerHTML=`
+    <div class="sim-card">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:18px">Configure your scenario</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <div class="sim-label">Symbol</div>
+          <input class="form-input" id="sim-symbol" placeholder="e.g. AXIA" list="sim-symbol-list" oninput="simAutoFill()" style="text-transform:uppercase">
+          <datalist id="sim-symbol-list">${allSymbols.map(k=>'<option value="'+escapeHtml(k.split('|')[0])+'">').join('')}</datalist>
+        </div>
+        <div>
+          <div class="sim-label">Exchange</div>
+          <select class="form-select" id="sim-exchange" onchange="simAutoFill()">
+            <option value="ZSE">ZSE (ZiG)</option>
+            <option value="VFSE">VFEX (USD)</option>
+            <option value="ZEEX">ZEEX (ZiG)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <div class="sim-label">Price then</div>
+          <input class="form-input" id="sim-price-then" type="number" step="any" min="0" placeholder="0.00" oninput="calcSimulator()">
+        </div>
+        <div>
+          <div class="sim-label">Date then</div>
+          <input class="form-input" id="sim-date-then" type="date" oninput="calcSimulator()">
+        </div>
+        <div>
+          <div class="sim-label">Price now</div>
+          <input class="form-input" id="sim-price-now" type="number" step="any" min="0" placeholder="0.00" oninput="calcSimulator()">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
+        <div>
+          <div class="sim-label">Amount invested</div>
+          <input class="form-input" id="sim-amount" type="number" step="any" min="0" placeholder="1,000" oninput="calcSimulator()">
+        </div>
+        <div>
+          <div class="sim-label">Currency</div>
+          <select class="form-select" id="sim-currency" onchange="calcSimulator()">
+            <option value="ZiG">ZiG</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
+      </div>
+      <div class="sim-quick">
+        <div style="font-size:11px;color:var(--muted);align-self:center;font-weight:600">Quick:</div>
+        <button class="sim-quick-btn" onclick="simSetAmount(1000)">1,000</button>
+        <button class="sim-quick-btn" onclick="simSetAmount(5000)">5,000</button>
+        <button class="sim-quick-btn" onclick="simSetAmount(10000)">10,000</button>
+        <button class="sim-quick-btn" onclick="simSetAmount(50000)">50,000</button>
+        <button class="sim-quick-btn" onclick="simSetAmount(100000)">100,000</button>
+      </div>
+    </div>
+    <div id="sim-result"></div>
+    ${zseHoldings.length?`
+    <div class="sim-card" style="margin-top:4px">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">Your holdings — click to simulate</div>
+      ${zseHoldings.map(h=>{
+        const mp=getMarketPrice(h.symbol,h.exchange);
+        const nowPrice=mp?mp.price:h.currentPrice;
+        const ccy=h.exchange==='VFSE'?'$':'ZiG ';
+        return `<div class="sim-row" style="cursor:pointer;border-radius:6px;padding:10px 4px" onclick="simLoadHolding('${escapeHtml(h.symbol)}','${escapeHtml(h.exchange)}')">
+          <div>
+            <div style="font-weight:700;font-size:14px">${escapeHtml(h.symbol)}</div>
+            <div style="font-size:11px;color:var(--muted)">${escapeHtml(h.exchange)} · bought ${h.buyDate||'—'} @ ${ccy}${fmtNum(h.buyPrice)}</div>
+          </div>
+          <div style="text-align:right">
+            ${nowPrice?`<div style="font-size:13px;font-weight:600">${ccy}${fmtNum(nowPrice)}</div>`:''}
+            <div style="font-size:11px;color:var(--muted)">${h.shares.toLocaleString()} shares</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}`;
+  // Default date 1 year ago
+  const dateThenEl=document.getElementById('sim-date-then');
+  if(dateThenEl&&!dateThenEl.value){const d=new Date();d.setFullYear(d.getFullYear()-1);dateThenEl.value=d.toISOString().slice(0,10);}
+}
+
+function simAutoFill(){
+  const symbol=(document.getElementById('sim-symbol').value||'').trim().toUpperCase();
+  const exchange=document.getElementById('sim-exchange').value;
+  if(!symbol) return;
+  const holding=zseHoldings.find(h=>h.symbol===symbol&&h.exchange===exchange);
+  if(holding){
+    if(holding.buyPrice) document.getElementById('sim-price-then').value=holding.buyPrice;
+    if(holding.buyDate) document.getElementById('sim-date-then').value=holding.buyDate;
+  }
+  const mp=getMarketPrice(symbol,exchange);
+  if(mp) document.getElementById('sim-price-now').value=mp.price;
+  document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
+  calcSimulator();
+}
+
+function simLoadHolding(symbol,exchange){
+  document.getElementById('sim-symbol').value=symbol;
+  document.getElementById('sim-exchange').value=exchange;
+  simAutoFill();
+  const h=zseHoldings.find(h=>h.symbol===symbol&&h.exchange===exchange);
+  if(h&&h.buyPrice&&h.shares){document.getElementById('sim-amount').value=(h.buyPrice*h.shares).toFixed(2);calcSimulator();}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function simSetAmount(n){
+  document.getElementById('sim-amount').value=n;
+  calcSimulator();
+}
+
+function calcSimulator(){
+  const resultEl=document.getElementById('sim-result'); if(!resultEl) return;
+  const priceThen=parseFloat(document.getElementById('sim-price-then').value);
+  const priceNow=parseFloat(document.getElementById('sim-price-now').value);
+  const amount=parseFloat(document.getElementById('sim-amount').value);
+  const dateThen=document.getElementById('sim-date-then').value;
+  const currency=document.getElementById('sim-currency').value;
+  const symbol=(document.getElementById('sim-symbol')?.value||'').trim().toUpperCase();
+  if(!priceThen||!priceNow||!amount||priceThen<=0||priceNow<=0||amount<=0){resultEl.innerHTML='';return;}
+  const shares=amount/priceThen;
+  const currentValue=shares*priceNow;
+  const gain=currentValue-amount;
+  const pct=(gain/amount)*100;
+  const isGain=gain>=0;
+  const ccy=currency==='USD'?'$':'ZiG ';
+  let daysHeld=null,annualized=null;
+  if(dateThen){
+    const d1=new Date(dateThen),d2=new Date();
+    daysHeld=Math.round((d2-d1)/(1000*60*60*24));
+    if(daysHeld>0) annualized=(Math.pow(priceNow/priceThen,365/daysHeld)-1)*100;
+  }
+  const fmtDur=d=>{if(d<30) return d+' days';if(d<365) return Math.round(d/30)+' mo';const y=Math.floor(d/365),m=Math.round((d%365)/30);return y+'yr'+(m>0?' '+m+'mo':'');};
+  resultEl.innerHTML=`
+    <div class="sim-result-box ${isGain?'':'loss'}">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">${symbol||'Result'} · Your investment would be worth</div>
+      <div class="sim-big ${isGain?'sim-gain':'sim-loss'}">${ccy}${fmtMoney(currentValue)}</div>
+      <div style="font-size:15px;font-weight:700;margin-top:6px;margin-bottom:20px;${isGain?'color:var(--accent)':'color:var(--red)'}">${isGain?'+':''}${ccy}${fmtMoney(Math.abs(gain))} &nbsp; ${isGain?'+':''}${fmtNum(pct)}%</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Invested</div><div style="font-weight:700">${ccy}${fmtMoney(amount)}</div></div>
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Shares</div><div style="font-weight:700">${fmtNum(shares)}</div></div>
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Price then → now</div><div style="font-weight:700;font-size:12px">${ccy}${fmtNum(priceThen)} → ${ccy}${fmtNum(priceNow)}</div></div>
+        ${daysHeld!==null?`<div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Held</div><div style="font-weight:700">${fmtDur(daysHeld)}</div></div>`:''}
+        ${annualized!==null?`<div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Annualised p.a.</div><div style="font-weight:700;${annualized>=0?'color:var(--accent)':'color:var(--red)'}">${annualized>=0?'+':''}${fmtNum(annualized)}%</div></div>`:''}
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Multiplier</div><div style="font-weight:700">${fmtNum(priceNow/priceThen)}×</div></div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════

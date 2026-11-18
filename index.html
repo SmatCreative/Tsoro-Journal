@@ -393,6 +393,10 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <label class="auth-label">Email address</label>
         <input class="auth-input" type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
       </div>
+      <div id="auth-display-name-wrap" style="display:none">
+        <label class="auth-label">Display name</label>
+        <input class="auth-input" type="text" id="auth-display-name" placeholder="Your name" autocomplete="name">
+      </div>
       <div>
         <label class="auth-label">Password</label>
         <input class="auth-input" type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" minlength="6">
@@ -451,6 +455,11 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     <button class="nav-item" data-page="pulse">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
       <span>Pulse</span>
+    </button>
+    <div class="nav-section" id="nav-admin-section" style="display:none">Admin</div>
+    <button class="nav-item" id="nav-admin" data-page="admin" style="display:none">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <span>Admin</span>
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -804,6 +813,22 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <div class="pulse-feed" id="pulse-feed"></div>
       </div>
 
+      <!-- Admin Panel -->
+      <div class="page" id="page-admin">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-size:22px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,168,78,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              Admin
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Market prices · Community overview</div>
+          </div>
+        </div>
+        <div id="admin-content"></div>
+      </div>
+
       <!-- Goals & Giving (merged) -->
       <div class="page" id="page-goals-giving">
         <!-- Goals section -->
@@ -1107,7 +1132,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Symbol / Asset</label><input class="form-input" id="f-symbol" placeholder="BTC, AAPL, EUR/USD…" list="sym-list" required autocomplete="off"><datalist id="sym-list"><option value="BTC/USD"><option value="ETH/USD"><option value="BNB/USD"><option value="SOL/USD"><option value="EUR/USD"><option value="GBP/USD"><option value="USD/JPY"><option value="AUD/USD"><option value="XAU/USD"><option value="XAG/USD"><option value="WTI/USD"><option value="AAPL"><option value="TSLA"><option value="NVDA"><option value="AMZN"><option value="MSFT"><option value="GOOGL"><option value="META"><option value="SPY"><option value="QQQ"><option value="GLD"></datalist></div>
         <div class="form-group"><label class="form-label">Market</label><select class="form-select" id="f-market" required><option value="">Select…</option><option value="Stock">Stock</option><option value="ETF">ETF</option><option value="REIT">REIT</option><option value="Crypto">Crypto</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="Bonds">Bonds</option><option value="Forex">Forex</option><option value="Preference Share">Preference Share</option></select></div>
-        <div class="form-group"><label class="form-label">Exchange <span class="opt">(optional)</span></label><input class="form-input" id="f-exchange" placeholder="ZSE, NYSE, NASDAQ…" list="exch-list" autocomplete="off"><datalist id="exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="LSE"><option value="NSE"><option value="BSE"><option value="ASX"><option value="TSX"><option value="HKEX"><option value="SSE"><option value="Euronext"><option value="XETRA"><option value="SGX"><option value="KSE"><option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX"><option value="CME"><option value="CBOE"><option value="ICE"><option value="OTC"></datalist></div>
+        <div class="form-group"><label class="form-label">Exchange <span class="opt">(optional)</span></label><input class="form-input" id="f-exchange" placeholder="ZSE, NYSE, NASDAQ…" list="exch-list" autocomplete="off"><datalist id="exch-list"><option value="ZSE"><option value="VFSE"><option value="ZEEX"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="LSE"><option value="NSE"><option value="BSE"><option value="ASX"><option value="TSX"><option value="HKEX"><option value="SSE"><option value="Euronext"><option value="XETRA"><option value="SGX"><option value="KSE"><option value="Binance"><option value="Coinbase"><option value="Kraken"><option value="Bybit"><option value="OKX"><option value="CME"><option value="CBOE"><option value="ICE"><option value="OTC"></datalist></div>
         <div class="form-group"><label class="form-label">Currency</label><select class="form-select" id="f-currency"><option value="USD">USD — US Dollar ($)</option><option value="ZiG">ZiG — Zimbabwe Gold</option><option value="ZAR">ZAR — South African Rand (R)</option><option value="GBP">GBP — British Pound (£)</option><option value="EUR">EUR — Euro (€)</option><option value="NGN">NGN — Nigerian Naira (₦)</option><option value="INR">INR — Indian Rupee (₹)</option><option value="KES">KES — Kenyan Shilling</option><option value="AUD">AUD — Australian Dollar</option><option value="CAD">CAD — Canadian Dollar</option><option value="HKD">HKD — Hong Kong Dollar</option><option value="CNY">CNY — Chinese Yuan (¥)</option><option value="SGD">SGD — Singapore Dollar</option><option value="JPY">JPY — Japanese Yen (¥)</option><option value="USDT">USDT — Tether</option><option value="PKR">PKR — Pakistani Rupee (₨)</option><option value="GHS">GHS — Ghanaian Cedi (₵)</option><option value="BRL">BRL — Brazilian Real</option><option value="EGP">EGP — Egyptian Pound</option><option value="BTC">BTC — Bitcoin (₿)</option><option value="ETH">ETH — Ethereum (Ξ)</option></select></div>
         <div class="form-group"><label class="form-label">Direction</label><select class="form-select" id="f-dir"><option value="Long">Long (Buy)</option><option value="Short">Short (Sell)</option></select></div>
         <div class="form-group"><label class="form-label">Quantity / Size</label><input class="form-input" id="f-qty" type="number" step="any" min="0" placeholder="0.00" required></div>
@@ -1219,6 +1244,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <select class="form-select" id="zh-exchange">
           <option value="ZSE">ZSE — Zimbabwe Stock Exchange (ZiG)</option>
           <option value="VFSE">VFSE — Victoria Falls Stock Exchange (USD)</option>
+          <option value="ZEEX">ZEEX — Zimbabwe Electronic Exchange (ZiG)</option>
         </select>
       </div>
       <div class="form-group">
@@ -1333,7 +1359,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <div class="form-group">
         <label class="form-label">Exchange <span class="opt">(optional)</span></label>
         <input class="form-input" id="w-exchange" placeholder="ZSE, NYSE, Binance…" list="w-exch-list" autocomplete="off">
-        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"></datalist>
+        <datalist id="w-exch-list"><option value="ZSE"><option value="VFSE"><option value="ZEEX"><option value="JSE"><option value="NYSE"><option value="NASDAQ"><option value="Binance"><option value="Coinbase"><option value="LSE"></datalist>
       </div>
       <div class="form-group">
         <label class="form-label">Currency</label>
@@ -2080,7 +2106,7 @@ function toDb(t){ return {type:t.type,symbol:t.symbol,market:t.market,exchange:t
 
 // ── Currency maps ──────────────────────────────────────────────────
 const EXCHANGE_CURRENCY={
-  'ZSE':'ZiG','VFSE':'USD','JSE':'ZAR','NYSE':'USD','NASDAQ':'USD',
+  'ZSE':'ZiG','VFSE':'USD','ZEEX':'ZiG','JSE':'ZAR','NYSE':'USD','NASDAQ':'USD',
   'LSE':'GBP','NSE':'NGN','BSE':'INR','ASX':'AUD','TSX':'CAD',
   'HKEX':'HKD','SSE':'CNY','SGX':'SGD','Euronext':'EUR','XETRA':'EUR',
   'Binance':'USDT','Coinbase':'USD','Kraken':'USD','Bybit':'USDT','OKX':'USDT',
@@ -2121,6 +2147,8 @@ function switchAuthTab(mode){
   document.getElementById('auth-msg').className='auth-msg';
   // Only show Remember Me on login
   document.getElementById('auth-remember').parentElement.style.display=mode==='login'?'flex':'none';
+  // Only show display name on signup
+  document.getElementById('auth-display-name-wrap').style.display=mode==='signup'?'block':'none';
 }
 async function handleAuth(){
   const email=document.getElementById('auth-email').value.trim(), password=document.getElementById('auth-password').value;
@@ -2129,9 +2157,10 @@ async function handleAuth(){
   if(!email||!password){showAuthMsg('Please enter email and password.','error');return;}
   btn.disabled=true; btn.textContent='…';
   try {
+    const displayName=document.getElementById('auth-display-name').value.trim();
     const result=authMode==='login'
       ?await sb.auth.signInWithPassword({email,password})
-      :await sb.auth.signUp({email,password});
+      :await sb.auth.signUp({email,password,options:{data:{display_name:displayName||email.split('@')[0]}}});
     if(result.error) throw result.error;
     if(authMode==='signup'&&result.data?.user&&!result.data.session){
       showAuthMsg('Check your email to confirm your account, then sign in.','success');
@@ -2154,7 +2183,25 @@ async function signOut(){
   window.location.reload();
 }
 function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
-function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; const init=email[0]?.toUpperCase()||'T'; const initEl=document.getElementById('sidebar-avatar-init'); if(initEl) initEl.textContent=init; const portInit=document.getElementById('portfolio-avatar-init'); if(portInit) portInit.textContent=init; syncProfileAvatar(); }
+
+let currentProfile=null;
+let isAdmin=false;
+
+async function loadProfile(){
+  try{
+    const{data}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+    currentProfile=data||null;
+    isAdmin=currentProfile?.is_admin===true;
+    const nameEl=document.getElementById('user-email-display');
+    if(nameEl&&currentProfile?.display_name) nameEl.textContent=currentProfile.display_name;
+    const adminNav=document.getElementById('nav-admin');
+    if(adminNav) adminNav.style.display=isAdmin?'flex':'none';
+    const adminSec=document.getElementById('nav-admin-section');
+    if(adminSec) adminSec.style.display=isAdmin?'block':'none';
+  }catch(e){ console.error('[Tsoro] profile:',e.message); }
+}
+
+function showApp(user){ currentUser=user; document.getElementById('auth-screen').classList.remove('show'); document.getElementById('app').classList.add('show'); const email=user.email||''; document.getElementById('user-email-display').textContent=email; const init=email[0]?.toUpperCase()||'T'; const initEl=document.getElementById('sidebar-avatar-init'); if(initEl) initEl.textContent=init; const portInit=document.getElementById('portfolio-avatar-init'); if(portInit) portInit.textContent=init; syncProfileAvatar(); loadProfile(); }
 
 // --- Profile picture ---
 function syncProfileAvatar(){
@@ -2188,7 +2235,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile()]);
     renderAll();
     renderTicker();
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
@@ -2248,8 +2295,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse'};
-const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse']);
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse',admin:'Admin'};
+const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','admin']);
 function toggleMobileSidebar(){
   const sb=document.querySelector('.sidebar');
   const ov=document.getElementById('mobile-sidebar-overlay');
@@ -2458,7 +2505,7 @@ function zseHoldingsAsTrades(){
         id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
         market:h.instrumentType||'Stock', direction:'Long', type:'long', status:'open',
         entry:h.buyPrice, qty:h.shares,
-        currency:h.exchange==='ZSE'?'ZiG':'USD',
+        currency:h.exchange==='VFSE'?'USD':'ZiG',
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
         exit:h.currentPrice||null, exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
@@ -3350,7 +3397,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -4305,7 +4352,7 @@ function _renderWallet(){
       const bizHoldings=zseHoldings.filter(h=>h.business_group===name);
       const holdingsUSD=bizHoldings.reduce((s,h)=>{
         const price=h.currentPrice??h.buyPrice; if(!price||!h.shares) return s;
-        const v=toUSD(price*h.shares, h.exchange==='ZSE'?'ZiG':'USD'); return v==null?s:s+v;
+        const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
       },0);
       const totalUSD=cashUSD+holdingsUSD;
       const subRows=gWallets.map(w=>{
@@ -4335,7 +4382,7 @@ function _renderWallet(){
         +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">ZSE / VFEX Holdings</div>'
         +bizHoldings.map(h=>{
           const price=h.currentPrice??h.buyPrice; const val=(price||0)*h.shares;
-          const ccy=h.exchange==='ZSE'?'ZiG':'USD'; const usdVal=toUSD(val,ccy);
+          const ccy=h.exchange==='VFSE'?'USD':'ZiG'; const usdVal=toUSD(val,ccy);
           const gain=price&&h.buyPrice?((price-h.buyPrice)/h.buyPrice*100):null;
           return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">'
             +'<div>'
@@ -5718,15 +5765,17 @@ function renderPulse(){
   el.innerHTML=list.map(p=>{
     const tags=(p.tags||[]).filter(Boolean);
     const dateStr=p.posted_at?new Date(p.posted_at+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—';
+    const isOwn=p.user_id===currentUser?.id;
     return `<div class="pulse-card">
       <div class="pulse-date">${dateStr}</div>
+      <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:8px">${escapeHtml(p.author_name||'Anonymous')}</div>
       ${p.title?`<div class="pulse-title">${escapeHtml(p.title)}</div>`:''}
       <div class="pulse-body">${escapeHtml(p.body||'')}</div>
       ${tags.length?`<div class="pulse-tags">${tags.map(t=>`<span class="pulse-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
-      <div class="pulse-actions">
+      ${isOwn?`<div class="pulse-actions">
         <button class="btn btn-sm btn-ghost" style="font-size:11px" onclick="openPulseModal('${p.id}')">Edit</button>
         <button class="btn btn-sm btn-ghost" style="font-size:11px;color:var(--red)" onclick="deletePulsePost('${p.id}')">Delete</button>
-      </div>
+      </div>`:''}
     </div>`;
   }).join('');
 }
@@ -5771,7 +5820,7 @@ async function savePulsePost(){
   if(!date){ errEl.textContent='Please set a date.'; errEl.style.display='block'; return; }
   const btn=document.getElementById('pulse-save-btn'); btn.disabled=true; btn.textContent='Saving…';
   try{
-    const row={title:title||null,body,tags,posted_at:date,user_id:currentUser.id};
+    const row={title:title||null,body,tags,posted_at:date,user_id:currentUser.id,author_name:currentProfile?.display_name||currentUser?.email?.split('@')[0]||'Anonymous'};
     if(id){
       const{error}=await sb.from('pulse_posts').update({title:title||null,body,tags,posted_at:date}).eq('id',id);
       if(error) throw error;
@@ -5794,6 +5843,101 @@ async function deletePulsePost(id){
   showToast('Post deleted.','success');
 }
 
+// ═══ ADMIN ═══════════════════════════════════════════════════════════
+
+let marketPrices={};
+
+async function loadMarketPrices(){
+  try{
+    const{data,error}=await sb.from('market_prices').select('*');
+    if(error) throw error;
+    marketPrices={};
+    (data||[]).forEach(r=>{ marketPrices[r.symbol+'|'+r.exchange]=r; });
+  }catch(e){ console.error('[Tsoro] market_prices:',e.message); marketPrices={}; }
+}
+
+function getMarketPrice(symbol,exchange){
+  return marketPrices[symbol+'|'+exchange]||null;
+}
+
+async function renderAdmin(){
+  if(!isAdmin){ navigate('dashboard'); return; }
+  const el=document.getElementById('admin-content'); if(!el) return;
+  let usersCount='—';
+  try{ const{count}=await sb.from('profiles').select('*',{count:'exact',head:true}); usersCount=count??'—'; }catch(_){}
+  const prices=Object.values(marketPrices).sort((a,b)=>a.exchange.localeCompare(b.exchange)||a.symbol.localeCompare(b.symbol));
+  el.innerHTML=`
+    <div class="card" style="padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">Market Prices</div>
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Update ZSE, VFEX and ZEEX prices daily. These override each user's stored price when calculating portfolio value.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px">
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Symbol</div><input class="form-input" id="ap-symbol" placeholder="AXIA" style="text-transform:uppercase"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Exchange</div>
+          <select class="form-select" id="ap-exchange">
+            <option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="ZEEX">ZEEX</option>
+          </select>
+        </div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price</div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <button class="btn btn-primary" onclick="saveAdminPrice()" style="height:40px;white-space:nowrap">+ Add / Update</button>
+      </div>
+      ${prices.length?`
+      <div class="table-wrap"><table class="data-table" style="width:100%">
+        <thead><tr><th>Symbol</th><th>Exchange</th><th style="text-align:right">Price</th><th>Currency</th><th>Date</th><th></th></tr></thead>
+        <tbody>${prices.map(r=>`<tr>
+          <td style="font-weight:700">${escapeHtml(r.symbol)}</td>
+          <td><span class="badge" style="background:rgba(0,168,78,.12);color:var(--accent)">${escapeHtml(r.exchange)}</span></td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${fmtNum(r.price)}</td>
+          <td style="color:var(--muted);font-size:12px">${escapeHtml(r.currency||'ZiG')}</td>
+          <td style="color:var(--muted);font-size:12px">${r.price_date||'—'}</td>
+          <td><button class="btn btn-sm btn-ghost" style="color:var(--red);font-size:11px" onclick="deleteAdminPrice('${escapeHtml(r.symbol)}','${escapeHtml(r.exchange)}')">Remove</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`:'<div style="font-size:13px;color:var(--muted);padding:8px 0">No prices saved yet. Add the first one above.</div>'}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card" style="padding:18px 20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Community</div>
+        <div style="display:flex;gap:24px">
+          <div><div style="font-size:28px;font-weight:800;color:var(--accent)">${usersCount}</div><div style="font-size:11px;color:var(--muted)">Registered users</div></div>
+          <div><div style="font-size:28px;font-weight:800;color:var(--accent)">${pulsePosts.length}</div><div style="font-size:11px;color:var(--muted)">Pulse posts</div></div>
+        </div>
+      </div>
+      <div class="card" style="padding:18px 20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">API Integration</div>
+        <div style="font-size:13px;color:var(--muted2);line-height:1.6">Manual price updates active. When ZSE / VFEX / ZEEX provide API access, connect it here to auto-update prices.</div>
+      </div>
+    </div>`;
+}
+
+async function saveAdminPrice(){
+  const symbol=document.getElementById('ap-symbol').value.trim().toUpperCase();
+  const exchange=document.getElementById('ap-exchange').value;
+  const price=parseFloat(document.getElementById('ap-price').value);
+  const date=document.getElementById('ap-date').value;
+  if(!symbol||isNaN(price)||price<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
+  const currency=exchange==='VFSE'?'USD':'ZiG';
+  try{
+    const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()});
+    if(error) throw error;
+    marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
+    document.getElementById('ap-symbol').value='';
+    document.getElementById('ap-price').value='';
+    showToast(`${symbol} price updated to ${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`,'success');
+    renderAdmin();
+  }catch(e){ showToast('Save failed: '+e.message,'error'); }
+}
+
+async function deleteAdminPrice(symbol,exchange){
+  if(!confirm(`Remove ${symbol} from shared prices?`)) return;
+  try{
+    const{error}=await sb.from('market_prices').delete().eq('symbol',symbol).eq('exchange',exchange);
+    if(error) throw error;
+    delete marketPrices[symbol+'|'+exchange];
+    renderAdmin();
+    showToast('Removed.','success');
+  }catch(e){ showToast('Failed: '+e.message,'error'); }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // INVESTMENT GOALS
 // ═══════════════════════════════════════════════════════════════════
@@ -5801,9 +5945,10 @@ async function deletePulsePost(id){
 // Total account value in USD — the number goals are measured against
 function zseHoldingsValueUSD(){
   return zseHoldings.reduce((s,h)=>{
-    const price=h.currentPrice??h.buyPrice;
+    const mp=getMarketPrice(h.symbol,h.exchange);
+    const price=mp?mp.price:(h.currentPrice??h.buyPrice);
     if(!price||!h.shares) return s;
-    const ccy=h.exchange==='ZSE'?'ZiG':'USD';
+    const ccy=h.exchange==='VFSE'?'USD':'ZiG';
     const v=toUSD(price*h.shares, ccy);
     return v==null?s:s+v;
   },0);
@@ -6068,7 +6213,7 @@ function renderBizCFO(){
   const bizZseHoldings=zseHoldings.filter(h=>h.business_group&&bizGroupNames.has(h.business_group));
   const bizZseUSD=bizZseHoldings.reduce((s,h)=>{
     const price=h.currentPrice??h.buyPrice; if(!price||!h.shares) return s;
-    const v=toUSD(price*h.shares, h.exchange==='ZSE'?'ZiG':'USD'); return v==null?s:s+v;
+    const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
   },0);
   const bizWalletBalance=bizCashBalance+bizZseUSD;
 

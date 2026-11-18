@@ -6067,9 +6067,16 @@ let priceHistory=[];
 
 async function loadPriceHistory(){
   try{
-    const{data,error}=await sb.from('price_history').select('*').order('recorded_date',{ascending:true});
-    if(error) throw error;
-    priceHistory=data||[];
+    const queries=[sb.from('price_history').select('symbol,exchange,price,currency,recorded_date').order('recorded_date',{ascending:true})];
+    if(currentUser) queries.push(sb.from('zse_price_history').select('symbol,exchange,price,currency,recorded_date').eq('user_id',currentUser.id).order('recorded_date',{ascending:true}));
+    const results=await Promise.all(queries);
+    const ph=(results[0].data||[]);
+    const zph=(results[1]?.data||[]).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
+    // Merge: user's personal history wins over bulk import on same day
+    const seen=new Map();
+    ph.forEach(r=>seen.set(r.symbol+'|'+r.exchange+'|'+r.recorded_date,r));
+    zph.forEach(r=>seen.set(r.symbol+'|'+r.exchange+'|'+r.recorded_date,r));
+    priceHistory=[...seen.values()];
   }catch(e){ console.error('[Tsoro] price_history:',e.message); priceHistory=[]; }
 }
 

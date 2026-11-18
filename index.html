@@ -5929,7 +5929,7 @@ async function renderAdmin(){
         </tr>`).join('')}</tbody>
       </table></div>`:'<div style="font-size:13px;color:var(--muted);padding:8px 0">No prices saved yet. Add the first one above.</div>'}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
       <div class="card" style="padding:18px 20px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Community</div>
         <div style="display:flex;gap:24px">
@@ -5938,8 +5938,34 @@ async function renderAdmin(){
         </div>
       </div>
       <div class="card" style="padding:18px 20px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">API Integration</div>
-        <div style="font-size:13px;color:var(--muted2);line-height:1.6">Manual price updates active. When ZSE / VFEX / ZEEX provide API access, connect it here to auto-update prices.</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Price History</div>
+        <div style="font-size:28px;font-weight:800;color:var(--accent)">${priceHistory.length}</div>
+        <div style="font-size:11px;color:var(--muted)">Historical records loaded</div>
+      </div>
+    </div>
+    <div class="card" style="padding:20px 24px">
+      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Import Historical Prices</div>
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6">Paste historical price data to power the What If? simulator. Supports two formats:<br>
+        <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">DATE,PRICE</code> (one symbol at a time, set symbol+exchange above) &nbsp;or&nbsp;
+        <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">SYMBOL,EXCHANGE,DATE,PRICE</code> (multi-symbol).<br>
+        First row can be a header — it is skipped automatically. Source: ZSE website, your broker, or any spreadsheet.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px">Symbol (for DATE,PRICE format)</div>
+          <input class="form-input" id="imp-symbol" placeholder="e.g. SIMBISA" style="text-transform:uppercase">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:4px">Exchange</div>
+          <select class="form-select" id="imp-exchange">
+            <option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="ZEEX">ZEEX</option>
+          </select>
+        </div>
+      </div>
+      <textarea class="form-input" id="imp-csv" rows="8" placeholder="DATE,PRICE&#10;2025-01-15,0.4532&#10;2025-02-20,0.4810&#10;2025-03-18,0.5120&#10;...&#10;&#10;Or multi-symbol:&#10;SYMBOL,EXCHANGE,DATE,PRICE&#10;SIMBISA,ZSE,2025-01-15,0.4532&#10;AXIA,ZSE,2025-01-15,2.3000" style="font-family:monospace;font-size:12px;resize:vertical;margin-bottom:10px"></textarea>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-primary" onclick="importAdminPrices()">Import Prices</button>
+        <div id="imp-status" style="font-size:12px;color:var(--muted)"></div>
       </div>
     </div>`;
 }
@@ -5975,6 +6001,64 @@ async function deleteAdminPrice(symbol,exchange){
   }catch(e){ showToast('Failed: '+e.message,'error'); }
 }
 
+async function importAdminPrices(){
+  const csv=(document.getElementById('imp-csv').value||'').trim();
+  const defaultSymbol=(document.getElementById('imp-symbol').value||'').trim().toUpperCase();
+  const defaultExchange=document.getElementById('imp-exchange').value;
+  const statusEl=document.getElementById('imp-status');
+  if(!csv){ statusEl.textContent='Nothing to import.'; return; }
+
+  const rows=csv.split(/\r?\n/).map(r=>r.trim()).filter(Boolean);
+  const records=[];
+  let skipped=0;
+
+  for(const row of rows){
+    const cols=row.split(',').map(c=>c.trim().replace(/^["']|["']$/g,''));
+    if(!cols.length) continue;
+
+    // Detect format: 4-col = SYMBOL,EXCHANGE,DATE,PRICE; 2-col = DATE,PRICE
+    let symbol,exchange,dateStr,price;
+    if(cols.length>=4){
+      // SYMBOL,EXCHANGE,DATE,PRICE
+      if(isNaN(parseFloat(cols[3]))){ skipped++; continue; } // header row
+      symbol=cols[0].toUpperCase(); exchange=cols[1].toUpperCase();
+      dateStr=cols[2]; price=parseFloat(cols[3]);
+    } else if(cols.length>=2){
+      // DATE,PRICE
+      if(isNaN(parseFloat(cols[1]))){ skipped++; continue; } // header row
+      if(!defaultSymbol){ statusEl.textContent='Set a symbol above for DATE,PRICE format.'; return; }
+      symbol=defaultSymbol; exchange=defaultExchange;
+      dateStr=cols[0]; price=parseFloat(cols[1]);
+    } else { skipped++; continue; }
+
+    // Validate date (YYYY-MM-DD)
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skipped++; continue; }
+    if(isNaN(price)||price<=0){ skipped++; continue; }
+    const currency=exchange==='VFSE'?'USD':'ZiG';
+    records.push({symbol,exchange,price,currency,recorded_date:dateStr,recorded_by:currentUser.id});
+  }
+
+  if(!records.length){ statusEl.textContent=`No valid rows found (${skipped} skipped).`; return; }
+  statusEl.textContent=`Importing ${records.length} rows…`;
+
+  // Batch insert in chunks of 100
+  let inserted=0,failed=0;
+  const CHUNK=100;
+  for(let i=0;i<records.length;i+=CHUNK){
+    const chunk=records.slice(i,i+CHUNK);
+    const{error}=await sb.from('price_history').upsert(chunk,{onConflict:'symbol,exchange,recorded_date',ignoreDuplicates:false});
+    if(error){ failed+=chunk.length; console.error('[Tsoro] import chunk error:',error.message); }
+    else inserted+=chunk.length;
+  }
+
+  // Reload history
+  await loadPriceHistory();
+  document.getElementById('imp-csv').value='';
+  statusEl.innerHTML=`<span style="color:var(--accent);font-weight:700">✓ ${inserted} records imported</span>${failed?` · ${failed} failed`:''}${skipped?` · ${skipped} skipped`:''}`;
+  showToast(`Imported ${inserted} price records.`,'success');
+  renderAdmin();
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // WHAT IF? SIMULATOR
 // ═══════════════════════════════════════════════════════════════════
@@ -5989,39 +6073,56 @@ async function loadPriceHistory(){
   }catch(e){ console.error('[Tsoro] price_history:',e.message); priceHistory=[]; }
 }
 
+// Find the price record in history closest to targetDate for a given symbol+exchange
+function findHistoricalPrice(symbol,exchange,targetDate){
+  const records=priceHistory.filter(r=>r.symbol===symbol&&r.exchange===exchange);
+  if(!records.length) return null;
+  const target=new Date(targetDate).getTime();
+  return records.reduce((best,r)=>{
+    const diff=Math.abs(new Date(r.recorded_date).getTime()-target);
+    const bestDiff=Math.abs(new Date(best.recorded_date).getTime()-target);
+    return diff<bestDiff?r:best;
+  });
+}
+
+// All unique symbol|exchange keys that have history data
+function symbolsWithHistory(){
+  return [...new Set(priceHistory.map(r=>r.symbol+'|'+r.exchange))];
+}
+
 function renderSimulator(){
   const el=document.getElementById('sim-content'); if(!el) return;
-  const allSymbols=[...new Set([...zseHoldings.map(h=>h.symbol+'|'+h.exchange),...Object.keys(marketPrices)])].sort();
+  const allSymbols=[...new Set([...zseHoldings.map(h=>h.symbol+'|'+h.exchange),...Object.keys(marketPrices),...symbolsWithHistory()])].sort();
+  const historyCounts={};
+  priceHistory.forEach(r=>{ const k=r.symbol+'|'+r.exchange; historyCounts[k]=(historyCounts[k]||0)+1; });
+
   el.innerHTML=`
     <div class="sim-card">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:18px">Configure your scenario</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
           <div class="sim-label">Symbol</div>
-          <input class="form-input" id="sim-symbol" placeholder="e.g. AXIA" list="sim-symbol-list" oninput="simAutoFill()" style="text-transform:uppercase">
+          <input class="form-input" id="sim-symbol" placeholder="e.g. SIMBISA" list="sim-symbol-list" oninput="simSymbolChanged()" style="text-transform:uppercase">
           <datalist id="sim-symbol-list">${allSymbols.map(k=>'<option value="'+escapeHtml(k.split('|')[0])+'">').join('')}</datalist>
+          <div id="sim-coverage" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
         </div>
         <div>
           <div class="sim-label">Exchange</div>
-          <select class="form-select" id="sim-exchange" onchange="simAutoFill()">
+          <select class="form-select" id="sim-exchange" onchange="simSymbolChanged()">
             <option value="ZSE">ZSE (ZiG)</option>
             <option value="VFSE">VFEX (USD)</option>
             <option value="ZEEX">ZEEX (ZiG)</option>
           </select>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div>
-          <div class="sim-label">Price then</div>
-          <input class="form-input" id="sim-price-then" type="number" step="any" min="0" placeholder="0.00" oninput="calcSimulator()">
-        </div>
-        <div>
-          <div class="sim-label">Date then</div>
+          <div class="sim-label">Date invested</div>
           <input class="form-input" id="sim-date-then" type="date" oninput="calcSimulator()">
         </div>
         <div>
-          <div class="sim-label">Price now</div>
-          <input class="form-input" id="sim-price-now" type="number" step="any" min="0" placeholder="0.00" oninput="calcSimulator()">
+          <div class="sim-label">End date <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave blank = today)</span></div>
+          <input class="form-input" id="sim-date-to" type="date" oninput="calcSimulator()">
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
@@ -6047,51 +6148,63 @@ function renderSimulator(){
       </div>
     </div>
     <div id="sim-result"></div>
+    ${Object.keys(historyCounts).length===0?`
+    <div class="sim-card" style="border:1.5px dashed var(--border)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px">No historical data yet</div>
+      <div style="font-size:13px;color:var(--muted2);line-height:1.6">Import historical prices in <b>Admin → Import Historical Prices</b> to enable automatic date-based lookups. You can copy price tables from the ZSE website or any spreadsheet into the import tool.</div>
+      ${isAdmin?'<button class="btn btn-primary" style="margin-top:14px" onclick="navigate(\'admin\')">Go to Admin →</button>':''}
+    </div>`:''}
     ${zseHoldings.length?`
-    <div class="sim-card" style="margin-top:4px">
+    <div class="sim-card">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">Your holdings — click to simulate</div>
       ${zseHoldings.map(h=>{
-        const mp=getMarketPrice(h.symbol,h.exchange);
-        const nowPrice=mp?mp.price:h.currentPrice;
+        const hCount=historyCounts[h.symbol+'|'+h.exchange]||0;
         const ccy=h.exchange==='VFSE'?'$':'ZiG ';
-        return `<div class="sim-row" style="cursor:pointer;border-radius:6px;padding:10px 4px" onclick="simLoadHolding('${escapeHtml(h.symbol)}','${escapeHtml(h.exchange)}')">
+        return `<div class="sim-row" style="cursor:pointer" onclick="simLoadHolding('${escapeHtml(h.symbol)}','${escapeHtml(h.exchange)}')">
           <div>
             <div style="font-weight:700;font-size:14px">${escapeHtml(h.symbol)}</div>
             <div style="font-size:11px;color:var(--muted)">${escapeHtml(h.exchange)} · bought ${h.buyDate||'—'} @ ${ccy}${fmtNum(h.buyPrice)}</div>
           </div>
           <div style="text-align:right">
-            ${nowPrice?`<div style="font-size:13px;font-weight:600">${ccy}${fmtNum(nowPrice)}</div>`:''}
+            <div style="font-size:11px;${hCount?'color:var(--accent)':'color:var(--muted)'}">${hCount?hCount+' price records':'no history'}</div>
             <div style="font-size:11px;color:var(--muted)">${h.shares.toLocaleString()} shares</div>
           </div>
         </div>`;
       }).join('')}
     </div>`:''}`;
-  // Default date 1 year ago
+  // Default: 1 year ago for "date then"
   const dateThenEl=document.getElementById('sim-date-then');
   if(dateThenEl&&!dateThenEl.value){const d=new Date();d.setFullYear(d.getFullYear()-1);dateThenEl.value=d.toISOString().slice(0,10);}
 }
 
-function simAutoFill(){
+function simSymbolChanged(){
   const symbol=(document.getElementById('sim-symbol').value||'').trim().toUpperCase();
   const exchange=document.getElementById('sim-exchange').value;
-  if(!symbol) return;
-  const holding=zseHoldings.find(h=>h.symbol===symbol&&h.exchange===exchange);
-  if(holding){
-    if(holding.buyPrice) document.getElementById('sim-price-then').value=holding.buyPrice;
-    if(holding.buyDate) document.getElementById('sim-date-then').value=holding.buyDate;
+  // Update coverage indicator
+  const covEl=document.getElementById('sim-coverage');
+  if(covEl&&symbol){
+    const records=priceHistory.filter(r=>r.symbol===symbol&&r.exchange===exchange);
+    if(records.length){
+      const dates=records.map(r=>r.recorded_date).sort();
+      covEl.innerHTML=`<span style="color:var(--accent)">✓ ${records.length} price records</span> · ${dates[0]} → ${dates[dates.length-1]}`;
+    } else {
+      covEl.innerHTML='<span style="color:var(--muted)">No history for this symbol</span>';
+    }
   }
-  const mp=getMarketPrice(symbol,exchange);
-  if(mp) document.getElementById('sim-price-now').value=mp.price;
-  document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
+  // Set currency
+  if(symbol) document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
   calcSimulator();
 }
 
 function simLoadHolding(symbol,exchange){
   document.getElementById('sim-symbol').value=symbol;
   document.getElementById('sim-exchange').value=exchange;
-  simAutoFill();
   const h=zseHoldings.find(h=>h.symbol===symbol&&h.exchange===exchange);
-  if(h&&h.buyPrice&&h.shares){document.getElementById('sim-amount').value=(h.buyPrice*h.shares).toFixed(2);calcSimulator();}
+  if(h&&h.buyDate) document.getElementById('sim-date-then').value=h.buyDate;
+  document.getElementById('sim-date-to').value='';
+  document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
+  if(h&&h.buyPrice&&h.shares) document.getElementById('sim-amount').value=(h.buyPrice*h.shares).toFixed(2);
+  simSymbolChanged();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -6102,39 +6215,70 @@ function simSetAmount(n){
 
 function calcSimulator(){
   const resultEl=document.getElementById('sim-result'); if(!resultEl) return;
-  const priceThen=parseFloat(document.getElementById('sim-price-then').value);
-  const priceNow=parseFloat(document.getElementById('sim-price-now').value);
-  const amount=parseFloat(document.getElementById('sim-amount').value);
-  const dateThen=document.getElementById('sim-date-then').value;
-  const currency=document.getElementById('sim-currency').value;
   const symbol=(document.getElementById('sim-symbol')?.value||'').trim().toUpperCase();
-  if(!priceThen||!priceNow||!amount||priceThen<=0||priceNow<=0||amount<=0){resultEl.innerHTML='';return;}
+  const exchange=document.getElementById('sim-exchange').value;
+  const dateThen=document.getElementById('sim-date-then').value;
+  const dateTo=document.getElementById('sim-date-to').value||new Date().toISOString().slice(0,10);
+  const amount=parseFloat(document.getElementById('sim-amount').value);
+  const currency=document.getElementById('sim-currency').value;
+  if(!symbol||!dateThen||!amount||amount<=0){resultEl.innerHTML='';return;}
+
+  // Look up historical prices
+  const recThen=findHistoricalPrice(symbol,exchange,dateThen);
+  // For end date: prefer history, fall back to market_prices for 'today'
+  let recTo=findHistoricalPrice(symbol,exchange,dateTo);
+  const isToday=dateTo===new Date().toISOString().slice(0,10)||!document.getElementById('sim-date-to').value;
+  if(!recTo&&isToday){
+    const mp=getMarketPrice(symbol,exchange);
+    if(mp) recTo={price:mp.price,recorded_date:dateTo,_fromMarket:true};
+  }
+
+  if(!recThen&&!recTo){
+    resultEl.innerHTML=`<div class="sim-card" style="border:1.5px dashed var(--border);text-align:center;padding:28px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">No price data for ${escapeHtml(symbol)}</div>
+      <div style="font-size:13px;color:var(--muted2)">Import historical prices in Admin to enable automatic lookups.</div>
+      ${isAdmin?'<button class="btn btn-primary" style="margin-top:14px" onclick="navigate(\'admin\')">Go to Admin →</button>':''}
+    </div>`;
+    return;
+  }
+  if(!recThen){
+    resultEl.innerHTML=`<div class="sim-card" style="text-align:center;padding:28px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">No price data near ${dateThen}</div><div style="font-size:13px;color:var(--muted2)">Import more historical data or pick a different start date.</div></div>`;
+    return;
+  }
+  if(!recTo){
+    resultEl.innerHTML=`<div class="sim-card" style="text-align:center;padding:28px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">No price data near ${dateTo}</div><div style="font-size:13px;color:var(--muted2)">Import more data or pick a different end date.</div></div>`;
+    return;
+  }
+
+  const priceThen=Number(recThen.price);
+  const priceNow=Number(recTo.price);
   const shares=amount/priceThen;
   const currentValue=shares*priceNow;
   const gain=currentValue-amount;
   const pct=(gain/amount)*100;
   const isGain=gain>=0;
   const ccy=currency==='USD'?'$':'ZiG ';
-  let daysHeld=null,annualized=null;
-  if(dateThen){
-    const d1=new Date(dateThen),d2=new Date();
-    daysHeld=Math.round((d2-d1)/(1000*60*60*24));
-    if(daysHeld>0) annualized=(Math.pow(priceNow/priceThen,365/daysHeld)-1)*100;
-  }
+  const d1=new Date(recThen.recorded_date),d2=new Date(recTo.recorded_date);
+  const daysHeld=Math.max(1,Math.round((d2-d1)/(1000*60*60*24)));
+  const annualized=(Math.pow(priceNow/priceThen,365/daysHeld)-1)*100;
   const fmtDur=d=>{if(d<30) return d+' days';if(d<365) return Math.round(d/30)+' mo';const y=Math.floor(d/365),m=Math.round((d%365)/30);return y+'yr'+(m>0?' '+m+'mo':'');};
+  const dateSrc=recThen._fromMarket?'market price':recThen.recorded_date;
+  const dateDstSrc=recTo._fromMarket?'current market price':recTo.recorded_date;
+
   resultEl.innerHTML=`
     <div class="sim-result-box ${isGain?'':'loss'}">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">${symbol||'Result'} · Your investment would be worth</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">${escapeHtml(symbol)} · ${escapeHtml(exchange)} · Your investment would be worth</div>
       <div class="sim-big ${isGain?'sim-gain':'sim-loss'}">${ccy}${fmtMoney(currentValue)}</div>
       <div style="font-size:15px;font-weight:700;margin-top:6px;margin-bottom:20px;${isGain?'color:var(--accent)':'color:var(--red)'}">${isGain?'+':''}${ccy}${fmtMoney(Math.abs(gain))} &nbsp; ${isGain?'+':''}${fmtNum(pct)}%</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">
         <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Invested</div><div style="font-weight:700">${ccy}${fmtMoney(amount)}</div></div>
         <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Shares</div><div style="font-weight:700">${fmtNum(shares)}</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Price then → now</div><div style="font-weight:700;font-size:12px">${ccy}${fmtNum(priceThen)} → ${ccy}${fmtNum(priceNow)}</div></div>
-        ${daysHeld!==null?`<div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Held</div><div style="font-weight:700">${fmtDur(daysHeld)}</div></div>`:''}
-        ${annualized!==null?`<div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Annualised p.a.</div><div style="font-weight:700;${annualized>=0?'color:var(--accent)':'color:var(--red)'}">${annualized>=0?'+':''}${fmtNum(annualized)}%</div></div>`:''}
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Price: buy → sell</div><div style="font-weight:700;font-size:12px">${ccy}${fmtNum(priceThen)} → ${ccy}${fmtNum(priceNow)}</div></div>
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Held</div><div style="font-weight:700">${fmtDur(daysHeld)}</div></div>
+        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Annualised p.a.</div><div style="font-weight:700;${annualized>=0?'color:var(--accent)':'color:var(--red)'}">${annualized>=0?'+':''}${fmtNum(annualized)}%</div></div>
         <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Multiplier</div><div style="font-weight:700">${fmtNum(priceNow/priceThen)}×</div></div>
       </div>
+      <div style="font-size:11px;color:var(--muted)">Using price data: ${escapeHtml(String(dateSrc))} (${ccy}${fmtNum(priceThen)}) → ${escapeHtml(String(dateDstSrc))} (${ccy}${fmtNum(priceNow)})</div>
     </div>`;
 }
 

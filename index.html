@@ -358,6 +358,19 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .ticker-price{font-size:15px;font-weight:700;color:var(--text);display:block;line-height:1.2}
 .ticker-chg{font-size:11px;font-weight:700;display:block;margin-top:1px}
 .ticker-chg.up{color:var(--green)}.ticker-chg.down{color:var(--red)}.ticker-chg.flat{color:var(--muted)}
+/* ── Pulse ── */
+.pulse-feed{display:flex;flex-direction:column;gap:14px}
+.pulse-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:20px 22px;transition:box-shadow .18s,border-color .15s}
+.pulse-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.22);border-color:var(--border-s)}
+.pulse-date{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:700;margin-bottom:7px}
+.pulse-title{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px;color:var(--text);line-height:1.3}
+.pulse-body{font-size:13.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap;margin-bottom:12px}
+.pulse-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.pulse-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(0,168,78,.12);color:var(--accent);letter-spacing:.05em;text-transform:uppercase}
+.pulse-actions{display:flex;gap:6px;padding-top:10px;border-top:1px solid var(--border)}
+.pulse-filter-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.pulse-filter-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted2);font-size:11px;font-weight:600;cursor:pointer;transition:all .13s;font-family:inherit;letter-spacing:.04em}
+.pulse-filter-btn.active,.pulse-filter-btn:hover{background:rgba(0,168,78,.12);border-color:rgba(0,168,78,.4);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -434,6 +447,10 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     <button class="nav-item" data-page="goals-giving">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
       <span>Goals &amp; Giving</span>
+    </button>
+    <button class="nav-item" data-page="pulse">
+      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      <span>Pulse</span>
     </button>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -766,6 +783,27 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         </div>
       </div>
 
+      <!-- Pulse — daily market commentary -->
+      <div class="page" id="page-pulse">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-size:22px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:10px">
+              <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,168,78,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              Pulse
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Your daily market commentary — thoughts, signals, and observations</div>
+          </div>
+          <button class="btn btn-primary" onclick="openPulseModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Post
+          </button>
+        </div>
+        <div class="pulse-filter-row" id="pulse-filter"></div>
+        <div class="pulse-feed" id="pulse-feed"></div>
+      </div>
+
       <!-- Goals & Giving (merged) -->
       <div class="page" id="page-goals-giving">
         <!-- Goals section -->
@@ -847,10 +885,48 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
         <span>Goals &amp; Giving</span>
       </button>
+      <button class="mobile-more-item" id="mmore-pulse" onclick="navigate('pulse')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Pulse</span>
+      </button>
     </div>
   </div>
 </div>
 
+
+<!-- Pulse Post Modal -->
+<div class="overlay" id="pulse-modal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-title" id="pulse-modal-title">New Post</div>
+      <button class="modal-close" onclick="closePulseModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="pulse-err" class="form-error" style="display:none;margin-bottom:10px"></div>
+    <input type="hidden" id="pulse-edit-id">
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" id="pulse-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tags <span class="opt">comma-separated</span></label>
+        <input class="form-input" id="pulse-tags" placeholder="ZSE, VFEX, Macro, USD…">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Headline <span class="opt">optional</span></label>
+        <input class="form-input" id="pulse-title" placeholder="Market open, Weekly review, Watching AXIA…">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Your thoughts</label>
+        <textarea class="form-input" id="pulse-body" rows="9" placeholder="What's moving today? Any setups you're watching? Macro thoughts, conviction levels, what the market is telling you…" style="resize:vertical;line-height:1.65;min-height:160px"></textarea>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:14px">
+      <button class="btn btn-primary" id="pulse-save-btn" onclick="savePulsePost()">Publish</button>
+      <button class="btn btn-ghost" onclick="closePulseModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- Private Investment Modal -->
 <div class="overlay" id="priv-invest-modal">
@@ -2112,7 +2188,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts()]);
     renderAll();
     renderTicker();
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
@@ -2172,8 +2248,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving'};
-const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving']);
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse'};
+const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse']);
 function toggleMobileSidebar(){
   const sb=document.querySelector('.sidebar');
   const ov=document.getElementById('mobile-sidebar-overlay');
@@ -3274,7 +3350,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -5607,6 +5683,116 @@ function openZseChargesModal(){
 }
 function closeZseChargesModal(){ document.getElementById('zse-charges-modal').classList.remove('open'); }
 document.getElementById('zse-charges-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeZseChargesModal();});
+
+// ═══════════════════════════════════════════════════════════════════
+// PULSE — daily market commentary
+// ═══════════════════════════════════════════════════════════════════
+let pulsePosts=[];
+
+async function loadPulsePosts(){
+  try{
+    const{data,error}=await sb.from('pulse_posts').select('*').order('posted_at',{ascending:false});
+    if(error) throw error;
+    pulsePosts=data||[];
+  }catch(e){ console.error('[Tsoro] pulse_posts:',e.message); pulsePosts=[]; }
+}
+
+function renderPulse(){
+  const el=document.getElementById('pulse-feed'); if(!el) return;
+  const filterEl=document.getElementById('pulse-filter'); if(!filterEl) return;
+  const activeTag=filterEl.querySelector('.pulse-filter-btn.active')?.dataset.tag||'all';
+  const allTags=[...new Set(pulsePosts.flatMap(p=>(p.tags||[])))].sort();
+  filterEl.innerHTML=['all',...allTags].map(t=>
+    `<button class="pulse-filter-btn${t===activeTag?' active':''}" data-tag="${escapeHtml(t)}" onclick="filterPulse('${escapeHtml(t)}')">${t==='all'?'All':escapeHtml(t)}</button>`
+  ).join('');
+  const list=activeTag==='all'?pulsePosts:pulsePosts.filter(p=>(p.tags||[]).includes(activeTag));
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state" style="padding:40px 20px">
+      <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <h3>${activeTag==='all'?'No posts yet':'No posts tagged '+activeTag}</h3>
+      <p>${activeTag==='all'?'Write your first daily Pulse — market thoughts, what you\'re watching, trade ideas.':'Try a different tag, or write a new post.'}</p>
+      ${activeTag==='all'?'<button class="btn btn-primary" style="margin-top:4px" onclick="openPulseModal()">Write First Post</button>':''}
+    </div>`;
+    return;
+  }
+  el.innerHTML=list.map(p=>{
+    const tags=(p.tags||[]).filter(Boolean);
+    const dateStr=p.posted_at?new Date(p.posted_at+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—';
+    return `<div class="pulse-card">
+      <div class="pulse-date">${dateStr}</div>
+      ${p.title?`<div class="pulse-title">${escapeHtml(p.title)}</div>`:''}
+      <div class="pulse-body">${escapeHtml(p.body||'')}</div>
+      ${tags.length?`<div class="pulse-tags">${tags.map(t=>`<span class="pulse-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
+      <div class="pulse-actions">
+        <button class="btn btn-sm btn-ghost" style="font-size:11px" onclick="openPulseModal('${p.id}')">Edit</button>
+        <button class="btn btn-sm btn-ghost" style="font-size:11px;color:var(--red)" onclick="deletePulsePost('${p.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterPulse(tag){
+  const filterEl=document.getElementById('pulse-filter'); if(!filterEl) return;
+  filterEl.querySelectorAll('.pulse-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.tag===tag));
+  renderPulse();
+}
+
+function openPulseModal(id){
+  document.getElementById('pulse-edit-id').value=id||'';
+  document.getElementById('pulse-modal-title').textContent=id?'Edit Post':'New Post';
+  document.getElementById('pulse-err').style.display='none';
+  if(id){
+    const p=pulsePosts.find(x=>x.id===id); if(!p) return;
+    document.getElementById('pulse-title').value=p.title||'';
+    document.getElementById('pulse-body').value=p.body||'';
+    document.getElementById('pulse-tags').value=(p.tags||[]).join(', ');
+    document.getElementById('pulse-date').value=p.posted_at||new Date().toISOString().slice(0,10);
+  } else {
+    document.getElementById('pulse-title').value='';
+    document.getElementById('pulse-body').value='';
+    document.getElementById('pulse-tags').value='';
+    document.getElementById('pulse-date').value=new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('pulse-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('pulse-body').focus(),80);
+}
+function closePulseModal(){ document.getElementById('pulse-modal').classList.remove('open'); }
+document.getElementById('pulse-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closePulseModal();});
+
+async function savePulsePost(){
+  const id=document.getElementById('pulse-edit-id').value;
+  const title=document.getElementById('pulse-title').value.trim();
+  const body=document.getElementById('pulse-body').value.trim();
+  const tagsRaw=document.getElementById('pulse-tags').value;
+  const date=document.getElementById('pulse-date').value;
+  const tags=tagsRaw.split(',').map(t=>t.trim().toUpperCase()).filter(Boolean);
+  const errEl=document.getElementById('pulse-err'); errEl.style.display='none';
+  if(!body){ errEl.textContent='Please write something before publishing.'; errEl.style.display='block'; return; }
+  if(!date){ errEl.textContent='Please set a date.'; errEl.style.display='block'; return; }
+  const btn=document.getElementById('pulse-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const row={title:title||null,body,tags,posted_at:date,user_id:currentUser.id};
+    if(id){
+      const{error}=await sb.from('pulse_posts').update({title:title||null,body,tags,posted_at:date}).eq('id',id);
+      if(error) throw error;
+      const idx=pulsePosts.findIndex(x=>x.id===id); if(idx>=0) pulsePosts[idx]={...pulsePosts[idx],...row,id};
+    } else {
+      const{data,error}=await sb.from('pulse_posts').insert([row]).select().single();
+      if(error) throw error;
+      pulsePosts.unshift(data);
+    }
+    closePulseModal(); renderPulse(); showToast('Post published.','success');
+  }catch(e){ errEl.textContent='Save failed: '+e.message; errEl.style.display='block'; }
+  finally{ btn.disabled=false; btn.textContent='Publish'; }
+}
+
+async function deletePulsePost(id){
+  if(!confirm('Delete this post?')) return;
+  const{error}=await sb.from('pulse_posts').delete().eq('id',id);
+  if(error){ showToast('Delete failed: '+error.message,'error'); return; }
+  pulsePosts=pulsePosts.filter(x=>x.id!==id); renderPulse();
+  showToast('Post deleted.','success');
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // INVESTMENT GOALS

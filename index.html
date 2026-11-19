@@ -531,6 +531,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
       <!-- Dashboard -->
       <div class="page active" id="page-dashboard">
         <div id="db-hero" style="margin-bottom:18px"></div>
+        <div id="db-donut" style="margin-bottom:18px"></div>
         <div id="db-period" style="margin-bottom:18px"></div>
         <div class="stats-row" id="db-stats"></div>
         <div id="db-winbar" style="margin-bottom:16px"></div>
@@ -2685,6 +2686,7 @@ function renderDashboard(){
   document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">${stockLogo(t.symbol,34)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:600">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
   const moversEl=document.getElementById('db-movers');
   if(moversEl) moversEl.innerHTML=zseMoversCard();
+  drawPortfolioDonut();
 }
 
 function zseMoversCard(){
@@ -2908,6 +2910,153 @@ function drawDailyChart(closed){
       itemStyle:{color:v>=0?{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#00E676'},{offset:1,color:'#00A84E'}]}:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#FF5252'},{offset:1,color:'#D32F2F'}]},borderRadius:v>=0?[4,4,0,0]:[0,0,4,4]}})),
       barMaxWidth:20}]
   });
+}
+
+async function drawPortfolioDonut(){
+  const el=document.getElementById('db-donut'); if(!el)return;
+  // Build segments from ZSE holdings + open trades + cash
+  const segMap={};
+  zseHoldings.forEach(h=>{
+    const val=(h.price||0)*(h.shares||0);
+    if(val>0){const k=h.symbol;segMap[k]={symbol:k,value:(segMap[k]?.value||0)+val,exchange:h.exchange||'ZSE'};}
+  });
+  allTrades().filter(t=>t.status==='open').forEach(t=>{
+    const val=toUSD((t.exit??t.entry)*(t.qty||0),t.currency)||0;
+    if(val>0){const k=t.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:t.market||''};segMap[k].value+=val;}
+  });
+  const cashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
+  if(cashUSD>0.5)segMap['CASH']={symbol:'CASH',value:cashUSD,exchange:'Cash'};
+  const segs=Object.values(segMap).filter(s=>s.value>0).sort((a,b)=>b.value-a.value);
+  if(!segs.length){el.innerHTML='';return;}
+  const total=segs.reduce((s,v)=>s+v.value,0);
+  const palette=['#00C853','#2196F3','#FF5722','#9C27B0','#FF9800','#00BCD4','#E91E63','#607D8B','#4CAF50','#F44336','#3F51B5','#FFC107'];
+  segs.forEach((s,i)=>{s.pct=s.value/total;s.color=palette[i%palette.length];});
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  el.innerHTML=`<div class="card" style="padding:24px;position:relative;overflow:visible">
+    <div style="position:absolute;top:20px;left:24px;z-index:2">
+      <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px">Total Portfolio</div>
+      <div style="font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--text)">$${fmtMoney(total)}</div>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center">
+      <canvas id="pf-donut-canvas" style="display:block"></canvas>
+    </div>
+  </div>`;
+  const canvas=document.getElementById('pf-donut-canvas'); if(!canvas)return;
+  const dpr=window.devicePixelRatio||1;
+  const container=canvas.parentElement;
+  const size=Math.min(container.clientWidth,480);
+  canvas.width=size*dpr; canvas.height=size*dpr;
+  canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx=size/2,cy=size/2;
+  const outerR=size*0.42,innerR=size*0.265,gap=0.012;
+  // Load logos
+  const imgs={};
+  await Promise.all(segs.map(s=>new Promise(res=>{
+    if(s.symbol==='CASH'){res();return;}
+    const src=LOGOS[s.symbol]||LOGOS[s.symbol.replace(/\.[A-Z]+$/,'')]||null;
+    if(!src){res();return;}
+    const img=new Image(); img.crossOrigin='anonymous';
+    img.onload=()=>{imgs[s.symbol]=img;res();}; img.onerror=res; img.src=src;
+  })));
+  // Load profile pic
+  let profileImg=null;
+  const picSrc=localStorage.getItem('tj_profile_pic');
+  if(picSrc)await new Promise(res=>{const img=new Image();img.onload=()=>{profileImg=img;res();};img.onerror=res;img.src=picSrc;});
+  // Animate
+  const dur=1300,start=performance.now();
+  const ease=t=>t<.5?4*t*t*t:(t-1)*(2*t-2)*(2*t-2)+1;
+  function draw(now){
+    const prog=Math.min(ease((now-start)/dur),1);
+    ctx.clearRect(0,0,size,size);
+    let a=-Math.PI/2;
+    segs.forEach(s=>{
+      const sweep=(s.pct*2*Math.PI-gap)*prog;
+      if(sweep<=0)return;
+      const a0=a+gap/2,a1=a0+sweep,mid=a0+sweep/2;
+      // Segment
+      ctx.beginPath();
+      ctx.arc(cx,cy,outerR,a0,a1);
+      ctx.arc(cx,cy,innerR,a1,a0,true);
+      ctx.closePath();
+      ctx.fillStyle=s.color;
+      ctx.fill();
+      // Logo inside segment
+      if(sweep>0.18){
+        const lr=(outerR+innerR)/2;
+        const lx=cx+lr*Math.cos(mid),ly=cy+lr*Math.sin(mid);
+        const logoSz=Math.min(sweep*lr*0.72,outerR-innerR-4,38);
+        if(logoSz>=10){
+          if(imgs[s.symbol]){
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(lx,ly,logoSz/2,0,Math.PI*2);
+            ctx.clip();
+            ctx.fillStyle='#fff';
+            ctx.fill();
+            ctx.drawImage(imgs[s.symbol],lx-logoSz/2,ly-logoSz/2,logoSz,logoSz);
+            ctx.restore();
+          } else {
+            // Initials fallback in segment
+            ctx.save();
+            ctx.font=`700 ${Math.round(logoSz*.38)}px -apple-system,sans-serif`;
+            ctx.fillStyle='rgba(255,255,255,.85)';
+            ctx.textAlign='center';
+            ctx.textBaseline='middle';
+            ctx.fillText(s.symbol.slice(0,3),lx,ly);
+            ctx.restore();
+          }
+        }
+      }
+      // Outer labels (fade in last 15%)
+      if(prog>0.85&&sweep>0.14){
+        const alpha=Math.min((prog-0.85)/0.15,1);
+        const lrOuter=outerR+18;
+        const lx=cx+lrOuter*Math.cos(mid),ly=cy+lrOuter*Math.sin(mid);
+        const right=lx>=cx;
+        ctx.save();
+        ctx.globalAlpha=alpha;
+        ctx.textAlign=right?'left':'right';
+        ctx.textBaseline='middle';
+        ctx.font=`700 11px -apple-system,sans-serif`;
+        ctx.fillStyle=isDark?'#ECF1FC':'#08132A';
+        ctx.fillText(s.symbol,lx+(right?4:-4),ly-7);
+        ctx.font=`600 10px -apple-system,sans-serif`;
+        ctx.fillStyle='#00C853';
+        ctx.fillText((s.pct*100).toFixed(1)+'%',lx+(right?4:-4),ly+6);
+        ctx.restore();
+      }
+      a+=s.pct*2*Math.PI;
+    });
+    // Center circle background
+    ctx.beginPath();
+    ctx.arc(cx,cy,innerR-3,0,Math.PI*2);
+    ctx.fillStyle=isDark?'#0a1020':'#ffffff';
+    ctx.fill();
+    // Profile picture
+    if(profileImg&&prog>0.3){
+      const alpha=Math.min((prog-0.3)/0.4,1);
+      ctx.save();
+      ctx.globalAlpha=alpha;
+      ctx.beginPath();
+      ctx.arc(cx,cy,innerR-6,0,Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(profileImg,cx-(innerR-6),cy-(innerR-6),(innerR-6)*2,(innerR-6)*2);
+      ctx.restore();
+    } else if(!profileImg){
+      // Fallback: show total value text in center
+      ctx.save();
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.font=`700 ${Math.round(innerR*.22)}px -apple-system,sans-serif`;
+      ctx.fillStyle=isDark?'#ECF1FC':'#08132A';
+      ctx.fillText('$'+fmtMoney(total),cx,cy);
+      ctx.restore();
+    }
+    if(prog<1)requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
 }
 
 // ── Analytics ──────────────────────────────────────────────────────

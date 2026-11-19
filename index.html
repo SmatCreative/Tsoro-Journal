@@ -2914,15 +2914,14 @@ function drawDailyChart(closed){
 
 async function drawPortfolioDonut(){
   const el=document.getElementById('db-donut'); if(!el)return;
-  // Build segments from ZSE holdings + open trades + cash
   const segMap={};
   zseHoldings.forEach(h=>{
     const val=(h.price||0)*(h.shares||0);
-    if(val>0){const k=h.symbol;segMap[k]={symbol:k,value:(segMap[k]?.value||0)+val,exchange:h.exchange||'ZSE'};}
+    if(val>0){const k=h.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:h.exchange||'ZSE',shares:0,price:h.price||0};segMap[k].value+=val;segMap[k].shares=(segMap[k].shares||0)+(h.shares||0);}
   });
   allTrades().filter(t=>t.status==='open').forEach(t=>{
     const val=toUSD((t.exit??t.entry)*(t.qty||0),t.currency)||0;
-    if(val>0){const k=t.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:t.market||''};segMap[k].value+=val;}
+    if(val>0){const k=t.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:t.market||'',qty:0,entry:t.entry||0,currency:t.currency||'USD'};segMap[k].value+=val;segMap[k].qty=(segMap[k].qty||0)+(t.qty||0);}
   });
   const cashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   if(cashUSD>0.5)segMap['CASH']={symbol:'CASH',value:cashUSD,exchange:'Cash'};
@@ -2930,133 +2929,246 @@ async function drawPortfolioDonut(){
   if(!segs.length){el.innerHTML='';return;}
   const total=segs.reduce((s,v)=>s+v.value,0);
   const palette=['#00C853','#2196F3','#FF5722','#9C27B0','#FF9800','#00BCD4','#E91E63','#607D8B','#4CAF50','#F44336','#3F51B5','#FFC107'];
-  segs.forEach((s,i)=>{s.pct=s.value/total;s.color=palette[i%palette.length];});
+  segs.forEach((s,i)=>{s.pct=s.value/total;s.color=palette[i%palette.length];s.idx=i;});
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
-  el.innerHTML=`<div class="card" style="padding:24px;position:relative;overflow:visible">
-    <div style="position:absolute;top:20px;left:24px;z-index:2">
-      <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:4px">Total Portfolio</div>
-      <div style="font-size:28px;font-weight:800;letter-spacing:-.04em;color:var(--text)">$${fmtMoney(total)}</div>
+  // Legend rows — all positions
+  const legendHtml=segs.map(s=>`
+    <div onclick="donutSelectSeg(${s.idx})" id="donut-leg-${s.idx}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+      <div style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${s.color}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.symbol)}</div>
+        <div style="font-size:10px;color:var(--muted)">${s.exchange||''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">$${fmtMoney(s.value)}</div>
+        <div style="font-size:10px;font-weight:600;color:${s.color}">${(s.pct*100).toFixed(1)}%</div>
+      </div>
+    </div>`).join('');
+  el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
+    <div style="display:flex;flex-wrap:wrap;align-items:stretch">
+      <div style="flex:1;min-width:280px;padding:20px 16px;position:relative">
+        <div style="position:absolute;top:18px;left:20px;z-index:2">
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:3px">Total Portfolio</div>
+          <div style="font-size:24px;font-weight:800;letter-spacing:-.04em;color:var(--text)">$${fmtMoney(total)}</div>
+        </div>
+        <div style="display:flex;justify-content:center;align-items:center;padding-top:8px">
+          <canvas id="pf-donut-canvas" style="display:block;cursor:pointer"></canvas>
+        </div>
+        <div id="pf-donut-tooltip" style="display:none;position:absolute;background:var(--surface2);border:1px solid var(--border-s);border-radius:10px;padding:10px 14px;pointer-events:none;z-index:10;min-width:140px;box-shadow:0 4px 20px rgba(0,0,0,.25)"></div>
+      </div>
+      <div style="width:220px;flex-shrink:0;border-left:1px solid var(--border);padding:12px 8px;overflow-y:auto;max-height:420px">
+        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:4px 10px 8px">Holdings</div>
+        ${legendHtml}
+      </div>
     </div>
-    <div style="display:flex;justify-content:center;align-items:center">
-      <canvas id="pf-donut-canvas" style="display:block"></canvas>
-    </div>
+    <div id="pf-donut-detail" style="display:none;border-top:1px solid var(--border);padding:18px 20px;animation:cardEnter .25s cubic-bezier(.22,1,.36,1)"></div>
   </div>`;
   const canvas=document.getElementById('pf-donut-canvas'); if(!canvas)return;
   const dpr=window.devicePixelRatio||1;
   const container=canvas.parentElement;
-  const size=Math.min(container.clientWidth,480);
+  const size=Math.min(container.clientWidth-16,420);
   canvas.width=size*dpr; canvas.height=size*dpr;
   canvas.style.width=size+'px'; canvas.style.height=size+'px';
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
   const cx=size/2,cy=size/2;
-  const outerR=size*0.42,innerR=size*0.265,gap=0.012;
+  const outerR=size*0.41,innerR=size*0.26,gap=0.013;
+  const arcData=[]; // {seg, a0, a1, mid} for hit testing
+  let hoveredIdx=-1,selectedIdx=-1;
   // Load logos
   const imgs={};
   await Promise.all(segs.map(s=>new Promise(res=>{
     if(s.symbol==='CASH'){res();return;}
     const src=LOGOS[s.symbol]||LOGOS[s.symbol.replace(/\.[A-Z]+$/,'')]||null;
     if(!src){res();return;}
-    const img=new Image(); img.crossOrigin='anonymous';
-    img.onload=()=>{imgs[s.symbol]=img;res();}; img.onerror=res; img.src=src;
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{imgs[s.symbol]=img;res();};img.onerror=res;img.src=src;
   })));
   // Load profile pic
   let profileImg=null;
   const picSrc=localStorage.getItem('tj_profile_pic');
   if(picSrc)await new Promise(res=>{const img=new Image();img.onload=()=>{profileImg=img;res();};img.onerror=res;img.src=picSrc;});
-  // Animate
-  const dur=1300,start=performance.now();
-  const ease=t=>t<.5?4*t*t*t:(t-1)*(2*t-2)*(2*t-2)+1;
-  function draw(now){
-    const prog=Math.min(ease((now-start)/dur),1);
-    ctx.clearRect(0,0,size,size);
+  // Build arc positions
+  function buildArcs(prog){
+    arcData.length=0;
     let a=-Math.PI/2;
     segs.forEach(s=>{
-      const sweep=(s.pct*2*Math.PI-gap)*prog;
+      const fullSweep=s.pct*2*Math.PI-gap;
+      const sweep=fullSweep*prog;
+      const a0=a+gap/2,a1=a0+Math.max(sweep,0);
+      arcData.push({s,a0,a1,mid:a0+(a1-a0)/2,sweep});
+      a+=s.pct*2*Math.PI;
+    });
+  }
+  function hitTest(mx,my){
+    const dx=mx-cx,dy=my-cy,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<innerR||dist>outerR+20)return -1;
+    let angle=Math.atan2(dy,dx);
+    if(angle<-Math.PI/2)angle+=2*Math.PI;
+    for(let i=0;i<arcData.length;i++){
+      const {a0,a1}=arcData[i];
+      let lo=a0,hi=a1;
+      if(lo>hi)hi+=2*Math.PI;
+      let ang=angle; if(ang<lo)ang+=2*Math.PI;
+      if(ang>=lo&&ang<=hi&&dist>=innerR&&dist<=outerR+10)return i;
+    }
+    return -1;
+  }
+  function drawFrame(prog){
+    ctx.clearRect(0,0,size,size);
+    buildArcs(prog);
+    arcData.forEach(({s,a0,a1,mid,sweep},i)=>{
       if(sweep<=0)return;
-      const a0=a+gap/2,a1=a0+sweep,mid=a0+sweep/2;
-      // Segment
+      const isHov=(i===hoveredIdx||i===selectedIdx);
+      const pushOut=isHov?8:0;
+      const ox=Math.cos(mid)*pushOut,oy=Math.sin(mid)*pushOut;
+      // Shadow on hover
+      if(isHov){ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=14;ctx.shadowOffsetX=ox*.3;ctx.shadowOffsetY=oy*.3;}
       ctx.beginPath();
-      ctx.arc(cx,cy,outerR,a0,a1);
-      ctx.arc(cx,cy,innerR,a1,a0,true);
+      ctx.arc(cx+ox,cy+oy,outerR+(isHov?3:0),a0,a1);
+      ctx.arc(cx+ox,cy+oy,innerR,a1,a0,true);
       ctx.closePath();
       ctx.fillStyle=s.color;
       ctx.fill();
-      // Logo inside segment
-      if(sweep>0.18){
-        const lr=(outerR+innerR)/2;
-        const lx=cx+lr*Math.cos(mid),ly=cy+lr*Math.sin(mid);
-        const logoSz=Math.min(sweep*lr*0.72,outerR-innerR-4,38);
-        if(logoSz>=10){
+      ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+      // Logo
+      if(sweep>0.17){
+        const lr=(outerR+innerR)/2+ox;
+        const lx=cx+lr*Math.cos(mid)+ox,ly=cy+lr*Math.sin(mid)+oy;
+        const bandH=outerR-innerR-8;
+        const logoSz=Math.min(sweep*(outerR+innerR)/2*0.68,bandH,40);
+        if(logoSz>=9){
           if(imgs[s.symbol]){
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(lx,ly,logoSz/2,0,Math.PI*2);
-            ctx.clip();
-            ctx.fillStyle='#fff';
-            ctx.fill();
-            ctx.drawImage(imgs[s.symbol],lx-logoSz/2,ly-logoSz/2,logoSz,logoSz);
-            ctx.restore();
+            ctx.save();ctx.beginPath();ctx.arc(lx,ly,logoSz/2+2,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fill();
+            ctx.beginPath();ctx.arc(lx,ly,logoSz/2,0,Math.PI*2);ctx.clip();
+            ctx.drawImage(imgs[s.symbol],lx-logoSz/2,ly-logoSz/2,logoSz,logoSz);ctx.restore();
           } else {
-            // Initials fallback in segment
-            ctx.save();
-            ctx.font=`700 ${Math.round(logoSz*.38)}px -apple-system,sans-serif`;
-            ctx.fillStyle='rgba(255,255,255,.85)';
-            ctx.textAlign='center';
-            ctx.textBaseline='middle';
-            ctx.fillText(s.symbol.slice(0,3),lx,ly);
-            ctx.restore();
+            ctx.save();ctx.font=`700 ${Math.round(logoSz*.4)}px -apple-system,sans-serif`;ctx.fillStyle='rgba(255,255,255,.88)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s.symbol.slice(0,3),lx,ly);ctx.restore();
           }
         }
       }
-      // Outer labels (fade in last 15%)
-      if(prog>0.85&&sweep>0.14){
+      // Labels — all segments fade in after 85%
+      if(prog>0.85){
         const alpha=Math.min((prog-0.85)/0.15,1);
-        const lrOuter=outerR+18;
-        const lx=cx+lrOuter*Math.cos(mid),ly=cy+lrOuter*Math.sin(mid);
+        const lrOut=outerR+20;
+        const lx=cx+lrOut*Math.cos(mid),ly=cy+lrOut*Math.sin(mid);
         const right=lx>=cx;
-        ctx.save();
-        ctx.globalAlpha=alpha;
-        ctx.textAlign=right?'left':'right';
-        ctx.textBaseline='middle';
-        ctx.font=`700 11px -apple-system,sans-serif`;
+        ctx.save();ctx.globalAlpha=alpha;
+        ctx.textAlign=right?'left':'right';ctx.textBaseline='middle';
+        ctx.font=`700 10.5px -apple-system,sans-serif`;
         ctx.fillStyle=isDark?'#ECF1FC':'#08132A';
-        ctx.fillText(s.symbol,lx+(right?4:-4),ly-7);
-        ctx.font=`600 10px -apple-system,sans-serif`;
-        ctx.fillStyle='#00C853';
+        ctx.fillText(s.symbol,lx+(right?4:-4),ly-6.5);
+        ctx.font=`600 9.5px -apple-system,sans-serif`;
+        ctx.fillStyle=s.color;
         ctx.fillText((s.pct*100).toFixed(1)+'%',lx+(right?4:-4),ly+6);
         ctx.restore();
       }
-      a+=s.pct*2*Math.PI;
     });
-    // Center circle background
-    ctx.beginPath();
-    ctx.arc(cx,cy,innerR-3,0,Math.PI*2);
-    ctx.fillStyle=isDark?'#0a1020':'#ffffff';
-    ctx.fill();
-    // Profile picture
-    if(profileImg&&prog>0.3){
-      const alpha=Math.min((prog-0.3)/0.4,1);
-      ctx.save();
-      ctx.globalAlpha=alpha;
-      ctx.beginPath();
-      ctx.arc(cx,cy,innerR-6,0,Math.PI*2);
-      ctx.clip();
-      ctx.drawImage(profileImg,cx-(innerR-6),cy-(innerR-6),(innerR-6)*2,(innerR-6)*2);
+    // Center
+    ctx.beginPath();ctx.arc(cx,cy,innerR-2,0,Math.PI*2);
+    ctx.fillStyle=isDark?'rgba(10,16,32,.97)':'rgba(255,255,255,.97)';ctx.fill();
+    if(profileImg&&prog>0.25){
+      const alpha=Math.min((prog-0.25)/0.5,1);
+      ctx.save();ctx.globalAlpha=alpha;
+      ctx.beginPath();ctx.arc(cx,cy,innerR-5,0,Math.PI*2);ctx.clip();
+      ctx.drawImage(profileImg,cx-(innerR-5),cy-(innerR-5),(innerR-5)*2,(innerR-5)*2);
       ctx.restore();
     } else if(!profileImg){
-      // Fallback: show total value text in center
-      ctx.save();
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      ctx.font=`700 ${Math.round(innerR*.22)}px -apple-system,sans-serif`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font=`700 ${Math.round(innerR*.21)}px -apple-system,sans-serif`;
       ctx.fillStyle=isDark?'#ECF1FC':'#08132A';
       ctx.fillText('$'+fmtMoney(total),cx,cy);
-      ctx.restore();
     }
-    if(prog<1)requestAnimationFrame(draw);
   }
-  requestAnimationFrame(draw);
+  // Initial animation
+  const dur=1400,startT=performance.now();
+  const ease=t=>t<.5?4*t*t*t:(t-1)*(2*t-2)*(2*t-2)+1;
+  let animDone=false;
+  function animFrame(now){
+    const prog=Math.min(ease((now-startT)/dur),1);
+    drawFrame(prog);
+    if(prog<1)requestAnimationFrame(animFrame); else{animDone=true;drawFrame(1);}
+  }
+  requestAnimationFrame(animFrame);
+  // Interaction
+  function showTooltip(i,mx,my){
+    const tip=document.getElementById('pf-donut-tooltip'); if(!tip)return;
+    const s=segs[i];
+    tip.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">${escapeHtml(s.symbol)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${s.exchange||''}</div>
+      <div style="font-size:14px;font-weight:800;color:${s.color}">$${fmtMoney(s.value)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${(s.pct*100).toFixed(2)}% of portfolio</div>
+      ${s.shares?`<div style="font-size:10px;color:var(--muted2);margin-top:2px">${fmtNum(s.shares)} shares @ $${s.price?s.price.toFixed(4):''}</div>`:''}
+      <div style="font-size:9px;color:var(--accent);margin-top:5px;font-weight:600">Click for details →</div>`;
+    tip.style.display='block';
+    const cr=canvas.getBoundingClientRect();
+    const pr=canvas.parentElement.getBoundingClientRect();
+    let tx=mx+12,ty=my-20;
+    if(tx+160>container.clientWidth)tx=mx-155;
+    tip.style.left=tx+'px';tip.style.top=ty+'px';
+  }
+  canvas.addEventListener('mousemove',e=>{
+    if(!animDone)return;
+    const r=canvas.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(size/r.width),my=(e.clientY-r.top)*(size/r.height);
+    const idx=hitTest(mx,my);
+    if(idx!==hoveredIdx){hoveredIdx=idx;drawFrame(1);canvas.style.cursor=idx>=0?'pointer':'default';}
+    const tip=document.getElementById('pf-donut-tooltip');
+    if(idx>=0)showTooltip(idx,e.clientX-r.left,e.clientY-r.top);
+    else if(tip)tip.style.display='none';
+  });
+  canvas.addEventListener('mouseleave',()=>{
+    hoveredIdx=-1;drawFrame(1);
+    const tip=document.getElementById('pf-donut-tooltip');if(tip)tip.style.display='none';
+  });
+  canvas.addEventListener('click',e=>{
+    if(!animDone)return;
+    const r=canvas.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(size/r.width),my=(e.clientY-r.top)*(size/r.height);
+    const idx=hitTest(mx,my);
+    if(idx<0){selectedIdx=-1;document.getElementById('pf-donut-detail').style.display='none';drawFrame(1);return;}
+    selectedIdx=idx;drawFrame(1);showDetail(idx);
+  });
+  window.donutSelectSeg=function(idx){selectedIdx=idx===selectedIdx?-1:idx;drawFrame(1);if(selectedIdx>=0)showDetail(idx);else document.getElementById('pf-donut-detail').style.display='none';};
+  function showDetail(idx){
+    const s=segs[idx];const det=document.getElementById('pf-donut-detail');if(!det)return;
+    // Gather performance data
+    const closedForSym=trades.filter(t=>t.status==='closed'&&t.symbol===s.symbol);
+    const pnlSym=closedForSym.reduce((a,t)=>a+(calcPnL(t)||0),0);
+    const openForSym=allTrades().filter(t=>t.status==='open'&&t.symbol===s.symbol);
+    const pnlOpen=openForSym.reduce((a,t)=>a+(calcPnL(t)||0),0);
+    const hData=zseHoldings.filter(h=>h.symbol===s.symbol);
+    const logoHtml=stockLogo(s.symbol,40);
+    const barW=Math.min(Math.abs(s.pct)*100*3,100);
+    det.style.display='block';
+    det.innerHTML=`<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px">
+        ${logoHtml}
+        <div>
+          <div style="font-size:17px;font-weight:800;color:var(--text)">${escapeHtml(s.symbol)}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.exchange||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${s.color}">$${fmtMoney(s.value)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Value</div></div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${s.color}">${(s.pct*100).toFixed(2)}%</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Weight</div></div>
+        ${s.shares?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--text)">${fmtNum(s.shares)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Shares</div></div>`:''}
+        ${s.price?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--text)">$${s.price.toFixed(4)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Price</div></div>`:''}
+        ${closedForSym.length?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${pnlSym>=0?'var(--green)':'var(--red)'}">${pnlSym>=0?'+':''}$${fmtMoney(Math.abs(pnlSym))}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Realised P&L</div></div>`:''}
+        ${openForSym.length&&pnlOpen?`<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:${pnlOpen>=0?'var(--green)':'var(--red)'}">${pnlOpen>=0?'+':''}$${fmtMoney(Math.abs(pnlOpen))}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Unrealised</div></div>`:''}
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em">Portfolio Weight</div>
+      <div style="height:7px;border-radius:4px;background:var(--surface2);overflow:hidden">
+        <div style="height:100%;width:0%;border-radius:4px;background:${s.color};transition:width .6s cubic-bezier(.22,1,.36,1)" id="det-bar-${idx}"></div>
+      </div>
+    </div>`;
+    setTimeout(()=>{const b=document.getElementById('det-bar-'+idx);if(b)b.style.width=barW+'%';},40);
+    // Highlight legend row
+    document.querySelectorAll('[id^=donut-leg-]').forEach(r=>r.style.background='');
+    const lr=document.getElementById('donut-leg-'+idx);if(lr){lr.style.background='var(--surface2)';lr.scrollIntoView({block:'nearest'});}
+  }
 }
 
 // ── Analytics ──────────────────────────────────────────────────────

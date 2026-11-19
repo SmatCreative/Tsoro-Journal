@@ -2755,7 +2755,8 @@ function zseMoversCard(){
     const xBadge=m.isVFEX
       ?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(16,185,129,.18);color:var(--green);font-weight:600">VFEX</span>'
       :'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(0,168,78,.15);color:var(--accent);font-weight:600">ZSE</span>';
-    return `<div style="display:grid;grid-template-columns:1fr 88px auto;align-items:center;gap:10px;padding:11px 18px;border-top:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+    return `<div style="display:grid;grid-template-columns:auto 1fr 88px auto;align-items:center;gap:10px;padding:11px 18px;border-top:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
+      ${stockLogo(m.symbol,34)}
       <div>
         <div style="font-size:14px;font-weight:800;color:var(--accent);letter-spacing:.01em">${escapeHtml(m.symbol)}</div>
         <div style="display:flex;gap:4px;align-items:center;margin-top:3px">${xBadge}${m.usingCost?'<span style="font-size:9px;color:var(--muted)">vs cost</span>':''}</div>
@@ -4553,17 +4554,49 @@ const DONUT_BLUES=['#00A84E','#38BDF8','#A855F7','#F59E0B','#EF4444','#14B8A6','
 let _portfolioView='list';
 let _pvCashUSD=0, _pvDeployedUSD=0;
 
-const SYMBOL_LOGOS={
-  'AXIA.VX':'/logos/AXIA.VX.png',
-  'FCA.VX':'/logos/FCA.VX.png',
-  'FMWG.VX':'/logos/FMWG.VX.webp',
-  'INN.VX':'/logos/INN.VX.png',
-  'INFR.VX':'/logos/infr.png',
-  'MCMS.ZW':'/logos/MCMS.ZW.png',
-  'SCIL.VX':'/logos/SCIL.VX.png',
-  'SIM.VX':'/logos/SIM.VX.png',
-  'VFEX':'/logos/VFEX.png',
+// ── Unified logo map — symbol/exchange-name → /logos/file ───────────
+const LOGOS={
+  // VFEX stocks
+  'AXIA.VX':'/logos/axia.vx.png',
+  'FCA.VX':'/logos/fca.vx.png',
+  'FMWG.VX':'/logos/fmwg.vx.webp',
+  'INN.VX':'/logos/inn.vx.png',
+  'INFR.VX':'/logos/infr.vx.png',
+  'SCIL.VX':'/logos/scil.vx.png',
+  'SIM.VX':'/logos/sim.vx.png',  'SIMBISA':'/logos/sim.vx.png',
+  'ZIMW.VX':'/logos/zimw.vx.png',
+  // ZSE stocks
+  'ARTD':'/logos/artd.png',  'ARIS':'/logos/artd.png',
+  'BAT':'/logos/bat.png',
+  'CAFCA':'/logos/cafca.png',
+  'CBZ':'/logos/cbz.png',
+  'DLTA':'/logos/dlta.png',
+  'DZL':'/logos/dzl.png',
+  'ECO':'/logos/eco.png',
+  'EDGR':'/logos/edgr.png',
+  'FBC':'/logos/fbc.png',
+  'GBH':'/logos/gbh.png',  'GBMB':'/logos/gbh.png',
+  'INSC':'/logos/insc.png',
+  'LAFR':'/logos/lafr.png',
+  'MCMS':'/logos/mcms.zw.png',  'MCMS.ZW':'/logos/mcms.zw.png',
+  'MSHL':'/logos/mshl.png',
+  'PROL':'/logos/prol.png',
+  'RTG':'/logos/rtg.png',
+  'SEED':'/logos/seed.png',
+  'TANG':'/logos/tang.png',
+  'TURN':'/logos/turn.png',
+  'UNIF':'/logos/unif.png',
+  'WILD':'/logos/wild.png',
+  'ZBFH':'/logos/zbfh.png',
+  'ZIMP':'/logos/zimp.png',  'ZIMPLW':'/logos/zimplw.png',
+  'ZIMR':'/logos/zimr.png',
+  // Exchanges & brokers
+  'ZSE':'/logos/zse.png',
+  'VFEX':'/logos/vfex.png',
+  'ECOCASH':'/logos/ecocash.png',
 };
+// Alias for portfolio donut (uses SYMBOL_LOGOS name)
+const SYMBOL_LOGOS=LOGOS;
 
 function setPortfolioView(v){ _portfolioView=v; drawWalletDonut(_pvCashUSD, _pvDeployedUSD); }
 
@@ -5309,7 +5342,8 @@ function renderTicker(){
     const fmt=v=>Number(v).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4});
 
     return `<div class="ticker-item">
-      <div class="ticker-inner">
+      ${stockLogo(g.symbol,32)}
+      <div class="ticker-inner" style="margin-left:10px">
         <div class="ticker-top">
           <span class="ticker-sym">${g.symbol}</span>
           ${spark}
@@ -6168,9 +6202,12 @@ function renderSimulator(){
         const hCount=historyCounts[h.symbol+'|'+h.exchange]||0;
         const ccy=h.exchange==='VFSE'?'$':'ZiG ';
         return `<div class="sim-row" style="cursor:pointer" onclick="simLoadHolding('${escapeHtml(h.symbol)}','${escapeHtml(h.exchange)}')">
-          <div>
-            <div style="font-weight:700;font-size:14px">${escapeHtml(h.symbol)}</div>
-            <div style="font-size:11px;color:var(--muted)">${escapeHtml(h.exchange)} · bought ${h.buyDate||'—'} @ ${ccy}${fmtNum(h.buyPrice)}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${stockLogo(h.symbol,34)}
+            <div>
+              <div style="font-weight:700;font-size:14px">${escapeHtml(h.symbol)}</div>
+              <div style="font-size:11px;color:var(--muted)">${escapeHtml(h.exchange)} · bought ${h.buyDate||'—'} @ ${ccy}${fmtNum(h.buyPrice)}</div>
+            </div>
           </div>
           <div style="text-align:right">
             <div style="font-size:11px;${hCount?'color:var(--accent)':'color:var(--muted)'}">${hCount?hCount+' price records':'no history'}</div>
@@ -7836,27 +7873,21 @@ async function saveGivingGoal(){
   showToast('Giving goal saved','success');
 }
 
-const STOCK_LOGOS={
-  'INN.VX':'/logos/inn.png',
-  'FCA.VX':'/logos/fca.png',
-  'SCIL.VX':'/logos/scil.png',
-  'INFR.VX':'/logos/infr.png',
-  'SIM.VX':'/logos/sim.png',
-  'AXIA.VX':'/logos/axia.png',
-  'MCMS.ZW':'/logos/mcms.png',
-  'FMWG.VX':'/logos/fmwg.png',
-};
-function stockLogo(symbol){
-  const src=STOCK_LOGOS[symbol];
+function stockLogo(symbol, size){
+  size=size||36;
+  const src=LOGOS[symbol]||LOGOS[symbol.replace(/\.[A-Z]+$/,'')]||null;
   const initials=symbol.replace(/\.[A-Z]+$/,'').slice(0,3);
   let hash=0; for(let i=0;i<symbol.length;i++) hash=((hash<<5)-hash)+symbol.charCodeAt(i);
   const palette=['#00A84E','#2196F3','#FF5722','#9C27B0','#FF9800','#00BCD4','#E91E63','#607D8B'];
   const c=palette[Math.abs(hash)%palette.length];
+  const pad=Math.round(size*0.11);
+  const fs=Math.round(size*0.28);
   const inner=src
-    ?`<img src="${src}" style="width:100%;height:100%;object-fit:contain" alt="${symbol}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:10px;font-weight:700;color:${c};letter-spacing:-.3px\\'>${initials}</span>'">`
-    :`<span style="font-size:10px;font-weight:700;color:${c};letter-spacing:-.3px">${initials}</span>`;
+    ?`<img src="${src}" style="width:100%;height:100%;object-fit:contain" alt="${symbol}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:${fs}px;font-weight:700;color:${c};letter-spacing:-.3px\\'>${initials}</span>';this.parentNode.style.background='${c}1a';this.parentNode.style.borderColor='${c}33';this.parentNode.style.padding='0'">`
+    :`<span style="font-size:${fs}px;font-weight:700;color:${c};letter-spacing:-.3px">${initials}</span>`;
   const bg=src?'var(--surface2)':c+'1a';
-  return `<div style="width:36px;height:36px;flex-shrink:0;background:${bg};border-radius:7px;border:1px solid ${src?'var(--border)':c+'33'};display:flex;align-items:center;justify-content:center;overflow:hidden;padding:${src?'4px':'0'}">${inner}</div>`;
+  const border=src?'var(--border)':c+'33';
+  return `<div style="width:${size}px;height:${size}px;flex-shrink:0;background:${bg};border-radius:${Math.round(size*0.2)}px;border:1px solid ${border};display:flex;align-items:center;justify-content:center;overflow:hidden;padding:${src?pad+'px':'0'}">${inner}</div>`;
 }
 
 function renderZse(){

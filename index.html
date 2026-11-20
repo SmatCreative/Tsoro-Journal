@@ -23,7 +23,7 @@
   --border:rgba(255,255,255,.072);--border-s:rgba(255,255,255,.11);
   --accent:#00A84E;--accent2:#008A3C;
   --green:#00A84E;--red:#F04444;--yellow:#F5A523;--blue:#3DBAFF;--purple:#B07DF5;
-  --text:#ECF1FC;--muted:#4A6382;--muted2:#7895B5;--r:12px;--r-sm:8px;
+  --text:#ECF1FC;--muted:#4A6382;--muted2:#7895B5;--r:8px;--r-sm:6px;
   --shadow:0 2px 12px rgba(0,0,0,.4);--card-glow:inset 0 1px 0 rgba(255,255,255,.07);
   --hero-grad:linear-gradient(145deg,#006830 0%,#00A84E 100%);
 }
@@ -96,7 +96,7 @@ body.zen-mode .zen-value:hover{filter:none}
 .nav-section{padding:18px 14px 5px;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;opacity:.7}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;margin:1px 8px;border-radius:var(--r-sm);cursor:pointer;color:var(--muted2);transition:background .12s,color .12s;font-size:13px;font-weight:400;border:none;background:none;width:calc(100% - 16px);text-align:left}
 .nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:rgba(0,168,78,.09);color:var(--accent);font-weight:600;box-shadow:inset 2px 0 0 var(--accent)}
+.nav-item.active{background:rgba(0,168,78,.1);color:var(--accent);font-weight:600}
 .nav-item.active .nav-icon svg{stroke:var(--accent)}
 .nav-item .nav-icon{width:16px;display:flex;justify-content:center;align-items:center;flex-shrink:0;opacity:.8}
 .nav-item.active .nav-icon{opacity:1}
@@ -133,11 +133,12 @@ body.zen-mode .zen-value:hover{filter:none}
 @keyframes barReveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0% 0 0)}}
 .anim-num{animation:numPop .52s cubic-bezier(.22,1,.36,1) both}
 .anim-card{animation:cardEnter .45s cubic-bezier(.22,1,.36,1) both}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:22px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative;transition:background .12s,border-color .12s,box-shadow .18s}
-.stat-card:hover{background:var(--surface2);border-color:var(--border-s);box-shadow:0 6px 24px rgba(0,0,0,.22)}
-.stat-label{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:10px}
-.stat-value{font-size:28px;font-weight:700;line-height:1;letter-spacing:-.035em}
+.stats-row{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:22px}
+.stat-card{flex:1;min-width:0;padding:18px 20px 16px;border-right:1px solid var(--border);border-radius:0;background:transparent;box-shadow:none;position:relative;transition:background .12s}
+.stat-card:last-child{border-right:none}
+.stat-card:hover{background:var(--surface2);box-shadow:none}
+.stat-label{font-size:11px;letter-spacing:.01em;color:var(--muted);font-weight:500;margin-bottom:8px}
+.stat-value{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.04em}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--blue)}
 
 /* Connected KPI strip — analytics-style horizontal bar, no individual borders */
@@ -145,10 +146,10 @@ body.zen-mode .zen-value:hover{filter:none}
 .kpi-item{flex:1;padding:16px 20px 14px;border-right:1px solid var(--border);transition:background .12s;cursor:default;min-width:0}
 .kpi-item:last-child{border-right:none}
 .kpi-item:hover{background:var(--surface2)}
-.kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kpi-value{font-size:22px;font-weight:700;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.kpi-label{font-size:11px;letter-spacing:.01em;color:var(--muted);font-weight:500;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-value{font-size:20px;font-weight:700;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s,box-shadow .2s;box-shadow:var(--card-glow)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:background .15s,border-color .15s;box-shadow:none}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
 .card-title{font-size:13px;font-weight:700;letter-spacing:-.15px;color:var(--text)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -238,12 +239,12 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 
 
 /* ── Wallet ── */
-.wallet-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
-.wallet-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);transition:box-shadow .18s,background .15s,border-color .15s}
-.wallet-sum-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.25);border-color:var(--border-s)}
-.wallet-sum-card:hover{background:var(--surface2)}
-.wallet-sum-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:500;margin-bottom:8px}
-.wallet-sum-val{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.wallet-summary-grid{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;flex-wrap:wrap}
+.wallet-sum-card{flex:1;min-width:140px;padding:16px 20px;border-right:1px solid var(--border);background:transparent;box-shadow:none;transition:background .12s}
+.wallet-sum-card:last-child{border-right:none}
+.wallet-sum-card:hover{background:var(--surface2);box-shadow:none}
+.wallet-sum-lbl{font-size:11px;letter-spacing:.01em;color:var(--muted);font-weight:500;margin-bottom:6px}
+.wallet-sum-val{font-size:20px;font-weight:600;letter-spacing:-.025em;line-height:1}
 .wallet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:10px;position:relative;overflow:hidden;transition:box-shadow .2s,transform .18s,border-color .2s;box-shadow:var(--shadow)}
 .wallet-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.2)}
 .wallet-card-accent{position:absolute;left:0;top:0;right:0;height:2px}
@@ -261,11 +262,12 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .deploy-seg{height:100%;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;color:#fff;transition:width .5s ease;min-width:0;overflow:hidden;white-space:nowrap}
 
 /* ── Portfolio ── */
-.port-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
-.port-stat-card::before{content:'';position:absolute;inset:0;opacity:.05;pointer-events:none}
-.port-stat-card.green::before{background:var(--green)}.port-stat-card.red::before{background:var(--red)}.port-stat-card.blue::before{background:var(--blue)}
-.port-stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600;margin-bottom:6px}
-.port-stat-val{font-size:22px;font-weight:600;letter-spacing:-.5px;line-height:1}
+.port-stat-card{flex:1;min-width:0;background:transparent;padding:18px 20px;position:relative;overflow:hidden;border-right:1px solid var(--border);transition:background .12s}
+.port-stat-card:hover{background:var(--surface2)}
+.port-stat-card:last-child{border-right:none}
+.port-stat-card::before{display:none}
+.port-stat-lbl{font-size:11px;letter-spacing:.01em;color:var(--muted);font-weight:500;margin-bottom:6px}
+.port-stat-val{font-size:22px;font-weight:700;letter-spacing:-.04em;line-height:1}
 .port-stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .cap-type-initial{background:rgba(0,168,78,.12);color:var(--accent)}
 .cap-type-deposit{background:rgba(34,197,94,.12);color:var(--green)}
@@ -282,8 +284,9 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .usd-equiv{font-size:12px;color:var(--muted2);font-weight:600}
 
 /* Modal analysis */
-.analysis-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-.analysis-stat{background:var(--surface2);border-radius:var(--r-sm);padding:14px;text-align:center}
+.analysis-stats{display:flex;background:var(--surface2);border-radius:var(--r-sm);overflow:hidden;margin-bottom:20px}
+.analysis-stat{background:transparent;border-right:1px solid var(--border);padding:14px 16px;text-align:left}
+.analysis-stats .analysis-stat:last-child{border-right:none}
 .analysis-stat-val{font-size:20px;font-weight:600;line-height:1;margin-bottom:4px}
 .analysis-stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .analysis-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
@@ -333,9 +336,9 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .btn-logout{display:none}
   /* Clear bottom nav + safe area */
   .content{padding:16px;padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))}
-  /* KPI strip scrolls horizontally on narrow screens */
-  .kpi-strip{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-  .kpi-item{min-width:140px;scroll-snap-align:start}
+  /* KPI strip + stats strip scroll horizontally on narrow screens */
+  .kpi-strip,.stats-row{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .kpi-item,.stat-card{min-width:130px;scroll-snap-align:start}
   /* Wide tables scroll horizontally rather than wrapping */
   .table-wrap{overflow-x:auto}
   /* Modal slides up from bottom on mobile */
@@ -360,8 +363,8 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .ticker-chg.up{color:var(--green)}.ticker-chg.down{color:var(--red)}.ticker-chg.flat{color:var(--muted)}
 /* ── Pulse ── */
 .pulse-feed{display:flex;flex-direction:column;gap:14px}
-.pulse-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--r);padding:20px 22px;transition:box-shadow .18s,border-color .15s}
-.pulse-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.22);border-color:var(--border-s)}
+.pulse-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;transition:border-color .15s,background .15s}
+.pulse-card:hover{background:var(--surface2);border-color:var(--border-s)}
 .pulse-date{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);font-weight:700;margin-bottom:7px}
 .pulse-title{font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:9px;color:var(--text);line-height:1.3}
 .pulse-body{font-size:13.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap;margin-bottom:12px}
@@ -372,8 +375,8 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
 .pulse-filter-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted2);font-size:11px;font-weight:600;cursor:pointer;transition:all .13s;font-family:inherit;letter-spacing:.04em}
 .pulse-filter-btn.active,.pulse-filter-btn:hover{background:rgba(0,168,78,.12);border-color:rgba(0,168,78,.4);color:var(--accent)}
 .sim-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;margin-bottom:16px}
-.sim-result-box{background:linear-gradient(135deg,rgba(0,168,78,.08) 0%,rgba(0,168,78,.03) 100%);border:1.5px solid rgba(0,168,78,.25);border-radius:var(--r);padding:24px;margin-top:4px}
-.sim-result-box.loss{background:linear-gradient(135deg,rgba(239,68,68,.08) 0%,rgba(239,68,68,.03) 100%);border-color:rgba(239,68,68,.25)}
+.sim-result-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-top:4px}
+.sim-result-box.loss{background:var(--surface2);border-color:var(--border)}
 .sim-big{font-size:36px;font-weight:800;letter-spacing:-.8px;line-height:1}
 .sim-gain{color:var(--accent)}.sim-loss{color:var(--red)}
 .sim-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;margin-bottom:4px}
@@ -2590,31 +2593,29 @@ function renderDashboard(){
     {label:'ZSE / VFEX',val:zseUSD,icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',show:zseUSD>0,inTotal:false,page:'zse'},
     {label:'Private',val:privUSD,icon:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',show:privUSD>0,inTotal:false,page:'wallet'},
   ];
-  const bkHtml=bkItems.filter(b=>b.show).map(b=>`
-    <div onclick="navigate('${b.page}')" style="flex:1;min-width:100px;padding:12px 14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s${b.inTotal?'':';opacity:.85'}" onmouseenter="this.style.borderColor='var(--border-s)';this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 16px rgba(0,0,0,.3)'" onmouseleave="this.style.borderColor='';this.style.transform='';this.style.boxShadow=''">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${b.icon}</svg>
-        <span style="font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600">${b.label}</span>
-      </div>
-      <div style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)">$${fmtMoney(b.val)}</div>
-      ${grandTotalUSD>0&&b.inTotal?`<div style="font-size:10px;color:var(--muted2);margin-top:2px">${(b.val/grandTotalUSD*100).toFixed(1)}%</div>`:b.inTotal?'':'<div style="font-size:10px;color:var(--accent);margin-top:2px;font-weight:600">View →</div>'}
+  const bkHtml=bkItems.filter(b=>b.show).map((b,i)=>`
+    <div onclick="navigate('${b.page}')" style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .12s;animation:cardEnter .36s cubic-bezier(.22,1,.36,1) ${i*50}ms both" onmouseover="this.style.opacity='.72'" onmouseout="this.style.opacity=''">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">${b.icon}</svg>
+      <span style="font-size:13px;color:var(--muted2);flex:1;min-width:0">${b.label}</span>
+      <span style="font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)">$${fmtMoney(b.val)}</span>
+      ${grandTotalUSD>0&&b.inTotal
+        ?`<span style="font-size:12px;color:var(--muted);min-width:36px;text-align:right;font-variant-numeric:tabular-nums">${(b.val/grandTotalUSD*100).toFixed(1)}%</span>`
+        :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`}
     </div>`).join('');
   document.getElementById('db-hero').innerHTML=`
-    <div style="padding:22px 26px 20px;border-bottom:1px solid var(--border);margin-bottom:4px">
-      <div style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px">Total Portfolio</div>
-      <div class="zen-value" id="db-grand-total" style="font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.05em;line-height:1;margin-bottom:10px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px">
+    <div style="padding:24px 26px 20px;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <div class="zen-value" id="db-grand-total" style="font-size:54px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.055em;line-height:1;margin-bottom:8px;color:var(--text)">$${fmtMoney(grandTotalUSD)}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
         ${todayHas
           ?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${todayPnL>=0?'var(--green)':'var(--red)'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${todayArrow}</svg><span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:${todayPnL>=0?'var(--green)':'var(--red)'}">${todayPnL>=0?'+':''}${fmtPnL(todayPnL)}</span><span style="font-size:12px;color:var(--muted)">today</span>`
           :`<span style="font-size:13px;color:var(--muted)">No trades closed today</span>`
         }
-        ${wr!=null?`<span style="font-size:12px;color:var(--muted);margin-left:12px">· Win rate <strong style="color:var(--text)">${wr}%</strong></span>`:''}
+        ${wr!=null?`<span style="font-size:12px;color:var(--muted);margin-left:8px">· Win rate <strong style="color:var(--text)">${wr}%</strong></span>`:''}
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${bkHtml}</div>
+      <div>${bkHtml}</div>
     </div>`;
   setTimeout(()=>{
     countUp(document.getElementById('db-grand-total'),grandTotalUSD,1000);
-    document.querySelectorAll('#db-hero [style*="min-width:100px"]').forEach((c,i)=>{c.style.animationDelay=(i*55)+'ms';c.classList.add('anim-card');});
   },30);
   // Period P&L strip (Ghostfolio pattern)
   const dbNow=new Date(); const dbNowStr=dbNow.toISOString().slice(0,10);
@@ -2623,17 +2624,14 @@ function renderDashboard(){
   const dbWtd=dbPnlSince(dbMon.toISOString().slice(0,10));
   const dbMtd=dbPnlSince(dbNowStr.slice(0,7)+'-01');
   const dbYtd=dbPnlSince(dbNowStr.slice(0,4)+'-01-01');
-  document.getElementById('db-period').innerHTML=`<div class="card" style="padding:14px 18px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Realised P&L</div>
-      <button onclick="document.body.classList.toggle('zen-mode')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;font-family:inherit" title="Zen Mode — blur all values">Zen</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-      ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>(t.entryDate||'').slice(0,10)===d).reduce((s,t)=>s+(calcPnL(t)||0),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
-        .map(([l,v],i)=>`<div style="text-align:center;padding:10px 6px;background:var(--surface2);border-radius:8px;animation:cardEnter .4s cubic-bezier(.22,1,.36,1) ${i*60}ms both">
-          <div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${l}</div>
-          <div class="zen-value anim-num" style="font-size:16px;font-weight:700;color:${v>=0?'var(--green)':'var(--red)'};animation-delay:${i*60+120}ms">${v>=0?'+':''}$${fmtMoney(v)}</div>
-        </div>`).join('')}
+  document.getElementById('db-period').innerHTML=`<div class="kpi-strip">
+    ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>(t.entryDate||'').slice(0,10)===d).reduce((s,t)=>s+(calcPnL(t)||0),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
+      .map(([l,v],i)=>`<div class="kpi-item" style="animation:cardEnter .38s cubic-bezier(.22,1,.36,1) ${i*55}ms both">
+        <div class="kpi-label">${l} P&L</div>
+        <div class="kpi-value zen-value anim-num" style="color:${v>=0?'var(--green)':'var(--red)'};animation-delay:${i*55+80}ms">${v>=0?'+':''}$${fmtMoney(v)}</div>
+      </div>`).join('')}
+    <div class="kpi-item" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:12px 18px">
+      <button onclick="document.body.classList.toggle('zen-mode')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;font-family:inherit" title="Zen Mode — blur all values">Zen</button>
     </div>
   </div>`;
   document.getElementById('db-stats').innerHTML=[
@@ -2655,21 +2653,21 @@ function renderDashboard(){
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px">
         <div style="text-align:left">
           <div style="font-size:22px;font-weight:800;color:var(--green)">${winCount}</div>
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Wins</div>
+          <div style="font-size:11px;font-weight:500;color:var(--muted)">Wins</div>
         </div>
         <div style="text-align:center">
           <div style="font-size:22px;font-weight:800">${sessions}</div>
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Sessions</div>
+          <div style="font-size:11px;font-weight:500;color:var(--muted)">Sessions</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:22px;font-weight:800;color:var(--red)">${lossCount}</div>
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px">Losses</div>
+          <div style="font-size:11px;font-weight:500;color:var(--muted)">Losses</div>
         </div>
       </div>
-      <div style="height:18px;border-radius:20px;overflow:hidden;display:flex;background:var(--surface2)">
-        ${winPct>0 ?`<div style="width:${winPct.toFixed(2)}%;background:linear-gradient(90deg,#10b981,#34d399);transition:width .5s;position:relative" title="${winCount} wins (${winPct.toFixed(1)}%)"></div>`:''}
-        ${bePct>0  ?`<div style="width:${bePct.toFixed(2)}%;background:var(--muted2);transition:width .5s" title="${breakeven} breakeven"></div>`:''}
-        ${lossPct>0?`<div style="width:${lossPct.toFixed(2)}%;background:linear-gradient(90deg,#ef4444,#f87171);transition:width .5s" title="${lossCount} losses (${lossPct.toFixed(1)}%)"></div>`:''}
+      <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;background:var(--surface2)">
+        ${winPct>0 ?`<div style="width:${winPct.toFixed(2)}%;background:var(--green);transition:width .5s" title="${winCount} wins (${winPct.toFixed(1)}%)"></div>`:''}
+        ${bePct>0  ?`<div style="width:${bePct.toFixed(2)}%;background:var(--muted);transition:width .5s" title="${breakeven} breakeven"></div>`:''}
+        ${lossPct>0?`<div style="width:${lossPct.toFixed(2)}%;background:var(--red);transition:width .5s" title="${lossCount} losses (${lossPct.toFixed(1)}%)"></div>`:''}
       </div>
       <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--muted)">
         <span style="color:var(--green);font-weight:600">${winPct.toFixed(1)}% win rate</span>

@@ -2218,9 +2218,11 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadPriceHistory()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile()]);
     renderAll();
     renderTicker();
+    // Bulk market history is large; paint first, then fill charts and the ticker when it lands
+    loadPriceHistory().then(()=>{ renderTicker(); renderPage(document.body.dataset.page||'dashboard'); });
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
 }
@@ -2245,7 +2247,13 @@ async function loadPrivInvest(){ const{data,error}=await sb.from('private_invest
 async function loadDividends(){ const{data,error}=await sb.from('dividends').select('*').order('pay_date',{ascending:false}); if(error){console.error('[Tsoro] dividends:',error.message);dividends=[];return;} dividends=data||[]; }
 async function loadGoals(){ const{data,error}=await sb.from('investment_goals').select('*').order('end_date',{ascending:true}); if(error){console.error('[Tsoro] goals:',error.message);goals=[];return;} goals=data||[]; }
 async function loadZsePriceHistory(){
-  const{data,error}=await sb.from('zse_price_history').select('*').order('recorded_date',{ascending:true});
+  const data=[]; let error=null;
+  for(let from=0;;from+=1000){
+    const r=await sb.from('zse_price_history').select('*').order('recorded_date',{ascending:true}).order('id',{ascending:true}).range(from,from+999);
+    if(r.error){ error=r.error; break; }
+    data.push(...(r.data||[]));
+    if(!r.data||r.data.length<1000) break;
+  }
   if(error){console.error('[Tsoro] zse_price_history:',error.message);zsePriceHistory=[];return;}
   // Drop market-wide Admin rows (suffix-less ZSE symbols saved in ZiG cents); users' own holdings use .ZW/.VX symbols in whole ZiG
   zsePriceHistory=(data||[]).filter(r=>!isStrayZseRow(r));
@@ -6439,11 +6447,30 @@ async function importAdminPrices(){
 
 let priceHistory=[];
 
+// Supabase returns at most 1,000 rows per request: count first, then pull the pages in parallel batches.
+async function fetchPaged(makeQuery){
+  const head=await makeQuery('recorded_date',{count:'exact',head:true});
+  if(head.error) throw head.error;
+  const size=1000, pages=Math.ceil((head.count||0)/size), out=[];
+  for(let i=0;i<pages;i+=8){
+    const batch=await Promise.all(Array.from({length:Math.min(8,pages-i)},(_,j)=>
+      makeQuery('symbol,exchange,price,currency,recorded_date').order('recorded_date',{ascending:true}).order('symbol',{ascending:true}).order('exchange',{ascending:true}).range((i+j)*size,(i+j+1)*size-1)));
+    batch.forEach(r=>{ if(r.error) throw r.error; out.push(...(r.data||[])); });
+  }
+  return out;
+}
+// ZSE prices before the ZiG launch are in the retired ZWL currency and cannot be compared, so the bulk
+// history loads from 5 Apr 2024; VFEX has always traded in USD, so all of it loads.
+const ZIG_START='2024-04-05';
 async function loadPriceHistory(){
   try{
-    const queries=[sb.from('price_history').select('symbol,exchange,price,currency,recorded_date').order('recorded_date',{ascending:true})];
-    if(currentUser) queries.push(sb.from('zse_price_history').select('symbol,exchange,price,currency,recorded_date').eq('user_id',currentUser.id).order('recorded_date',{ascending:true}));
-    const results=await Promise.all(queries);
+    const jobs=[
+      fetchPaged((sel,o)=>sb.from('price_history').select(sel,o).gte('recorded_date',ZIG_START)),
+      fetchPaged((sel,o)=>sb.from('price_history').select(sel,o).lt('recorded_date',ZIG_START).in('exchange',['VFEX','VFSE']))
+    ];
+    if(currentUser) jobs.push(fetchPaged((sel,o)=>sb.from('zse_price_history').select(sel,o).eq('user_id',currentUser.id)));
+    const [recent,vfexOld,mine]=await Promise.all(jobs);
+    const results=[{data:[...vfexOld,...recent]},{data:mine||[]}];
     // Normalize: price_history uses VFEX/ZWG, app uses VFSE/ZiG internally
     // ZSE prices from bulk import are in ZiG cents → divide by 100 to get whole ZiG
     const ph=(results[0].data||[]).map(r=>{

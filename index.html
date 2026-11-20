@@ -6226,11 +6226,11 @@ async function renderAdmin(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px">
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Symbol</div><input class="form-input" id="ap-symbol" placeholder="AXIA" style="text-transform:uppercase"></div>
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Exchange</div>
-          <select class="form-select" id="ap-exchange">
+          <select class="form-select" id="ap-exchange" onchange="const h=document.getElementById('ap-price-hint');if(h)h.style.display=this.value==='ZSE'?'':'none'">
             <option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="ZEEX">ZEEX</option>
           </select>
         </div>
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price</div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price <span id="ap-price-hint" style="font-size:10px;color:var(--accent);font-weight:500">(ZiG cents ÷100)</span></div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
         <button class="btn btn-primary" onclick="saveAdminPrice()" style="height:40px;white-space:nowrap">+ Add / Update</button>
       </div>
@@ -6291,10 +6291,12 @@ async function renderAdmin(){
 async function saveAdminPrice(){
   const symbol=document.getElementById('ap-symbol').value.trim().toUpperCase();
   const exchange=document.getElementById('ap-exchange').value;
-  const price=parseFloat(document.getElementById('ap-price').value);
+  const rawPrice=parseFloat(document.getElementById('ap-price').value);
   const date=document.getElementById('ap-date').value;
-  if(!symbol||isNaN(price)||price<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
+  if(!symbol||isNaN(rawPrice)||rawPrice<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
   const currency=exchange==='VFSE'?'USD':'ZiG';
+  // ZSE prices are quoted in ZiG cents — divide by 100 to store as whole ZiG
+  const price=exchange==='ZSE'?rawPrice/100:rawPrice;
   try{
     const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'symbol,exchange'});
     if(error) throw error;
@@ -6305,7 +6307,8 @@ async function saveAdminPrice(){
     try{ await recordZsePrice(symbol,exchange,price,currency,date,null); }catch(_){}
     document.getElementById('ap-symbol').value='';
     document.getElementById('ap-price').value='';
-    showToast(`${symbol} price updated to ${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`,'success');
+    const displayPrice=exchange==='ZSE'?`ZiG ${fmtNum(price)} (${fmtNum(rawPrice)} ZiG¢)`:`${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`;
+    showToast(`${symbol} price updated to ${displayPrice}`,'success');
     renderAdmin();
   }catch(e){ showToast('Save failed: '+e.message,'error'); }
 }
@@ -6391,7 +6394,13 @@ async function loadPriceHistory(){
     if(currentUser) queries.push(sb.from('zse_price_history').select('symbol,exchange,price,currency,recorded_date').eq('user_id',currentUser.id).order('recorded_date',{ascending:true}));
     const results=await Promise.all(queries);
     // Normalize: price_history uses VFEX/ZWG, app uses VFSE/ZiG internally
-    const ph=(results[0].data||[]).map(r=>({...r,exchange:r.exchange==='VFEX'?'VFSE':r.exchange,currency:r.currency==='ZWG'?'ZiG':r.currency}));
+    // ZSE prices from bulk import are in ZiG cents → divide by 100 to get whole ZiG
+    const ph=(results[0].data||[]).map(r=>{
+      const ex=r.exchange==='VFEX'?'VFSE':r.exchange;
+      const ccy=r.currency==='ZWG'?'ZiG':r.currency;
+      const price=ex==='ZSE'?r.price/100:r.price;
+      return {...r,exchange:ex,currency:ccy,price};
+    });
     const zph=(results[1]?.data||[]).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
     // Merge: user's personal history wins over bulk import on same day
     const seen=new Map();

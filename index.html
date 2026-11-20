@@ -6291,7 +6291,7 @@ async function saveAdminPrice(){
     if(error) throw error;
     marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
     // Log to price_history so the simulator has historical data
-    try{ await sb.from('price_history').insert({symbol,exchange,price,currency,recorded_date:date,recorded_by:currentUser.id}); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
+    try{ await sb.from('price_history').upsert({symbol,exchange,price,currency,recorded_date:date,recorded_by:currentUser.id},{onConflict:'symbol,exchange,recorded_date'}); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
     document.getElementById('ap-symbol').value='';
     document.getElementById('ap-price').value='';
     showToast(`${symbol} price updated to ${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`,'success');

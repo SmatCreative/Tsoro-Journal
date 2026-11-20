@@ -10,7 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#000000" id="meta-theme-color">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -424,6 +425,9 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
   .ph-grid{grid-template-columns:minmax(0,1fr);gap:44px}
   .ph-row{grid-template-columns:88px 1fr auto}
   .ph-row .n{display:none}
+  .ph-top{flex-wrap:wrap;row-gap:4px}
+  .ph-chg{white-space:normal}
+  .ph-chg .when{display:block}
   .search-wrap{flex:1 1 100%}
   .table-wrap{margin:0 -16px;padding:0 4px}
   .overlay{padding:0;align-items:flex-end}
@@ -1997,7 +2001,7 @@ function syncThemeIcons(){
   const isLight=document.documentElement.getAttribute('data-theme')==='light';
   ['theme-icon-moon','auth-icon-moon'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=isLight?'none':'block'; });
   ['theme-icon-sun','auth-icon-sun'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=isLight?'block':'none'; });
-  const m=document.getElementById('meta-theme-color'); if(m) m.setAttribute('content',isLight?'#FFFFFF':'#000000');
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content',isLight?'#FFFFFF':'#000000'));
 }
 function applyTheme(theme,fromSystem){
   document.documentElement.setAttribute('data-theme',theme==='light'?'light':'dark');
@@ -4841,17 +4845,17 @@ function _renderWallet(){
             +'<span class="badge" style="background:var(--surface3);color:var(--muted2);font-size:11px;font-weight:600">'+w.currency+'</span>'
           +'</div>'
         +'</div>'
-        +'<div class="wallet-balance" style="color:'+color+'">'+ccySym(w.currency)+fmtMoney(totalVal)+'</div>'
+        +'<div class="wallet-balance zen-value">'+ccySym(w.currency)+fmtMoney(totalVal)+'</div>'
         +(usdLine?'<div style="margin-top:2px;margin-bottom:8px">'+usdLine+'</div>':'<div style="margin-bottom:8px"></div>')
         +(pos.val>0
-          ?'<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:10px">'
-            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--muted2)">Cash available</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(w.balance)+'</span></div>'
-            +pos.items.map(function(it){return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0"><span style="color:var(--muted2)">'+it.symbol+' <span style="font-size:10px;color:var(--muted)">position</span></span><span style="font-weight:600;color:var(--accent2)">'+ccySym(w.currency)+fmtMoney(it.val)+'</span></div>';}).join('')
+          ?'<div style="margin-bottom:14px">'
+            +'<div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:var(--muted)">Cash available</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(w.balance)+'</span></div>'
+            +pos.items.map(function(it){return '<div style="display:flex;justify-content:space-between;font-size:14px;padding:4px 0"><span style="color:var(--muted)">'+it.symbol+' <span style="font-size:10px;color:var(--muted)">position</span></span><span style="font-weight:600;color:var(--accent2)">'+ccySym(w.currency)+fmtMoney(it.val)+'</span></div>';}).join('')
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding-top:5px;margin-top:3px;"><span style="font-weight:600">Total</span><span style="font-weight:600">'+ccySym(w.currency)+fmtMoney(totalVal)+'</span></div>'
           +'</div>'
           :'')
         +(w.notes?'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">'+escapeHtml(w.notes)+'</div>':'')
-        +'<div style="font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;margin-top:2px">'+(isBroker?'Recent Trades':'Recent Transactions')+'</div>'
+        +'<div style="font-size:13px;font-weight:600;color:var(--text);margin:4px 0 6px">'+(isBroker?'Recent trades':'Recent transactions')+'</div>'
         +tradeRows
         +(w.updated_at&&!isNaN(new Date(w.updated_at))?'<div style="font-size:10px;color:var(--muted);margin-top:6px">Updated '+new Date(w.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+'</div>':'')
         +'<div class="wallet-actions" style="flex-wrap:wrap;gap:6px">'

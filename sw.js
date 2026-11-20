@@ -1,5 +1,5 @@
 // Tsoro Journal Service Worker — enables PWA install prompt
-const CACHE = 'tsoro-v1';
+const CACHE = 'tsoro-v2';
 const PRECACHE = ['/'];
 
 self.addEventListener('install', e => {

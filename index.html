@@ -504,7 +504,7 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
               <div id="db-period"></div>
               <div class="stats-row" id="db-stats"></div>
               <div id="db-winbar"></div>
-              <div class="grid-2">
+              <div class="grid-2" id="db-pnl-charts">
                 <div class="card">
                   <div class="card-header"><div class="card-title">Equity curve</div><div class="chart-legend">Cumulative P&amp;L</div></div>
                   <div id="equity-chart" style="height:180px;width:100%"></div>
@@ -515,7 +515,7 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
                 </div>
               </div>
               <div class="grid-2">
-                <div class="card"><div class="card-header"><div class="card-title">P&amp;L by asset</div></div><div id="asset-bars" class="bar-list"></div></div>
+                <div class="card" id="db-asset-card"><div class="card-header"><div class="card-title">P&amp;L by asset</div></div><div id="asset-bars" class="bar-list"></div></div>
                 <div class="card">
                   <div class="card-header">
                     <div class="card-title">Recent trades</div>
@@ -2531,7 +2531,11 @@ function renderDashboard(){
   drawHeroChart();
   renderHomeRail();
   const tradingEl=document.getElementById('db-trading');
-  if(tradingEl) tradingEl.style.display=trades.length?'':'none';
+  if(tradingEl){
+    tradingEl.style.display=trades.length?'':'none';
+    const hasClosed=closed.length>0;
+    ['db-period','db-stats','db-winbar','db-pnl-charts','db-asset-card'].forEach(id=>{ const x=document.getElementById(id); if(x) x.style.display=hasClosed?'':'none'; });
+  }
   // Period P&L strip (Ghostfolio pattern)
   const dbNow=new Date(); const dbNowStr=dbNow.toISOString().slice(0,10);
   function dbPnlSince(ds){ return closed.filter(t=>t.entryDate>=ds).reduce((s,t)=>s+(calcPnL(t)||0),0); }
@@ -2983,20 +2987,16 @@ async function drawPortfolioDonut(){
         <div style="font-size:10px;font-weight:600;color:${s.color}">${(s.pct*100).toFixed(1)}%</div>
       </div>
     </div>`).join('');
-  el.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
-    <div style="display:flex;flex-wrap:wrap;align-items:stretch">
-      <div style="flex:1;min-width:280px;padding:20px 16px;position:relative">
-        <div style="position:absolute;top:18px;left:20px;z-index:2">
-          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:3px">Total Portfolio</div>
-          <div style="font-size:24px;font-weight:800;letter-spacing:-.04em;color:var(--text)">$${fmtMoney(total)}</div>
-        </div>
+  el.innerHTML=`<div class="card" style="overflow:hidden">
+    <div class="card-header"><div class="card-title">Allocation</div></div>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:24px">
+      <div style="flex:1;min-width:260px;position:relative">
         <div style="display:flex;justify-content:center;align-items:center;padding-top:8px">
           <canvas id="pf-donut-canvas" style="display:block;cursor:pointer"></canvas>
         </div>
-        <div id="pf-donut-tooltip" style="display:none;position:absolute;background:var(--surface2);border:0;border-radius:10px;padding:10px 14px;pointer-events:none;z-index:10;min-width:140px;box-shadow:0 4px 20px rgba(0,0,0,.25)"></div>
+        <div id="pf-donut-tooltip" style="display:none;position:absolute;background:var(--elev);border:0;border-radius:12px;padding:10px 14px;pointer-events:none;z-index:10;min-width:140px;box-shadow:var(--pop-shadow)"></div>
       </div>
-      <div style="width:220px;flex-shrink:0;padding:12px 8px;overflow-y:auto;max-height:420px">
-        <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:4px 10px 8px">Holdings</div>
+      <div style="width:220px;flex-shrink:0">
         ${legendHtml}
       </div>
     </div>
@@ -4618,7 +4618,7 @@ function _renderWallet(){
             ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px">≈ $'+fmtNum(d.usd)+' USD</div>'
             : '<div style="font-size:11px;color:var(--yellow);margin-top:2px">Add rate to see USD equiv.</div>';
         }
-        return '<div style="background:var(--surface2);border:0;border-radius:var(--r-sm);padding:10px 16px;min-width:140px">'
+        return '<div style="min-width:140px">'
           +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">'
           +'<span class="badge" style="background:rgba(0,200,83,.12);color:var(--accent);font-size:11px;font-weight:600">'+ccy+'</span>'
           +'<span style="font-size:11px;color:var(--muted)">'+d.count+' wallet'+(d.count!==1?'s':'')+'</span>'
@@ -7373,11 +7373,11 @@ function renderLoans(){
 
       <!-- Amounts row -->
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-top:14px;padding:12px;background:var(--surface2);border-radius:var(--r-sm)">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Principal</div><div style="font-size:15px;font-weight:700;margin-top:3px">${loan.currency||'$'}${fmtMoney(principal)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Interest</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--yellow)">+${loan.currency||'$'}${fmtMoney(interest)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total Due</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--accent2)">${loan.currency||'$'}${fmtMoney(total)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Paid</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--green)">${loan.currency||'$'}${fmtMoney(paid)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Outstanding</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:${outstanding>0?'var(--red)':'var(--green)'}">${loan.currency||'$'}${fmtMoney(outstanding)}</div></div>
+        <div><div style="font-size:13px;color:var(--muted)">Principal</div><div style="font-size:15px;font-weight:700;margin-top:3px">${loan.currency||'$'}${fmtMoney(principal)}</div></div>
+        <div><div style="font-size:13px;color:var(--muted)">Interest</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--yellow)">+${loan.currency||'$'}${fmtMoney(interest)}</div></div>
+        <div><div style="font-size:13px;color:var(--muted)">Total Due</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--accent2)">${loan.currency||'$'}${fmtMoney(total)}</div></div>
+        <div><div style="font-size:13px;color:var(--muted)">Paid</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--green)">${loan.currency||'$'}${fmtMoney(paid)}</div></div>
+        <div><div style="font-size:13px;color:var(--muted)">Outstanding</div><div style="font-size:15px;font-weight:700;margin-top:3px;color:${outstanding>0?'var(--red)':'var(--green)'}">${loan.currency||'$'}${fmtMoney(outstanding)}</div></div>
       </div>
 
       <!-- Progress bar -->
@@ -7448,10 +7448,10 @@ function calcLoanPreview(){
   const total     = principal+interest;
   preview.style.display='grid';
   preview.innerHTML=`
-    <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Principal</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-top:4px">$${fmtMoney(principal)}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Interest</div><div style="font-size:16px;font-weight:700;color:var(--yellow);margin-top:4px">+$${fmtMoney(interest)}</div></div>
-    <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total to Collect</div><div style="font-size:16px;font-weight:700;color:var(--accent2);margin-top:4px">$${fmtMoney(total)}</div></div>
-    ${due&&start?`<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Duration</div><div style="font-size:16px;font-weight:700;margin-top:4px">${Math.round((new Date(due)-new Date(start))/86400000)} days</div></div>`:''}
+    <div><div style="font-size:13px;color:var(--muted)">Principal</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-top:4px">$${fmtMoney(principal)}</div></div>
+    <div><div style="font-size:13px;color:var(--muted)">Interest</div><div style="font-size:16px;font-weight:700;color:var(--yellow);margin-top:4px">+$${fmtMoney(interest)}</div></div>
+    <div><div style="font-size:13px;color:var(--muted)">Total to Collect</div><div style="font-size:16px;font-weight:700;color:var(--accent2);margin-top:4px">$${fmtMoney(total)}</div></div>
+    ${due&&start?`<div><div style="font-size:13px;color:var(--muted)">Duration</div><div style="font-size:16px;font-weight:700;margin-top:4px">${Math.round((new Date(due)-new Date(start))/86400000)} days</div></div>`:''}
   `;
 }
 
@@ -7658,11 +7658,9 @@ function renderGoals(){
       </div>
 
       <!-- Breakdown targets -->
-      <div style="margin-top:16px;border:0;border-radius:var(--r-sm);overflow:hidden">
-        <div style="background:var(--surface2);padding:7px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)">
-          Target breakdown — to reach goal by deadline
-        </div>
-        <div style="display:flex;padding:14px 8px">
+      <div style="margin-top:20px">
+        <div style="font-size:13px;font-weight:500;color:var(--muted)">To reach this goal by the deadline</div>
+        <div style="display:flex;padding:10px 0 0">
           ${breakdownCell('Daily',dailyNeeded,dailyIdeal,false)}
           ${breakdownCell('Weekly',weeklyNeeded,weeklyIdeal,false)}
           ${breakdownCell('Monthly',monthlyNeeded,monthlyIdeal,true)}
@@ -7670,21 +7668,21 @@ function renderGoals(){
       </div>
 
       <!-- Pace summary -->
-      ${!hit&&!expired?`<div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Weeks left</div>
+      ${!hit&&!expired?`<div style="margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:16px">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Weeks left</div>
           <div style="font-size:15px;font-weight:700;margin-top:3px">${weeksLeftStr}</div>
         </div>
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Months left</div>
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Months left</div>
           <div style="font-size:15px;font-weight:700;margin-top:3px">${monthsLeftStr}</div>
         </div>
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total days</div>
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Total days</div>
           <div style="font-size:15px;font-weight:700;margin-top:3px">${totalDays}</div>
         </div>
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Ideal daily</div>
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Ideal daily</div>
           <div style="font-size:15px;font-weight:700;margin-top:3px;color:var(--accent2)">$${fmtMoney(dailyIdeal)}</div>
         </div>
       </div>`:''}

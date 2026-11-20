@@ -2528,7 +2528,7 @@ function zseHoldingsAsTrades(){
         entry:h.buyPrice, qty:h.shares,
         currency:h.exchange==='VFSE'?'USD':'ZiG',
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
-        exit:h.currentPrice||null, exitDate:null,
+        exit:h.currentPrice!=null?(h.exchange==='ZSE'?h.currentPrice/100:h.currentPrice):null, exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
         _synthetic:true
       }));
@@ -3177,7 +3177,10 @@ function zseAnalyticsCard(){
     const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
     const avgBuy=totalCost/totalShares;
     const latest=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
-    const cp=latest.currentPrice??avgBuy;
+    const mp=getMarketPrice(g.symbol,g.exchange);
+    const useMp=mp&&mp.price_date&&(!latest.priceDate||mp.price_date>=latest.priceDate);
+    const rawCp=latest.currentPrice!=null?(g.exchange==='ZSE'?latest.currentPrice/100:latest.currentPrice):avgBuy;
+    const cp=useMp?Number(mp.price):rawCp;
     const costUSD=mvToUSD(g.exchange,totalCost);
     const mvUSD=mvToUSD(g.exchange,totalShares*cp);
     const pnlUSD=(costUSD!=null&&mvUSD!=null)?mvUSD-costUSD:null;
@@ -4377,7 +4380,11 @@ function renderZsePerformanceCard(){
   groups.forEach(g=>{
     const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
     const latest=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
-    const cp=latest.currentPrice??(g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0)/totalShares);
+    const wavg=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0)/totalShares;
+    const mpPC=getMarketPrice(g.symbol,g.exchange);
+    const useMpPC=mpPC&&mpPC.price_date&&(!latest.priceDate||mpPC.price_date>=latest.priceDate);
+    const rawCpPC=latest.currentPrice!=null?(g.exchange==='ZSE'?latest.currentPrice/100:latest.currentPrice):wavg;
+    const cp=useMpPC?Number(mpPC.price):rawCpPC;
     const u=mvToUSD(g.exchange,totalShares*cp); if(u!=null) currentUSD+=u;
   });
 
@@ -4386,7 +4393,7 @@ function renderZsePerformanceCard(){
   zsePriceHistory.forEach(r=>{ if(!symPrices[r.symbol]) symPrices[r.symbol]={}; symPrices[r.symbol][r.recorded_date]=Number(r.price); });
   holdings.forEach(h=>{
     if(h.buyDate&&h.buyPrice){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; if(!symPrices[h.symbol][h.buyDate]) symPrices[h.symbol][h.buyDate]=Number(h.buyPrice); }
-    if(h.priceDate&&h.currentPrice){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; symPrices[h.symbol][h.priceDate]=Number(h.currentPrice); }
+    if(h.priceDate&&h.currentPrice!=null){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; symPrices[h.symbol][h.priceDate]=h.exchange==='ZSE'?Number(h.currentPrice)/100:Number(h.currentPrice); }
   });
 
   const allDates=[...new Set(Object.values(symPrices).flatMap(dp=>Object.keys(dp)))].sort();
@@ -6637,7 +6644,8 @@ function calcSimulator(){
 function zseHoldingsValueUSD(){
   return zseHoldings.reduce((s,h)=>{
     const mp=getMarketPrice(h.symbol,h.exchange);
-    const price=mp?mp.price:(h.currentPrice??h.buyPrice);
+    const rawFallback=h.currentPrice!=null?(h.exchange==='ZSE'?h.currentPrice/100:h.currentPrice):h.buyPrice;
+    const price=mp?Number(mp.price):rawFallback;
     if(!price||!h.shares) return s;
     const ccy=h.exchange==='VFSE'?'USD':'ZiG';
     const v=toUSD(price*h.shares, ccy);

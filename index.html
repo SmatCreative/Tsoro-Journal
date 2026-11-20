@@ -6704,9 +6704,13 @@ function priceTimeline(symbol,exchange){
   if(_ptCache.key!==ver) _ptCache={key:ver,map:new Map()};
   const k=baseSymbol(symbol)+'|'+exchange;
   if(_ptCache.map.has(k)) return _ptCache.map.get(k);
-  const b=baseSymbol(symbol), m=new Map();
-  priceHistory.forEach(r=>{ if(r.exchange===exchange&&baseSymbol(r.symbol)===b&&Number(r.price)>0) m.set(r.recorded_date,Number(r.price)); });
-  zsePriceHistory.forEach(r=>{ if(r.exchange===exchange&&baseSymbol(r.symbol)===b&&Number(r.price)>0&&!m.has(r.recorded_date)) m.set(r.recorded_date,Number(r.price)); });
+  const b=baseSymbol(symbol), m=new Map(), mine=new Map();
+  // Market rows (imported history + Admin) use the bare symbol; the user's own logs use INN.VX-style symbols
+  const add=r=>{ if(r.exchange!==exchange||baseSymbol(r.symbol)!==b||!(Number(r.price)>0)) return; (r.symbol.toUpperCase()===b?m:mine).set(r.recorded_date,Number(r.price)); };
+  priceHistory.forEach(add); zsePriceHistory.forEach(add);
+  // Where real market history exists it wins; personal logs only fill in after it ends (or stand alone when there is none)
+  const lastMarket=m.size>=10?[...m.keys()].sort().pop():null;
+  mine.forEach((v,d)=>{ if(!m.has(d)&&(!lastMarket||d>lastMarket)) m.set(d,v); });
   const mp=getMarketPrice(b,exchange)||getMarketPrice(symbol,exchange);
   if(mp&&mp.price_date) m.set(mp.price_date,Number(mp.price));
   const arr=[...m.entries()].sort((x,y)=>x[0].localeCompare(y[0]));

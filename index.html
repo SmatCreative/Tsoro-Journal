@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Tsoro</title>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('tj_theme_pref')||(window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))}catch(e){document.documentElement.setAttribute('data-theme','dark')}</script>
+<script>window.__tjErr=null;window.addEventListener('error',function(e){if(!window.__tjErr)window.__tjErr=(e.message||'Script error')+(e.lineno?' (line '+e.lineno+')':'');});window.addEventListener('unhandledrejection',function(e){if(!window.__tjErr)window.__tjErr=String((e.reason&&e.reason.message)||e.reason||'Request failed');});</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -439,7 +440,8 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 </head>
 <body data-page="dashboard">
 
-<div class="loader show" id="loader"><div class="spinner"></div><div style="color:var(--muted);font-size:13px">Loading…</div></div>
+<div class="loader show" id="loader"><div class="spinner"></div><div id="loader-msg" style="color:var(--muted);font-size:14px;text-align:center;max-width:300px;padding:0 24px">Loading…</div></div>
+<script>setTimeout(function(){var l=document.getElementById('loader');if(!l||!l.classList.contains('show'))return;var m=document.getElementById('loader-msg');m.innerHTML='This is taking longer than usual.'+(window.__tjErr?'<div style="margin-top:8px;font-size:12px;opacity:.8">'+String(window.__tjErr).replace(/[<>&]/g,'')+'</div>':'')+'<div style="margin-top:16px"><button onclick="location.reload()" style="height:40px;padding:0 20px;border-radius:999px;border:0;background:#00C853;color:#000;font:600 14px system-ui,sans-serif;cursor:pointer">Reload</button></div>';},12000);</script>
 
 <!-- Auth -->
 <div class="auth-screen" id="auth-screen">
@@ -2015,12 +2017,11 @@ function toggleTheme(){
   applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
   requestAnimationFrame(()=>setTimeout(rerenderForTheme,0));
 }
-if(window.matchMedia){
-  matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{
-    let pref=null; try{ pref=localStorage.getItem(THEME_KEY); }catch(e){}
-    if(!pref){ applyTheme(systemTheme(),true); rerenderForTheme(); }
-  });
-}
+try{
+  const mq=window.matchMedia&&matchMedia('(prefers-color-scheme: light)');
+  const onScheme=()=>{ let pref=null; try{ pref=localStorage.getItem(THEME_KEY); }catch(e){} if(!pref){ applyTheme(systemTheme(),true); rerenderForTheme(); } };
+  if(mq&&mq.addEventListener) mq.addEventListener('change',onScheme); else if(mq&&mq.addListener) mq.addListener(onScheme);
+}catch(e){}
 syncThemeIcons();
 
 // ── SVG icon helper ────────────────────────────────────────────────

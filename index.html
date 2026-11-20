@@ -15,6 +15,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/motion@14.6.0/dist/motion.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 :root{
@@ -110,6 +111,12 @@ body.zen-mode .zen-value:hover{filter:none}
 .nav-item.active .nav-icon svg{stroke:var(--accent)}
 .nav-item .nav-icon{width:16px;display:flex;justify-content:center;align-items:center;flex-shrink:0;opacity:.8}
 .nav-item.active .nav-icon{opacity:1}
+/* Lucide icon sizing across nav contexts */
+.nav-icon svg{width:16px;height:16px;stroke-width:2}
+.mobile-nav-item>svg,.mobile-nav-item>i{width:20px;height:20px}
+.mobile-nav-item svg{width:20px;height:20px;stroke-width:2}
+.mobile-more-item>svg,.mobile-more-item>i{width:22px;height:22px}
+.mobile-more-item svg{width:22px;height:22px;stroke-width:1.8}
 .sidebar-footer{margin-top:auto;padding:14px 16px;border-top:1px solid var(--border)}
 .sidebar-user{display:flex;align-items:center;gap:9px}
 .user-avatar{width:30px;height:30px;background:var(--hero-grad);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
@@ -467,41 +474,41 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="nav-section">Main</div>
     <button class="nav-item active" data-page="dashboard">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+      <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
       <span>Dashboard</span>
     </button>
     <button class="nav-item" data-page="journal">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+      <span class="nav-icon"><i data-lucide="receipt-text"></i></span>
       <span>Trades</span>
     </button>
     <button class="nav-item" data-page="analytics">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span>
       <span>Analytics</span>
     </button>
     <div class="nav-section">Analysis</div>
     <button class="nav-item" data-page="wallet">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></span>
+      <span class="nav-icon"><i data-lucide="wallet"></i></span>
       <span>Portfolio &amp; Wallet</span>
     </button>
     <button class="nav-item" data-page="zse">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="nav-icon"><i data-lucide="candlestick-chart"></i></span>
       <span>ZSE / VFEX</span>
     </button>
     <button class="nav-item" data-page="goals-giving">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+      <span class="nav-icon"><i data-lucide="target"></i></span>
       <span>Goals &amp; Giving</span>
     </button>
     <button class="nav-item" data-page="pulse">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      <span class="nav-icon"><i data-lucide="activity"></i></span>
       <span>Pulse</span>
     </button>
     <button class="nav-item" data-page="simulator">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+      <span class="nav-icon"><i data-lucide="flask-conical"></i></span>
       <span>Simulator</span>
     </button>
     <div class="nav-section" id="nav-admin-section" style="display:none">Admin</div>
     <button class="nav-item" id="nav-admin" data-page="admin" style="display:none">
-      <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      <span class="nav-icon"><i data-lucide="shield-check"></i></span>
       <span>Admin</span>
     </button>
     <div class="sidebar-footer">
@@ -934,23 +941,23 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   <!-- Mobile bottom navigation -->
   <nav class="mobile-nav" id="mobile-nav">
     <button class="mobile-nav-item active" id="mnav-dashboard" onclick="navigate('dashboard')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <i data-lucide="layout-dashboard"></i>
       <span>Home</span>
     </button>
     <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 16 12 11 16 14 21 9"/></svg>
+      <i data-lucide="candlestick-chart"></i>
       <span>Portfolio</span>
     </button>
     <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <i data-lucide="receipt-text"></i>
       <span>Trades</span>
     </button>
     <button class="mobile-nav-item" id="mnav-wallet" onclick="navigate('wallet')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 10h.01"/><path d="M2 10h20"/></svg>
+      <i data-lucide="wallet"></i>
       <span>Wallet</span>
     </button>
     <button class="mobile-nav-item" id="mnav-more" onclick="toggleMoreSheet()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+      <i data-lucide="ellipsis"></i>
       <span>More</span>
     </button>
   </nav>
@@ -961,22 +968,20 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     <div class="mobile-more-handle"></div>
     <div class="mobile-more-grid">
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <i data-lucide="bar-chart-3"></i>
         <span>Analytics</span>
       </button>
       <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <i data-lucide="target"></i>
         <span>Goals &amp; Giving</span>
       </button>
       <button class="mobile-more-item" id="mmore-pulse" onclick="navigate('pulse')">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <i data-lucide="activity"></i>
         <span>Pulse</span>
       </button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')">
-        <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:rgba(0,168,78,.12)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-        </span>
-        <span style="font-size:12px;font-weight:600">Simulator</span>
+        <i data-lucide="flask-conical"></i>
+        <span>Simulator</span>
       </button>
     </div>
   </div>
@@ -8645,6 +8650,9 @@ function applyMotionInteractions(root){
 setTimeout(()=>applyMotionInteractions(),400);
 
 // Cursor glow — follows mouse with eased lag (dark mode only)
+// Initialize Lucide icons
+if(typeof lucide!=='undefined') lucide.createIcons({'stroke-width':2});
+
 (function(){
   const glow=document.createElement('div');
   glow.id='cursor-glow';

@@ -2429,6 +2429,9 @@ async function importCSV(){ const file=document.getElementById('csv-file').files
 
 // ── Helpers ────────────────────────────────────────────────────────
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
+// Aggregates mix ZiG and USD trades, so sum them in USD
+function pnlUSD(t){ const p=calcPnL(t)||0; if(!p) return 0; const u=toUSD(p,t.currency); return u==null?0:u; }
+function closeDate(t){ return String(t.exitDate||t.entryDate||'').slice(0,10); }
 function fmtNum(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6}); }
 function fmtMoney(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function countUp(el,target,dur,fmt){
@@ -2522,7 +2525,7 @@ function filtered(type,search,market,exchange,dir,status){ return allTrades().fi
 // ── Dashboard ──────────────────────────────────────────────────────
 function renderDashboard(){
   const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
-  const allPnL=closed.map(t=>calcPnL(t)||0);
+  const allPnL=closed.map(t=>pnlUSD(t));
   const totalPnL=allPnL.reduce((s,v)=>s+v,0);
   const wins=allPnL.filter(v=>v>0),losses=allPnL.filter(v=>v<0);
   const wr=closed.length?(wins.length/closed.length*100).toFixed(1):null;
@@ -2538,7 +2541,7 @@ function renderDashboard(){
   const accountValueUSD=walletCashUSD+deployedUSD;
   // Summary strip — no gradient card, just the numbers
   const todayStr=new Date().toISOString().slice(0,10);
-  const todayPnL=closed.filter(t=>(t.exitDate||'').slice(0,10)===todayStr).reduce((s,t)=>s+(calcPnL(t)||0),0);
+  const todayPnL=closed.filter(t=>(t.exitDate||'').slice(0,10)===todayStr).reduce((s,t)=>s+(pnlUSD(t)),0);
   const todayHas=closed.some(t=>(t.exitDate||'').slice(0,10)===todayStr);
   const todayArrow=todayPnL>=0
     ?'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>'
@@ -2583,13 +2586,13 @@ function renderDashboard(){
   }
   // Period P&L strip (Ghostfolio pattern)
   const dbNow=new Date(); const dbNowStr=dbNow.toISOString().slice(0,10);
-  function dbPnlSince(ds){ return closed.filter(t=>t.entryDate>=ds).reduce((s,t)=>s+(calcPnL(t)||0),0); }
+  function dbPnlSince(ds){ return closed.filter(t=>closeDate(t)>=ds).reduce((s,t)=>s+(pnlUSD(t)),0); }
   const dbDow=dbNow.getDay(); const dbMon=new Date(dbNow); dbMon.setDate(dbNow.getDate()-(dbDow===0?6:dbDow-1));
   const dbWtd=dbPnlSince(dbMon.toISOString().slice(0,10));
   const dbMtd=dbPnlSince(dbNowStr.slice(0,7)+'-01');
   const dbYtd=dbPnlSince(dbNowStr.slice(0,4)+'-01-01');
   document.getElementById('db-period').innerHTML=`<div class="kpi-strip">
-    ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>(t.entryDate||'').slice(0,10)===d).reduce((s,t)=>s+(calcPnL(t)||0),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
+    ${[['Today',(()=>{const d=dbNowStr;return closed.filter(t=>closeDate(t)===d).reduce((s,t)=>s+(pnlUSD(t)),0);})()],['This Week',dbWtd],['This Month',dbMtd],['This Year',dbYtd]]
       .map(([l,v],i)=>`<div class="kpi-item" style="animation:cardEnter .38s cubic-bezier(.22,1,.36,1) ${i*55}ms both">
         <div class="kpi-label">${l} P&L</div>
         <div class="kpi-value zen-value anim-num" style="color:${v>=0?'var(--green)':'var(--red)'};animation-delay:${i*55+80}ms">${v>=0?'+':''}$${fmtMoney(v)}</div>
@@ -2637,7 +2640,7 @@ function renderDashboard(){
       </div>
     </div>` : '';
   drawEquityChart(closed); drawDailyChart(closed);
-  const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(calcPnL(t)||0);});
+  const byAsset={}; closed.forEach(t=>{byAsset[t.symbol]=(byAsset[t.symbol]||0)+(pnlUSD(t));});
   const entries=Object.entries(byAsset).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,7);
   const maxAbs=Math.max(...entries.map(([,v])=>Math.abs(v)),1);
   document.getElementById('asset-bars').innerHTML=entries.length?entries.map(([sym,pnl])=>`<div class="bar-row"><div class="bar-label">${sym}</div><div class="bar-track"><div class="bar-fill ${pnl>=0?'pos':'neg'}" style="width:${(Math.abs(pnl)/maxAbs*100).toFixed(1)}%">${Math.abs(pnl)>maxAbs*.18?pnlStr(pnl):''}</div></div><div class="bar-val ${pnlClass(pnl)}">${pnlStr(pnl)}</div></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:28px;font-size:13px">No closed trades yet</div>';
@@ -2766,42 +2769,45 @@ function setHeroRange(k){
   document.querySelectorAll('.range-tab').forEach(b=>{ const a=b.textContent===k; b.classList.toggle('active',a); b.setAttribute('aria-selected',a); });
   drawHeroChart();
 }
-// Daily total: wallet cash (from balance snapshots) + ZSE/VFEX holdings at that day's price + open trades at cost.
-// The last point is pinned to the live headline so the line always ends on the number shown.
-function portfolioValueSeries(){
+// Portfolio model behind the Home chart.
+// value(d): wallet cash (from balance snapshots) + every position at that day's price, in USD.
+// gain(d0,d1): what the investments earned between two dates: price moves on positions plus trades closed in between.
+// Deposits, withdrawals and new purchases change value(d) but never gain(), so the change shown is real performance.
+function portfolioModel(){
   const today=new Date().toISOString().slice(0,10);
-  const base=x=>x.replace(/\.(VX|ZW)$/i,'');
-  const lots=zseHoldingsNotInTrades();
-  const tl={};
-  lots.forEach(h=>{
-    const k=h.symbol+'|'+h.exchange; if(tl[k]) return;
-    const m=new Map();
-    priceHistory.forEach(r=>{ if(r.exchange===h.exchange&&(r.symbol===h.symbol||r.symbol===base(h.symbol))&&Number(r.price)>0) m.set(r.recorded_date,Number(r.price)); });
-    const mp=getMarketPrice(h.symbol,h.exchange); if(mp&&mp.price_date) m.set(mp.price_date,Number(mp.price));
-    tl[k]=[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
-  });
-  const priceAt=(k,d,fb)=>{ const a=tl[k]; let p=null; if(a){ let lo=0,hi=a.length-1; while(lo<=hi){ const mid=(lo+hi)>>1; if(a[mid][0]<=d){ p=a[mid][1]; lo=mid+1; } else hi=mid-1; } } return p??fb; };
-  const realOpen=trades.filter(t=>t.status==='open'&&t.market!=='Forex');
+  const pos=[];
+  zseHoldingsNotInTrades().forEach(h=>pos.push({from:h.buyDate||'',shares:h.shares,buy:h.buyPrice,ccy:h.exchange==='VFSE'?'USD':'ZiG',tl:priceTimeline(h.symbol,h.exchange)}));
+  trades.filter(t=>t.status==='open'&&t.market!=='Forex').forEach(t=>pos.push({from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',fixed:t.exit??t.entry}));
+  const usd=(v,ccy)=>{ const u=toUSD(v,ccy); return u==null?0:u; };
+  const held=(p,d)=>d!=null&&(!p.from||p.from<=d);
+  const priceOf=(p,d)=>{ if(p.fixed!=null) return p.fixed; const i=timelineIndexAt(p.tl,d); return i>=0?p.tl[i][1]:p.buy; };
+  const valueOf=(p,d)=>held(p,d)?usd(p.shares*priceOf(p,d),p.ccy):0;
+  const costOf=p=>usd(p.shares*p.buy,p.ccy);
+  const realized=trades.filter(t=>t.status==='closed'&&t.market!=='Forex').map(t=>[closeDate(t),pnlUSD(t)]);
   const snaps={};
-  walletHistory.forEach(r=>{ const d=(r.recorded_at||'').slice(0,10); if(!d) return; (snaps[r.wallet_id]=snaps[r.wallet_id]||[]).push([d,toUSD(Number(r.balance),r.currency||'USD')||0]); });
+  walletHistory.forEach(r=>{ const d=(r.recorded_at||'').slice(0,10); if(!d) return; (snaps[r.wallet_id]=snaps[r.wallet_id]||[]).push([d,usd(Number(r.balance),r.currency||'USD')]); });
   Object.values(snaps).forEach(a=>a.sort((x,y)=>x[0].localeCompare(y[0])));
   const cashAt=d=>wallets.reduce((s,w)=>{ const a=snaps[w.id]; if(!a||!a.length) return s+(walletToUSD(w)||0); let v=null; for(const [sd,u] of a){ if(sd<=d) v=u; else break; } return s+(v??0); },0);
-  const valueAt=d=>{
-    let v=cashAt(d);
-    lots.forEach(h=>{ if(h.buyDate&&h.buyDate>d) return; const p=priceAt(h.symbol+'|'+h.exchange,d,h.buyPrice); const u=h.exchange==='VFSE'?h.shares*p:toUSD(h.shares*p,'ZiG'); if(u) v+=u; });
-    realOpen.forEach(t=>{ const ed=(t.entryDate||'').slice(0,10); if(ed&&ed>d) return; const u=toUSD((t.exit??t.entry)*t.qty,t.currency); if(u) v+=u; });
-    return v;
+  const valueAt=d=>pos.reduce((s,p)=>s+valueOf(p,d),cashAt(d));
+  // d0 null = from the very start (every position counted from its cost)
+  const gain=(d0,d1)=>{
+    let g=0,basis=0;
+    pos.forEach(p=>{ if(!held(p,d1)) return; const startV=held(p,d0)?valueOf(p,d0):costOf(p); g+=valueOf(p,d1)-startV; basis+=startV; });
+    realized.forEach(([cd,v])=>{ if(cd&&cd<=d1&&(d0==null||cd>d0)) g+=v; });
+    return {gain:g,basis};
   };
-  const starts=[...lots.map(h=>h.buyDate),...realOpen.map(t=>(t.entryDate||'').slice(0,10)),...Object.values(snaps).map(a=>a[0]&&a[0][0])].filter(Boolean).sort();
+  const starts=[...pos.map(p=>p.from),...Object.values(snaps).map(a=>a[0]&&a[0][0])].filter(Boolean).sort();
   const first=starts[0]||today;
   const dates=new Set([today]);
-  Object.values(tl).forEach(a=>a.forEach(([d])=>dates.add(d)));
+  pos.forEach(p=>{ if(p.tl) p.tl.forEach(([d])=>dates.add(d)); });
   Object.values(snaps).forEach(a=>a.forEach(([d])=>dates.add(d)));
   starts.forEach(d=>dates.add(d));
-  const pts=[...dates].filter(d=>d>=first&&d<=today).sort().map(d=>({d,v:valueAt(d)}));
-  if(pts.length) pts[pts.length-1].v=_heroTotal;
-  return pts;
+  const series=[...dates].filter(d=>d>=first&&d<=today).sort().map(d=>({d,v:valueAt(d)}));
+  if(series.length) series[series.length-1].v=_heroTotal;
+  return {series,gain};
 }
+let _heroModel=null;
+function portfolioValueSeries(){ _heroModel=portfolioModel(); return _heroModel.series; }
 function heroSlice(){
   const all=_heroSeries; if(!all.length) return [];
   const r=HERO_RANGES.find(x=>x.k===heroRange)||HERO_RANGES[1];
@@ -2829,9 +2835,12 @@ function drawHeroChart(){
     return;
   }
   el.style.display='';
-  const base=pts[0].v, last=pts[pts.length-1].v, up=last>=base;
+  const base=pts[0].v, last=pts[pts.length-1].v;
+  const d0=r.d?pts[0].d:null;
+  const total=_heroModel?_heroModel.gain(d0,pts[pts.length-1].d):{gain:last-base,basis:base};
+  const up=total.gain>=0;
   document.documentElement.setAttribute('data-trend',up?'up':'down');
-  const rest=()=>{ valEl.textContent='$'+fmtMoney(last); lblEl.textContent='Portfolio value'; chgEl.style.color=''; chgEl.innerHTML=heroChangeHTML(last-base,base,r.l); };
+  const rest=()=>{ valEl.textContent='$'+fmtMoney(last); lblEl.textContent='Portfolio value'; chgEl.style.color=''; chgEl.innerHTML=heroChangeHTML(total.gain,total.basis,r.l+' · investment gain'); };
   rest();
   const color=cssVar(up?'--green':'--red'), muted=cssVar('--muted');
   let chart=echarts.getInstanceByDom(el); if(!chart) chart=echarts.init(el,null,{renderer:'canvas'});
@@ -2852,8 +2861,9 @@ function drawHeroChart(){
     const p=pts[ax.value]; if(!p) return;
     valEl.textContent='$'+fmtMoney(p.v);
     lblEl.textContent=fmtHeroDate(p.d);
-    chgEl.style.color=p.v>=base?'var(--green)':'var(--red)';
-    chgEl.innerHTML=heroChangeHTML(p.v-base,base,'since '+fmtHeroDate(pts[0].d));
+    const g=_heroModel?_heroModel.gain(d0,p.d):{gain:p.v-base,basis:base};
+    chgEl.style.color=g.gain>=0?'var(--green)':'var(--red)';
+    chgEl.innerHTML=heroChangeHTML(g.gain,g.basis,d0?'gain since '+fmtHeroDate(pts[0].d):'gain to date');
   });
   chart.getZr().off('globalout');
   chart.getZr().on('globalout',rest);
@@ -2896,7 +2906,7 @@ function chartGrid(ctx, W, H, pad){
 function drawAnPnlChart(sorted2){
   const el=document.getElementById('an-pnl-chart'); if(!el)return;
   let chart=echarts.getInstanceByDom(el); if(!chart)chart=echarts.init(el,null,{renderer:'canvas'});
-  const vals=sorted2.map(t=>calcPnL(t)||0);
+  const vals=sorted2.map(t=>pnlUSD(t));
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   const tc=isDark?'#8E8E96':'#6B6B73', gc='transparent';
   chart.setOption({
@@ -2947,9 +2957,9 @@ function drawAnRollingChart(rolling10){
 function drawEquityChart(closed){
   const el=document.getElementById('equity-chart'); if(!el)return;
   let chart=echarts.getInstanceByDom(el); if(!chart)chart=echarts.init(el,null,{renderer:'canvas'});
-  const sorted=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
+  const sorted=[...closed].sort((a,b)=>closeDate(a).localeCompare(closeDate(b)));
   const pts=[0]; let cum=0;
-  sorted.forEach(t=>{cum+=calcPnL(t)||0;pts.push(cum);});
+  sorted.forEach(t=>{cum+=pnlUSD(t);pts.push(cum);});
   const labels=[''].concat(sorted.map(t=>t.entryDate?t.entryDate.slice(5):''));
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   const tc=isDark?'#8E8E96':'#6B6B73', gc='transparent';
@@ -2979,7 +2989,7 @@ function drawDailyChart(closed){
   const el=document.getElementById('daily-chart'); if(!el)return;
   let chart=echarts.getInstanceByDom(el); if(!chart)chart=echarts.init(el,null,{renderer:'canvas'});
   const byDay={};
-  closed.forEach(t=>{const d=(t.entryDate||'').slice(0,10);if(d)byDay[d]=(byDay[d]||0)+(calcPnL(t)||0);});
+  closed.forEach(t=>{const d=closeDate(t);if(d)byDay[d]=(byDay[d]||0)+(pnlUSD(t));});
   const days=Object.keys(byDay).sort().slice(-30);
   const vals=days.map(d=>byDay[d]);
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
@@ -3387,7 +3397,7 @@ function renderAnalytics(){
   const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
   // ── Core stats ──────────────────────────────────────────────────
-  const pnls=closed.map(t=>calcPnL(t)||0);
+  const pnls=closed.map(t=>pnlUSD(t));
   const wins=pnls.filter(v=>v>0), losses=pnls.filter(v=>v<0);
   const grossP=wins.reduce((s,v)=>s+v,0);
   const grossL=Math.abs(losses.reduce((s,v)=>s+v,0));
@@ -3396,7 +3406,7 @@ function renderAnalytics(){
   const noSLCount=closed.filter(t=>!t.sl).length;
   const bestPnL=wins.length?Math.max(...wins):null;
   const worstPnL=losses.length?Math.min(...losses):null;
-  const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();
+  const maxDD=(()=>{let peak=0,mdd=0,cum=0;[...closed].sort((a,b)=>closeDate(a).localeCompare(closeDate(b))).forEach(t=>{cum+=pnlUSD(t);if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});return mdd;})();
   const avgWin=wins.length?grossP/wins.length:0;
   const avgLoss=losses.length?grossL/losses.length:0;
   const pnlMean=pnls.length?pnls.reduce((s,v)=>s+v,0)/pnls.length:0;
@@ -3435,7 +3445,7 @@ function renderAnalytics(){
   const kellyPct=kelly!=null?Math.max(0,Math.min(kelly*100,50)):null; // cap at 50%
 
   // Consecutive streak
-  const sortedCl=[...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate));
+  const sortedCl=[...closed].sort((a,b)=>closeDate(a).localeCompare(closeDate(b)));
   let streak=0,streakDir='';
   for(let i=sortedCl.length-1;i>=0;i--){
     const p=calcPnL(sortedCl[i])||0;
@@ -3447,9 +3457,9 @@ function renderAnalytics(){
   // Monthly P&L map
   const monthlyPnL={};
   sortedCl.forEach(t=>{
-    const key=(t.entryDate||'').slice(0,7);
+    const key=closeDate(t).slice(0,7);
     if(!key) return;
-    monthlyPnL[key]=(monthlyPnL[key]||0)+(calcPnL(t)||0);
+    monthlyPnL[key]=(monthlyPnL[key]||0)+(pnlUSD(t));
   });
 
   // Rolling 10-trade win rate
@@ -3461,7 +3471,7 @@ function renderAnalytics(){
 
   // Equity curve with drawdown series
   let cum2=0,peak2=0;
-  const eqSeries=sortedCl.map(t=>{cum2+=calcPnL(t)||0;if(cum2>peak2)peak2=cum2;return{eq:cum2,dd:peak2>0?(cum2-peak2)/peak2*100:0};});
+  const eqSeries=sortedCl.map(t=>{cum2+=pnlUSD(t);if(cum2>peak2)peak2=cum2;return{eq:cum2,dd:peak2>0?(cum2-peak2)/peak2*100:0};});
 
   // Ulcer Index: sqrt(mean(drawdown^2)) — downside volatility measure
   const ulcer=eqSeries.length?Math.sqrt(eqSeries.reduce((s,p)=>s+p.dd*p.dd,0)/eqSeries.length):null;
@@ -3472,7 +3482,7 @@ function renderAnalytics(){
 
   // Time-period P&L (Ghostfolio pattern)
   const now=new Date(); const nowStr=now.toISOString().slice(0,10);
-  function pnlSince(dateStr){ return sortedCl.filter(t=>t.entryDate>=dateStr).reduce((s,t)=>s+(calcPnL(t)||0),0); }
+  function pnlSince(dateStr){ return sortedCl.filter(t=>closeDate(t)>=dateStr).reduce((s,t)=>s+(pnlUSD(t)),0); }
   const dow=now.getDay(); const daysSinceMon=dow===0?6:dow-1;
   const wtdStart=new Date(now); wtdStart.setDate(now.getDate()-daysSinceMon);
   const wtdPnL=pnlSince(wtdStart.toISOString().slice(0,10));
@@ -3550,7 +3560,7 @@ function renderAnalytics(){
   const allForBreakdown=allTrades();
   const byMarket={},byExchange={},byStrategy={},byDir={},byDow={};
   allForBreakdown.forEach(t=>{
-    const p=calcPnL(t)||0;
+    const p=pnlUSD(t);
     const mkt=t.market||'Unknown';
     (byMarket[mkt]=byMarket[mkt]||{pnl:0,count:0,wins:0}).pnl+=p; byMarket[mkt].count++; if(p>0)byMarket[mkt].wins++;
     if(t.exchange){(byExchange[t.exchange]=byExchange[t.exchange]||{pnl:0,count:0,wins:0}).pnl+=p; byExchange[t.exchange].count++; if(p>0)byExchange[t.exchange].wins++;}
@@ -5866,7 +5876,7 @@ function analyzeSymbol(symbol){
   const all=allTrades().filter(t=>t.symbol===symbol);
   const closed=all.filter(t=>t.status==='closed');
   const open=all.filter(t=>t.status==='open');
-  const pnls=closed.map(t=>calcPnL(t)||0);
+  const pnls=closed.map(t=>pnlUSD(t));
   const wins=pnls.filter(v=>v>0), losses=pnls.filter(v=>v<0);
   const grossP=wins.reduce((s,v)=>s+v,0);
   const grossL=Math.abs(losses.reduce((s,v)=>s+v,0));
@@ -5886,7 +5896,7 @@ function analyzeSymbol(symbol){
   const sharpe=stdDev>0?mean/stdDev:null;
   // Max drawdown
   let peak=0,mdd=0,cum=0;
-  [...closed].sort((a,b)=>new Date(a.entryDate)-new Date(b.entryDate)).forEach(t=>{cum+=calcPnL(t)||0;if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});
+  [...closed].sort((a,b)=>closeDate(a).localeCompare(closeDate(b))).forEach(t=>{cum+=pnlUSD(t);if(cum>peak)peak=cum;const dd=peak-cum;if(dd>mdd)mdd=dd;});
   // Consecutive wins/losses
   let maxCW=0,maxCL=0,cw=0,cl=0;
   pnls.forEach(p=>{if(p>0){cw++;cl=0;maxCW=Math.max(maxCW,cw);}else{cl++;cw=0;maxCL=Math.max(maxCL,cl);}});
@@ -6421,6 +6431,7 @@ async function importAdminPrices(){
     // Validate date (YYYY-MM-DD)
     if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skipped++; continue; }
     if(isNaN(price)||price<=0){ skipped++; continue; }
+    if(exchange==='VFEX') exchange='VFSE';
     const currency=exchange==='VFSE'?'USD':'ZiG';
     records.push({symbol,exchange,price,currency,recorded_date:dateStr,recorded_by:currentUser.id});
   }
@@ -6481,7 +6492,8 @@ async function loadPriceHistory(){
     const ph=(results[0].data||[]).map(r=>{
       const ex=r.exchange==='VFEX'?'VFSE':r.exchange;
       const ccy=r.currency==='ZWG'?'ZiG':r.currency;
-      const price=ex==='ZSE'?r.price/100:r.price;
+      // ZSE rows are ZiG cents; bulk-imported VFEX rows (stored as 'VFEX') are US cents; Admin VFEX rows ('VFSE') are dollars
+      const price=(ex==='ZSE'||r.exchange==='VFEX')?r.price/100:r.price;
       return {...r,exchange:ex,currency:ccy,price};
     });
     const zph=(results[1]?.data||[]).filter(r=>!isStrayZseRow(r)).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
@@ -6493,142 +6505,143 @@ async function loadPriceHistory(){
   }catch(e){ console.error('[Tsoro] price_history:',e.message); priceHistory=[]; }
 }
 
-// Find the price record in history closest to targetDate for a given symbol+exchange
+const baseSymbol=x=>String(x||'').toUpperCase().replace(/\.(VX|ZW)$/i,'');
+let _ptCache={key:'',map:new Map()};
+// Every known price for a stock, oldest first, in whole ZiG / USD: bulk history, the user's own logs and the Admin price.
+// "INN" and "INN.VX" are the same stock.
+function priceTimeline(symbol,exchange){
+  const ver=priceHistory.length+'|'+zsePriceHistory.length+'|'+Object.keys(marketPrices).length;
+  if(_ptCache.key!==ver) _ptCache={key:ver,map:new Map()};
+  const k=baseSymbol(symbol)+'|'+exchange;
+  if(_ptCache.map.has(k)) return _ptCache.map.get(k);
+  const b=baseSymbol(symbol), m=new Map();
+  priceHistory.forEach(r=>{ if(r.exchange===exchange&&baseSymbol(r.symbol)===b&&Number(r.price)>0) m.set(r.recorded_date,Number(r.price)); });
+  zsePriceHistory.forEach(r=>{ if(r.exchange===exchange&&baseSymbol(r.symbol)===b&&Number(r.price)>0&&!m.has(r.recorded_date)) m.set(r.recorded_date,Number(r.price)); });
+  const mp=getMarketPrice(b,exchange)||getMarketPrice(symbol,exchange);
+  if(mp&&mp.price_date) m.set(mp.price_date,Number(mp.price));
+  const arr=[...m.entries()].sort((x,y)=>x[0].localeCompare(y[0]));
+  _ptCache.map.set(k,arr);
+  return arr;
+}
+// Last price on or before the date (index into a timeline), or -1
+function timelineIndexAt(arr,d){ let lo=0,hi=arr.length-1,ix=-1; while(lo<=hi){ const mid=(lo+hi)>>1; if(arr[mid][0]<=d){ ix=mid; lo=mid+1; } else hi=mid-1; } return ix; }
+// Price on or before targetDate; if none, the first price within 7 days after it
 function findHistoricalPrice(symbol,exchange,targetDate){
-  const records=priceHistory.filter(r=>r.symbol===symbol&&r.exchange===exchange);
-  if(!records.length) return null;
-  const target=new Date(targetDate).getTime();
-  return records.reduce((best,r)=>{
-    const diff=Math.abs(new Date(r.recorded_date).getTime()-target);
-    const bestDiff=Math.abs(new Date(best.recorded_date).getTime()-target);
-    return diff<bestDiff?r:best;
-  });
+  const arr=priceTimeline(symbol,exchange); if(!arr.length) return null;
+  const i=timelineIndexAt(arr,targetDate);
+  if(i>=0) return {price:arr[i][1],recorded_date:arr[i][0]};
+  const first=arr[0];
+  if((new Date(first[0])-new Date(targetDate))/864e5<=7) return {price:first[1],recorded_date:first[0]};
+  return null;
 }
 
 // All unique symbol|exchange keys that have history data
 function symbolsWithHistory(){
-  return [...new Set(priceHistory.map(r=>r.symbol+'|'+r.exchange))];
+  return [...new Set(priceHistory.map(r=>baseSymbol(r.symbol)+'|'+r.exchange))];
 }
 
+function simFmtPx(v,ccy){ return (ccy==='USD'?'$':'ZiG ')+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4}); }
+function simHoldingGroups(){
+  const g={};
+  zseHoldings.forEach(h=>{ const k=baseSymbol(h.symbol)+'|'+h.exchange; (g[k]=g[k]||{symbol:baseSymbol(h.symbol),exchange:h.exchange,lots:[]}).lots.push(h); });
+  return Object.values(g);
+}
 function renderSimulator(){
   const el=document.getElementById('sim-content'); if(!el) return;
-  const allSymbols=[...new Set([...zseHoldings.map(h=>h.symbol+'|'+h.exchange),...Object.keys(marketPrices),...symbolsWithHistory()])].sort();
-  const historyCounts={};
-  priceHistory.forEach(r=>{ const k=r.symbol+'|'+r.exchange; historyCounts[k]=(historyCounts[k]||0)+1; });
-
+  const keys=[...new Set([...zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+h.exchange),...Object.values(marketPrices).filter(m=>m.exchange==='ZSE'||m.exchange==='VFSE').map(m=>baseSymbol(m.symbol)+'|'+m.exchange),...symbolsWithHistory()])].sort();
+  const symbols=[...new Set(keys.map(k=>k.split('|')[0]))];
+  const groups=simHoldingGroups();
   el.innerHTML=`
     <div class="sim-card">
-      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:18px">Configure your scenario</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div>
-          <div class="sim-label">Symbol</div>
-          <input class="form-input" id="sim-symbol" placeholder="e.g. SIMBISA" list="sim-symbol-list" oninput="simSymbolChanged()" style="text-transform:uppercase">
-          <datalist id="sim-symbol-list">${allSymbols.map(k=>'<option value="'+escapeHtml(k.split('|')[0])+'">').join('')}</datalist>
-          <div id="sim-coverage" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+          <div class="sim-label">Stock</div>
+          <input class="form-input" id="sim-symbol" placeholder="e.g. DLTA or INN" list="sim-symbol-list" oninput="simSymbolChanged()" style="text-transform:uppercase" autocomplete="off">
+          <datalist id="sim-symbol-list">${symbols.map(s=>'<option value="'+escapeHtml(s)+'">').join('')}</datalist>
+          <div id="sim-coverage" style="font-size:13px;color:var(--muted);margin-top:6px"></div>
         </div>
         <div>
           <div class="sim-label">Exchange</div>
-          <select class="form-select" id="sim-exchange" onchange="simSymbolChanged()">
-            <option value="ZSE">ZSE (ZiG)</option>
-            <option value="VFSE">VFEX (USD)</option>
-            <option value="ZEEX">ZEEX (ZiG)</option>
+          <select class="form-select" id="sim-exchange" onchange="simSymbolChanged(true)">
+            <option value="ZSE">ZSE (prices in ZiG)</option>
+            <option value="VFSE">VFEX (prices in USD)</option>
           </select>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div>
           <div class="sim-label">Date invested</div>
           <input class="form-input" id="sim-date-then" type="date" oninput="calcSimulator()">
         </div>
         <div>
-          <div class="sim-label">End date <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave blank = today)</span></div>
+          <div class="sim-label">End date <span style="font-weight:400;color:var(--muted)">(blank = today)</span></div>
           <input class="form-input" id="sim-date-to" type="date" oninput="calcSimulator()">
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
-        <div>
-          <div class="sim-label">Amount invested</div>
-          <input class="form-input" id="sim-amount" type="number" step="any" min="0" placeholder="1,000" oninput="calcSimulator()">
-        </div>
-        <div>
-          <div class="sim-label">Currency</div>
-          <select class="form-select" id="sim-currency" onchange="calcSimulator()">
-            <option value="ZiG">ZiG</option>
-            <option value="USD">USD ($)</option>
-          </select>
-        </div>
+      <div>
+        <div class="sim-label">Amount invested <span id="sim-ccy-label" style="font-weight:600;color:var(--text)">(ZiG)</span></div>
+        <input class="form-input" id="sim-amount" type="number" step="any" min="0" placeholder="1,000" oninput="calcSimulator()" style="max-width:320px">
+        <input type="hidden" id="sim-currency" value="ZiG">
       </div>
       <div class="sim-quick">
-        <div style="font-size:11px;color:var(--muted);align-self:center;font-weight:600">Quick:</div>
-        <button class="sim-quick-btn" onclick="simSetAmount(1000)">1,000</button>
-        <button class="sim-quick-btn" onclick="simSetAmount(5000)">5,000</button>
-        <button class="sim-quick-btn" onclick="simSetAmount(10000)">10,000</button>
-        <button class="sim-quick-btn" onclick="simSetAmount(50000)">50,000</button>
-        <button class="sim-quick-btn" onclick="simSetAmount(100000)">100,000</button>
+        ${[1000,5000,10000,50000,100000].map(n=>`<button class="sim-quick-btn" onclick="simSetAmount(${n})">${n.toLocaleString('en-US')}</button>`).join('')}
       </div>
     </div>
     <div id="sim-result"></div>
-    ${Object.keys(historyCounts).length===0?`
-    <div class="sim-card" style="border:1.5px dashed var(--border)">
-      <div style="font-size:13px;font-weight:700;margin-bottom:8px">No historical data yet</div>
-      <div style="font-size:13px;color:var(--muted2);line-height:1.6">Import historical prices in <b>Admin → Import Historical Prices</b> to enable automatic date-based lookups. You can copy price tables from the ZSE website or any spreadsheet into the import tool.</div>
-      ${isAdmin?'<button class="btn btn-primary" style="margin-top:14px" onclick="navigate(\'admin\')">Go to Admin →</button>':''}
-    </div>`:''}
-    ${zseHoldings.length?`
+    ${groups.length?`
     <div class="sim-card">
-      <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">Your holdings — click to simulate</div>
-      ${zseHoldings.map(h=>{
-        const hCount=historyCounts[h.symbol+'|'+h.exchange]||0;
-        const ccy=h.exchange==='VFSE'?'$':'ZiG ';
-        return `<div class="sim-row" style="cursor:pointer" onclick="simLoadHolding('${escapeHtml(h.symbol)}','${escapeHtml(h.exchange)}')">
-          <div style="display:flex;align-items:center;gap:10px">
-            ${stockLogo(h.symbol,34)}
-            <div>
-              <div style="font-weight:700;font-size:14px">${escapeHtml(h.symbol)}</div>
-              <div style="font-size:11px;color:var(--muted)">${escapeHtml(h.exchange)} · bought ${h.buyDate||'—'} @ ${ccy}${fmtNum(h.buyPrice)}</div>
-            </div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:11px;${hCount?'color:var(--accent)':'color:var(--muted)'}">${hCount?hCount+' price records':'no history'}</div>
-            <div style="font-size:11px;color:var(--muted)">${h.shares.toLocaleString()} shares</div>
-          </div>
+      <h2 class="section-title">Your holdings</h2>
+      <div class="section-sub" style="margin:-10px 0 12px">Tap one to see what it would have done since you bought it.</div>
+      ${groups.map(g=>{
+        const shares=g.lots.reduce((a,h)=>a+h.shares,0);
+        const cost=g.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0);
+        const first=g.lots.map(h=>h.buyDate).filter(Boolean).sort()[0]||'';
+        const n=priceTimeline(g.symbol,g.exchange).length;
+        const ccy=g.exchange==='VFSE'?'USD':'ZiG';
+        return `<div class="bk-row" role="button" tabindex="0" onclick="simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')" onkeydown="if(event.key==='Enter')simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')">
+          ${stockLogo(g.symbol,32)}
+          <div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(g.symbol)}</div><div style="font-size:13px;color:var(--muted)">${g.exchange==='VFSE'?'VFEX':'ZSE'} · ${fmtNum(shares)} shares · avg ${simFmtPx(shares?cost/shares:0,ccy)}${first?' · since '+first:''}</div></div>
+          <div style="font-size:13px;color:${n?'var(--muted)':'var(--red)'};text-align:right">${n?n.toLocaleString('en-US')+' prices':'no prices'}</div>
         </div>`;
       }).join('')}
     </div>`:''}`;
-  // Default: 1 year ago for "date then"
   const dateThenEl=document.getElementById('sim-date-then');
-  if(dateThenEl&&!dateThenEl.value){const d=new Date();d.setFullYear(d.getFullYear()-1);dateThenEl.value=d.toISOString().slice(0,10);}
+  if(dateThenEl&&!dateThenEl.value){ const d=new Date(); d.setFullYear(d.getFullYear()-1); dateThenEl.value=d.toISOString().slice(0,10); }
 }
 
-function simSymbolChanged(){
-  const symbol=(document.getElementById('sim-symbol').value||'').trim().toUpperCase();
-  const exchange=document.getElementById('sim-exchange').value;
-  // Update coverage indicator
-  const covEl=document.getElementById('sim-coverage');
-  if(covEl&&symbol){
-    const records=priceHistory.filter(r=>r.symbol===symbol&&r.exchange===exchange);
-    if(records.length){
-      const dates=records.map(r=>r.recorded_date).sort();
-      covEl.innerHTML=`<span style="color:var(--accent)">✓ ${records.length} price records</span> · ${dates[0]} → ${dates[dates.length-1]}`;
-    } else {
-      covEl.innerHTML='<span style="color:var(--muted)">No history for this symbol</span>';
-    }
+function simSymbolChanged(exchangeChosen){
+  const symbol=baseSymbol((document.getElementById('sim-symbol').value||'').trim());
+  const exSel=document.getElementById('sim-exchange');
+  // pick the exchange that actually has this stock, unless the user just chose one
+  if(symbol&&!exchangeChosen){
+    const hasZ=priceTimeline(symbol,'ZSE').length, hasV=priceTimeline(symbol,'VFSE').length;
+    if(hasV&&!hasZ) exSel.value='VFSE'; else if(hasZ&&!hasV) exSel.value='ZSE';
   }
-  // Set currency
-  if(symbol) document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
+  const exchange=exSel.value;
+  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  document.getElementById('sim-currency').value=ccy;
+  document.getElementById('sim-ccy-label').textContent='('+ccy+')';
+  const covEl=document.getElementById('sim-coverage');
+  if(covEl){
+    const arr=symbol?priceTimeline(symbol,exchange):[];
+    covEl.innerHTML=!symbol?'':arr.length
+      ?`${arr.length.toLocaleString('en-US')} prices · ${arr[0][0]} to ${arr[arr.length-1][0]}`
+      :`<span style="color:var(--red)">No prices for ${escapeHtml(symbol)} on ${exchange==='VFSE'?'VFEX':'ZSE'}</span>`;
+  }
   calcSimulator();
 }
 
 function simLoadHolding(symbol,exchange){
-  document.getElementById('sim-symbol').value=symbol;
+  document.getElementById('sim-symbol').value=baseSymbol(symbol);
   document.getElementById('sim-exchange').value=exchange;
-  const h=zseHoldings.find(h=>h.symbol===symbol&&h.exchange===exchange);
-  if(h&&h.buyDate) document.getElementById('sim-date-then').value=h.buyDate;
+  const lots=zseHoldings.filter(h=>baseSymbol(h.symbol)===baseSymbol(symbol)&&h.exchange===exchange);
+  const first=lots.map(h=>h.buyDate).filter(Boolean).sort()[0];
+  if(first) document.getElementById('sim-date-then').value=first;
   document.getElementById('sim-date-to').value='';
-  document.getElementById('sim-currency').value=exchange==='VFSE'?'USD':'ZiG';
-  if(h&&h.buyPrice&&h.shares) document.getElementById('sim-amount').value=(h.buyPrice*h.shares).toFixed(2);
-  simSymbolChanged();
-  window.scrollTo({top:0,behavior:'smooth'});
+  const cost=lots.reduce((a,h)=>a+h.shares*h.buyPrice,0);
+  if(cost>0) document.getElementById('sim-amount').value=cost.toFixed(2);
+  simSymbolChanged(true);
+  const c=document.querySelector('.content'); if(c) c.scrollTo({top:0,behavior:'smooth'});
 }
 
 function simSetAmount(n){
@@ -6638,70 +6651,53 @@ function simSetAmount(n){
 
 function calcSimulator(){
   const resultEl=document.getElementById('sim-result'); if(!resultEl) return;
-  const symbol=(document.getElementById('sim-symbol')?.value||'').trim().toUpperCase();
+  const symbol=baseSymbol((document.getElementById('sim-symbol')?.value||'').trim());
   const exchange=document.getElementById('sim-exchange').value;
+  const today=new Date().toISOString().slice(0,10);
   const dateThen=document.getElementById('sim-date-then').value;
-  const dateTo=document.getElementById('sim-date-to').value||new Date().toISOString().slice(0,10);
+  const dateTo=document.getElementById('sim-date-to').value||today;
   const amount=parseFloat(document.getElementById('sim-amount').value);
-  const currency=document.getElementById('sim-currency').value;
-  if(!symbol||!dateThen||!amount||amount<=0){resultEl.innerHTML='';return;}
-
-  // Look up historical prices
+  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const sym=ccy==='USD'?'$':'ZiG ';
+  if(!symbol||!dateThen||!amount||amount<=0){ resultEl.innerHTML=''; return; }
+  const msg=(t,b)=>{ resultEl.innerHTML=`<div class="sim-card"><div style="font-size:17px;font-weight:600;margin-bottom:4px">${t}</div><div style="font-size:14px;color:var(--muted)">${b}</div></div>`; };
+  if(dateTo<=dateThen){ msg('Pick an end date after the investment date',`${dateThen} to ${dateTo} is not a holding period.`); return; }
+  const arr=priceTimeline(symbol,exchange);
+  if(!arr.length){ msg(`No prices for ${escapeHtml(symbol)} on ${exchange==='VFSE'?'VFEX':'ZSE'}`,'Check the exchange, or add prices in Admin.'); return; }
   const recThen=findHistoricalPrice(symbol,exchange,dateThen);
-  // For end date: prefer history, fall back to market_prices for 'today'
-  let recTo=findHistoricalPrice(symbol,exchange,dateTo);
-  const isToday=dateTo===new Date().toISOString().slice(0,10)||!document.getElementById('sim-date-to').value;
-  if(!recTo&&isToday){
-    const mp=getMarketPrice(symbol,exchange);
-    if(mp) recTo={price:mp.price,recorded_date:dateTo,_fromMarket:true};
-  }
+  const recTo=findHistoricalPrice(symbol,exchange,dateTo);
+  if(!recThen){ msg(`No ${escapeHtml(symbol)} price on or before ${dateThen}`,`Prices start on ${arr[0][0]}${exchange==='ZSE'?' (ZSE history begins with ZiG in April 2024)':''}. Pick a later date.`); return; }
+  if(!recTo||recTo.recorded_date<recThen.recorded_date){ msg('Not enough prices in that window','Try a wider date range.'); return; }
 
-  if(!recThen&&!recTo){
-    resultEl.innerHTML=`<div class="sim-card" style="border:1.5px dashed var(--border);text-align:center;padding:28px">
-      <div style="font-size:14px;font-weight:700;margin-bottom:8px">No price data for ${escapeHtml(symbol)}</div>
-      <div style="font-size:13px;color:var(--muted2)">Import historical prices in Admin to enable automatic lookups.</div>
-      ${isAdmin?'<button class="btn btn-primary" style="margin-top:14px" onclick="navigate(\'admin\')">Go to Admin →</button>':''}
-    </div>`;
-    return;
-  }
-  if(!recThen){
-    resultEl.innerHTML=`<div class="sim-card" style="text-align:center;padding:28px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">No price data near ${dateThen}</div><div style="font-size:13px;color:var(--muted2)">Import more historical data or pick a different start date.</div></div>`;
-    return;
-  }
-  if(!recTo){
-    resultEl.innerHTML=`<div class="sim-card" style="text-align:center;padding:28px"><div style="font-size:14px;font-weight:700;margin-bottom:6px">No price data near ${dateTo}</div><div style="font-size:13px;color:var(--muted2)">Import more data or pick a different end date.</div></div>`;
-    return;
-  }
-
-  const priceThen=Number(recThen.price);
-  const priceNow=Number(recTo.price);
+  const priceThen=Number(recThen.price), priceNow=Number(recTo.price);
   const shares=amount/priceThen;
-  const currentValue=shares*priceNow;
-  const gain=currentValue-amount;
-  const pct=(gain/amount)*100;
-  const isGain=gain>=0;
-  const ccy=currency==='USD'?'$':'ZiG ';
-  const d1=new Date(recThen.recorded_date),d2=new Date(recTo.recorded_date);
-  const daysHeld=Math.max(1,Math.round((d2-d1)/(1000*60*60*24)));
-  const annualized=(Math.pow(priceNow/priceThen,365/daysHeld)-1)*100;
-  const fmtDur=d=>{if(d<30) return d+' days';if(d<365) return Math.round(d/30)+' mo';const y=Math.floor(d/365),m=Math.round((d%365)/30);return y+'yr'+(m>0?' '+m+'mo':'');};
-  const dateSrc=recThen._fromMarket?'market price':recThen.recorded_date;
-  const dateDstSrc=recTo._fromMarket?'current market price':recTo.recorded_date;
-
+  const value=shares*priceNow;
+  const gain=value-amount;
+  const pct=gain/amount*100;
+  const up=gain>=0;
+  const days=Math.max(1,Math.round((new Date(recTo.recorded_date)-new Date(recThen.recorded_date))/864e5));
+  const annual=days>=90?(Math.pow(priceNow/priceThen,365/days)-1)*100:null;
+  const dur=days<60?days+' days':days<365?Math.round(days/30.44)+' months':(()=>{ const y=Math.floor(days/365.25), m=Math.round((days-y*365.25)/30.44); return y+(y===1?' year':' years')+(m?' '+m+' mo':''); })();
+  const rate=ccy==='ZiG'?getZigUsdRate():null;
+  const usdLine=rate?`<div style="font-size:14px;color:var(--muted);margin-top:4px">≈ $${fmtMoney(value/rate)} at today's rate of ${rate} ZiG per USD</div>`:'';
+  const signed=(v,f)=>(v>=0?'+':'−')+f(Math.abs(v));
+  const stat=(l,v,c)=>`<div><div class="sim-label">${l}</div><div style="font-size:17px;font-weight:600${c?';color:'+c:''}">${v}</div></div>`;
+  const shiftNote=recThen.recorded_date!==dateThen?` (nearest price before ${dateThen})`:'';
   resultEl.innerHTML=`
-    <div class="sim-result-box ${isGain?'':'loss'}">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px">${escapeHtml(symbol)} · ${escapeHtml(exchange)} · Your investment would be worth</div>
-      <div class="sim-big ${isGain?'sim-gain':'sim-loss'}">${ccy}${fmtMoney(currentValue)}</div>
-      <div style="font-size:15px;font-weight:700;margin-top:6px;margin-bottom:20px;${isGain?'color:var(--accent)':'color:var(--red)'}">${isGain?'+':''}${ccy}${fmtMoney(Math.abs(gain))} &nbsp; ${isGain?'+':''}${fmtNum(pct)}%</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Invested</div><div style="font-weight:700">${ccy}${fmtMoney(amount)}</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Shares</div><div style="font-weight:700">${fmtNum(shares)}</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Price: buy → sell</div><div style="font-weight:700;font-size:12px">${ccy}${fmtNum(priceThen)} → ${ccy}${fmtNum(priceNow)}</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Held</div><div style="font-weight:700">${fmtDur(daysHeld)}</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Annualised p.a.</div><div style="font-weight:700;${annualized>=0?'color:var(--accent)':'color:var(--red)'}">${annualized>=0?'+':''}${fmtNum(annualized)}%</div></div>
-        <div style="background:var(--surface);border-radius:8px;padding:12px 14px"><div class="sim-label">Multiplier</div><div style="font-weight:700">${fmtNum(priceNow/priceThen)}×</div></div>
+    <div class="sim-result-box" style="margin-bottom:48px">
+      <div class="sim-label">${escapeHtml(symbol)} · ${exchange==='VFSE'?'VFEX':'ZSE'} · your investment would be worth</div>
+      <div class="sim-big ${up?'sim-gain':'sim-loss'}">${sym}${fmtMoney(value)}</div>
+      <div style="font-size:16px;font-weight:600;margin-top:6px;color:${up?'var(--green)':'var(--red)'}">${signed(gain,v=>sym+fmtMoney(v))} (${signed(pct,v=>v.toFixed(2))}%)</div>
+      ${usdLine}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:20px 32px;margin:28px 0 20px">
+        ${stat('Invested',sym+fmtMoney(amount))}
+        ${stat('Shares',Number(shares).toLocaleString('en-US',{maximumFractionDigits:shares<10?4:2}))}
+        ${stat('Price',simFmtPx(priceThen,ccy)+' → '+simFmtPx(priceNow,ccy))}
+        ${stat('Held',dur)}
+        ${stat('Per year',annual==null?'—':signed(annual,v=>v.toFixed(2))+'%',annual==null?'':annual>=0?'var(--green)':'var(--red)')}
+        ${stat('Multiple',(priceNow/priceThen).toFixed(3)+'×')}
       </div>
-      <div style="font-size:11px;color:var(--muted)">Using price data: ${escapeHtml(String(dateSrc))} (${ccy}${fmtNum(priceThen)}) → ${escapeHtml(String(dateDstSrc))} (${ccy}${fmtNum(priceNow)})</div>
+      <div style="font-size:13px;color:var(--muted)">Bought at the ${recThen.recorded_date} price${shiftNote}; valued at the ${recTo.recorded_date} price. Price change only: dividends and broker charges are not included.${annual==null?' Per-year return shows for periods of 90 days or more.':''}</div>
     </div>`;
 }
 

@@ -2285,8 +2285,10 @@ async function loadGoals(){ const{data,error}=await sb.from('investment_goals').
 async function loadZsePriceHistory(){
   const{data,error}=await sb.from('zse_price_history').select('*').order('recorded_date',{ascending:true});
   if(error){console.error('[Tsoro] zse_price_history:',error.message);zsePriceHistory=[];return;}
-  zsePriceHistory=data||[];
+  // Drop market-wide Admin rows (suffix-less ZSE symbols saved in ZiG cents); users' own holdings use .ZW/.VX symbols in whole ZiG
+  zsePriceHistory=(data||[]).filter(r=>!isStrayZseRow(r));
 }
+function isStrayZseRow(r){ return r.exchange==='ZSE'&&!/\.[A-Za-z]{2}$/.test(r.symbol); }
 async function recordZsePrice(symbol,exchange,price,currency,date,note){
   const recorded_date=date||new Date().toISOString().slice(0,10);
   // Avoid duplicate for same symbol+date
@@ -2528,7 +2530,7 @@ function zseHoldingsAsTrades(){
         entry:h.buyPrice, qty:h.shares,
         currency:h.exchange==='VFSE'?'USD':'ZiG',
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
-        exit:h.currentPrice!=null?(h.exchange==='ZSE'?h.currentPrice/100:h.currentPrice):null, exitDate:null,
+        exit:h.currentPrice!=null?h.currentPrice:null, exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
         _synthetic:true
       }));
@@ -2701,7 +2703,9 @@ function zseMoversCard(){
 
     // Day change: use 2nd most-recent price entry; fallback to cost basis
     let prevPrice, usingCost=false;
-    if(hist.length>=2){ prevPrice=Number(hist[1].price); }
+    const mpNewerT=useMpTicker&&hist.length&&mpTicker.price_date>hist[0].recorded_date;
+    if(mpNewerT){ prevPrice=Number(hist[0].price); }
+    else if(hist.length>=2){ prevPrice=Number(hist[1].price); }
     else { prevPrice=avgBuy; usingCost=true; }
 
     const chgAmt=cp-prevPrice;
@@ -3179,7 +3183,7 @@ function zseAnalyticsCard(){
     const latest=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
     const mp=getMarketPrice(g.symbol,g.exchange);
     const useMp=mp&&mp.price_date&&(!latest.priceDate||mp.price_date>=latest.priceDate);
-    const rawCp=latest.currentPrice!=null?(g.exchange==='ZSE'?latest.currentPrice/100:latest.currentPrice):avgBuy;
+    const rawCp=latest.currentPrice!=null?latest.currentPrice:avgBuy;
     const cp=useMp?Number(mp.price):rawCp;
     const costUSD=mvToUSD(g.exchange,totalCost);
     const mvUSD=mvToUSD(g.exchange,totalShares*cp);
@@ -4383,7 +4387,7 @@ function renderZsePerformanceCard(){
     const wavg=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0)/totalShares;
     const mpPC=getMarketPrice(g.symbol,g.exchange);
     const useMpPC=mpPC&&mpPC.price_date&&(!latest.priceDate||mpPC.price_date>=latest.priceDate);
-    const rawCpPC=latest.currentPrice!=null?(g.exchange==='ZSE'?latest.currentPrice/100:latest.currentPrice):wavg;
+    const rawCpPC=latest.currentPrice!=null?latest.currentPrice:wavg;
     const cp=useMpPC?Number(mpPC.price):rawCpPC;
     const u=mvToUSD(g.exchange,totalShares*cp); if(u!=null) currentUSD+=u;
   });
@@ -4393,7 +4397,7 @@ function renderZsePerformanceCard(){
   zsePriceHistory.forEach(r=>{ if(!symPrices[r.symbol]) symPrices[r.symbol]={}; symPrices[r.symbol][r.recorded_date]=Number(r.price); });
   holdings.forEach(h=>{
     if(h.buyDate&&h.buyPrice){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; if(!symPrices[h.symbol][h.buyDate]) symPrices[h.symbol][h.buyDate]=Number(h.buyPrice); }
-    if(h.priceDate&&h.currentPrice!=null){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; symPrices[h.symbol][h.priceDate]=h.exchange==='ZSE'?Number(h.currentPrice)/100:Number(h.currentPrice); }
+    if(h.priceDate&&h.currentPrice!=null){ if(!symPrices[h.symbol]) symPrices[h.symbol]={}; symPrices[h.symbol][h.priceDate]=Number(h.currentPrice); }
   });
 
   const allDates=[...new Set(Object.values(symPrices).flatMap(dp=>Object.keys(dp)))].sort();
@@ -4640,7 +4644,7 @@ function _renderWallet(){
       // ZSE/VFEX holdings tagged to this business group
       const bizHoldings=zseHoldings.filter(h=>h.business_group===name);
       const holdingsUSD=bizHoldings.reduce((s,h)=>{
-        const price=h.currentPrice??h.buyPrice; if(!price||!h.shares) return s;
+        const price=holdingPrice(h); if(!price||!h.shares) return s;
         const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
       },0);
       const totalUSD=cashUSD+holdingsUSD;
@@ -4670,7 +4674,7 @@ function _renderWallet(){
       const holdingRows=bizHoldings.length?'<div style="padding:9px 18px 4px;background:var(--surface2);border-bottom:1px solid var(--border)">'
         +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">ZSE / VFEX Holdings</div>'
         +bizHoldings.map(h=>{
-          const price=h.currentPrice??h.buyPrice; const val=(price||0)*h.shares;
+          const price=holdingPrice(h); const val=(price||0)*h.shares;
           const ccy=h.exchange==='VFSE'?'USD':'ZiG'; const usdVal=toUSD(val,ccy);
           const gain=price&&h.buyPrice?((price-h.buyPrice)/h.buyPrice*100):null;
           return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">'
@@ -5612,12 +5616,13 @@ function renderTicker(){
     const mpT=getMarketPrice(g.symbol,g.exchange);
     const useMpT=mpT&&mpT.price_date&&(!latestHistDate||mpT.price_date>=latestHistDate);
     const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
-    const holdingCp=latestHolding?.currentPrice!=null?(g.exchange==='ZSE'?latestHolding.currentPrice/100:latestHolding.currentPrice):null;
+    const holdingCp=latestHolding?.currentPrice!=null?latestHolding.currentPrice:null;
     const cp=useMpT?Number(mpT.price):(history.length?Number(history[0].price):holdingCp);
     if(cp==null) return null;
 
     // Day change: latest vs previous price entry; fallback vs avg buy
-    let prevPrice=history.length>=2?Number(history[1].price):(useMpT&&history.length===1?Number(history[0].price):avgBuy);
+    const mpNewer=useMpT&&history.length&&mpT.price_date>history[0].recorded_date;
+    let prevPrice=mpNewer?Number(history[0].price):history.length>=2?Number(history[1].price):avgBuy;
     const chgAmt=cp-prevPrice;
     const chgPct=prevPrice?(chgAmt/prevPrice)*100:0;
     const isUp=chgPct>0.005, isDown=chgPct<-0.005;
@@ -6214,7 +6219,8 @@ async function loadMarketPrices(){
     const{data,error}=await sb.from('market_prices').select('*');
     if(error) throw error;
     marketPrices={};
-    (data||[]).forEach(r=>{ marketPrices[r.symbol+'|'+r.exchange]=r; });
+    // DB stores ZSE prices in ZiG cents (as quoted by ZSE). In memory everything is whole ZiG / USD.
+    (data||[]).forEach(r=>{ const raw=Number(r.price); marketPrices[r.symbol+'|'+r.exchange]={...r,price_raw:raw,price:r.exchange==='ZSE'?raw/100:raw}; });
   }catch(e){ console.error('[Tsoro] market_prices:',e.message); marketPrices={}; }
 }
 
@@ -6243,7 +6249,7 @@ async function renderAdmin(){
             <option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="ZEEX">ZEEX</option>
           </select>
         </div>
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price <span id="ap-price-hint" style="font-size:10px;color:var(--accent);font-weight:500">(ZiG cents ÷100)</span></div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price <span id="ap-price-hint" style="font-size:10px;color:var(--accent);font-weight:500">(ZiG cents, as quoted by ZSE)</span></div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
         <button class="btn btn-primary" onclick="saveAdminPrice()" style="height:40px;white-space:nowrap">+ Add / Update</button>
       </div>
@@ -6253,7 +6259,7 @@ async function renderAdmin(){
         <tbody>${prices.map(r=>`<tr>
           <td><div style="display:flex;align-items:center;gap:8px">${stockLogo(r.symbol,28)}<span style="font-weight:700">${escapeHtml(r.symbol)}</span></div></td>
           <td><span class="badge" style="background:rgba(0,168,78,.12);color:var(--accent)">${escapeHtml(r.exchange)}</span></td>
-          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${fmtNum(r.price)}</td>
+          <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${fmtNum(r.price_raw??r.price)}${r.exchange==='ZSE'?` <span style="font-size:10px;color:var(--muted);font-weight:500">¢ = ZiG ${fmtNum(r.price)}</span>`:''}</td>
           <td style="color:var(--muted);font-size:12px">${escapeHtml(r.currency||'ZiG')}</td>
           <td style="color:var(--muted);font-size:12px">${r.price_date||'—'}</td>
           <td><button class="btn btn-sm btn-ghost" style="color:var(--red);font-size:11px" onclick="deleteAdminPrice('${escapeHtml(r.symbol)}','${escapeHtml(r.exchange)}')">Remove</button></td>
@@ -6308,16 +6314,20 @@ async function saveAdminPrice(){
   const date=document.getElementById('ap-date').value;
   if(!symbol||isNaN(rawPrice)||rawPrice<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
   const currency=exchange==='VFSE'?'USD':'ZiG';
-  // ZSE prices are quoted in ZiG cents — divide by 100 to store as whole ZiG
+  // DB tables market_prices/price_history keep ZSE in ZiG cents (as quoted); memory + zse_price_history use whole ZiG
   const price=exchange==='ZSE'?rawPrice/100:rawPrice;
   try{
-    const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'symbol,exchange'});
+    const{error}=await sb.from('market_prices').upsert({symbol,exchange,price:rawPrice,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'symbol,exchange'});
     if(error) throw error;
-    marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
+    marketPrices[symbol+'|'+exchange]={symbol,exchange,price,price_raw:rawPrice,currency,price_date:date};
     // Log to price_history so the simulator has historical data
-    try{ await sb.from('price_history').upsert({symbol,exchange,price,currency,recorded_date:date,recorded_by:currentUser.id},{onConflict:'symbol,exchange,recorded_date'}); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
-    // Also write to zse_price_history so ZSE/VFEX charts and ticker pick up the new price immediately
-    try{ await recordZsePrice(symbol,exchange,price,currency,date,null); }catch(_){}
+    try{ await sb.from('price_history').upsert({symbol,exchange,price:rawPrice,currency,recorded_date:date,recorded_by:currentUser.id},{onConflict:'symbol,exchange,recorded_date'}); priceHistory=priceHistory.filter(r=>!(r.symbol===symbol&&r.exchange===exchange&&r.recorded_date===date)); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
+    // Mirror into the user's own price log only for symbols they hold (using the holding's symbol), in whole ZiG / USD
+    try{
+      const base=s=>s.replace(/\.(VX|ZW)$/i,'');
+      const held=[...new Set(zseHoldings.filter(h=>h.exchange===exchange&&base(h.symbol)===symbol).map(h=>h.symbol))];
+      for(const hs of held) await recordZsePrice(hs,exchange,price,currency,date,null);
+    }catch(_){}
     document.getElementById('ap-symbol').value='';
     document.getElementById('ap-price').value='';
     const displayPrice=exchange==='ZSE'?`ZiG ${fmtNum(price)} (${fmtNum(rawPrice)} ZiG¢)`:`${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`;
@@ -6415,7 +6425,7 @@ async function loadPriceHistory(){
       const price=ex==='ZSE'?r.price/100:r.price;
       return {...r,exchange:ex,currency:ccy,price};
     });
-    const zph=(results[1]?.data||[]).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
+    const zph=(results[1]?.data||[]).filter(r=>!isStrayZseRow(r)).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
     // Merge: user's personal history wins over bulk import on same day
     const seen=new Map();
     ph.forEach(r=>seen.set(r.symbol+'|'+r.exchange+'|'+r.recorded_date,r));
@@ -6643,9 +6653,7 @@ function calcSimulator(){
 // Total account value in USD — the number goals are measured against
 function zseHoldingsValueUSD(){
   return zseHoldings.reduce((s,h)=>{
-    const mp=getMarketPrice(h.symbol,h.exchange);
-    const rawFallback=h.currentPrice!=null?(h.exchange==='ZSE'?h.currentPrice/100:h.currentPrice):h.buyPrice;
-    const price=mp?Number(mp.price):rawFallback;
+    const price=holdingPrice(h);
     if(!price||!h.shares) return s;
     const ccy=h.exchange==='VFSE'?'USD':'ZiG';
     const v=toUSD(price*h.shares, ccy);
@@ -6911,7 +6919,7 @@ function renderBizCFO(){
   const bizGroupNames=new Set(Object.keys(bizGroups));
   const bizZseHoldings=zseHoldings.filter(h=>h.business_group&&bizGroupNames.has(h.business_group));
   const bizZseUSD=bizZseHoldings.reduce((s,h)=>{
-    const price=h.currentPrice??h.buyPrice; if(!price||!h.shares) return s;
+    const price=holdingPrice(h); if(!price||!h.shares) return s;
     const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
   },0);
   const bizWalletBalance=bizCashBalance+bizZseUSD;
@@ -7683,12 +7691,16 @@ function getZigUsdRate(){
   return rate && rate.units_per_usd ? Number(rate.units_per_usd) : null;
 }
 
+function holdingPrice(h){
+  const mp=getMarketPrice(h.symbol,h.exchange);
+  if(mp&&mp.price_date&&(!h.priceDate||mp.price_date>=h.priceDate)) return Number(mp.price);
+  return h.currentPrice!=null?h.currentPrice:h.buyPrice;
+}
+
 function holdingToUSD(h){
   const mp=getMarketPrice(h.symbol,h.exchange);
   const mpMoreRecent=mp&&mp.price_date&&(!h.priceDate||mp.price_date>=h.priceDate);
-  // ZSE currentPrice is in ZiG cents; buyPrice is already in ZiG
-  const rawPrice=mpMoreRecent?Number(mp.price):h.currentPrice!=null?h.currentPrice:h.buyPrice;
-  const price=(!mpMoreRecent&&h.currentPrice!=null&&h.exchange==='ZSE')?rawPrice/100:rawPrice;
+  const price=mpMoreRecent?Number(mp.price):h.currentPrice!=null?h.currentPrice:h.buyPrice;
   const mv = h.shares * price;
   if(h.exchange==='VFSE') return mv; // already USD
   const rate = getZigUsdRate();
@@ -8313,8 +8325,7 @@ function renderZse(){
       const latestLot=g.lots.reduce((b,h)=>{ if(!b.priceDate&&!h.priceDate) return b; if(!b.priceDate) return h; if(!h.priceDate) return b; return h.priceDate>b.priceDate?h:b; },g.lots[0]);
       const mp=getMarketPrice(g.symbol,g.exchange);
       const useMp=mp&&mp.price_date&&(!latestLot.priceDate||mp.price_date>=latestLot.priceDate);
-      // ZSE currentPrice stored in ZiG cents; divide by 100 for whole ZiG (buyPrice/wavg is already in ZiG)
-      const lotCp=latestLot.currentPrice!=null?(g.exchange==='ZSE'?latestLot.currentPrice/100:latestLot.currentPrice):wavg;
+      const lotCp=latestLot.currentPrice!=null?latestLot.currentPrice:wavg;
       const currentPrice=useMp?Number(mp.price):lotCp;
       const priceDate=useMp?mp.price_date:latestLot.priceDate;
       const mv=totalShares*currentPrice;

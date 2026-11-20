@@ -469,7 +469,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </button>
     <button class="nav-item" data-page="simulator">
       <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
-      <span>What If?</span>
+      <span>Simulator</span>
     </button>
     <div class="nav-section" id="nav-admin-section" style="display:none">Admin</div>
     <button class="nav-item" id="nav-admin" data-page="admin" style="display:none">
@@ -836,7 +836,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
             <div style="width:34px;height:34px;border-radius:9px;background:rgba(0,168,78,.14);display:flex;align-items:center;justify-content:center;flex-shrink:0">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
             </div>
-            What If?
+            Simulator
           </div>
           <div style="font-size:12px;color:var(--muted)">Simulate any investment across any time period</div>
         </div>
@@ -948,7 +948,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
         <span style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:rgba(0,168,78,.12)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00A84E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </span>
-        <span style="font-size:12px;font-weight:600">What If?</span>
+        <span style="font-size:12px;font-weight:600">Simulator</span>
       </button>
     </div>
   </div>
@@ -2331,7 +2331,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'What If?',admin:'Admin'};
+const PAGE_TITLES={dashboard:'Dashboard',journal:'Trades',analytics:'Analytics',wallet:'Portfolio & Wallet',zse:'ZSE / VFEX Tracker','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'Simulator',admin:'Admin'};
 const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','simulator','admin']);
 function toggleMobileSidebar(){
   const sb=document.querySelector('.sidebar');
@@ -6274,7 +6274,7 @@ async function renderAdmin(){
     </div>
     <div class="card" style="padding:20px 24px">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Import Historical Prices</div>
-      <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6">Paste historical price data to power the What If? simulator. Supports two formats:<br>
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;line-height:1.6">Paste historical price data to power the Simulator. Supports two formats:<br>
         <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">DATE,PRICE</code> (one symbol at a time, set symbol+exchange above) &nbsp;or&nbsp;
         <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">SYMBOL,EXCHANGE,DATE,PRICE</code> (multi-symbol).<br>
         First row can be a header — it is skipped automatically. Source: ZSE website, your broker, or any spreadsheet.
@@ -6399,7 +6399,8 @@ async function loadPriceHistory(){
     const queries=[sb.from('price_history').select('symbol,exchange,price,currency,recorded_date').order('recorded_date',{ascending:true})];
     if(currentUser) queries.push(sb.from('zse_price_history').select('symbol,exchange,price,currency,recorded_date').eq('user_id',currentUser.id).order('recorded_date',{ascending:true}));
     const results=await Promise.all(queries);
-    const ph=(results[0].data||[]);
+    // Normalize: price_history uses VFEX/ZWG, app uses VFSE/ZiG internally
+    const ph=(results[0].data||[]).map(r=>({...r,exchange:r.exchange==='VFEX'?'VFSE':r.exchange,currency:r.currency==='ZWG'?'ZiG':r.currency}));
     const zph=(results[1]?.data||[]).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
     // Merge: user's personal history wins over bulk import on same day
     const seen=new Map();
@@ -7727,7 +7728,7 @@ function drawZseChart(canvas, h, pts, entries){
       ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
       ctx.fillStyle = isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.45)';
       ctx.font='10px system-ui'; ctx.textAlign='right';
-      ctx.fillText((h.exchange==='VFSE'?'$':'')+val.toFixed(2), PAD.l-5, y+3.5);
+      ctx.fillText((h.exchange==='VFSE'||h.exchange==='VFEX'?'$':'')+val.toFixed(2), PAD.l-5, y+3.5);
     }
 
     if(pts.length>=2){
@@ -7796,7 +7797,7 @@ function drawZseChart(canvas, h, pts, entries){
     }
 
     // Entry arrows — one per lot buy date
-    if(entries&&entries.length>1){
+    if(entries&&entries.length>=1){
       const dateIdx={};
       pts.forEach((p,i)=>{ dateIdx[p.date]=i; });
       const seen={};
@@ -7816,22 +7817,25 @@ function drawZseChart(canvas, h, pts, entries){
     }
 
     // Header
-    const ccy=h.exchange==='VFSE'?'$':'ZiG ';
+    const isVFEX=h.exchange==='VFSE'||h.exchange==='VFEX';
+    const ccy=isVFEX?'$':'ZiG ';
+    const exchDisplay=h.exchange==='VFSE'?'VFEX':h.exchange;
+    const symDisplay=h.symbol+(isVFEX?'.VX':'.ZW');
     const pctChg=avgBuyP>0?((last-avgBuyP)/avgBuyP*100):null;
     // Symbol (left) + Price (right) on line 1
     ctx.font='bold 14px system-ui'; ctx.textAlign='left';
     ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
-    ctx.fillText(h.symbol,14,22);
+    ctx.fillText(symDisplay,14,22);
     ctx.font='bold 14px system-ui'; ctx.textAlign='right';
     ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
     ctx.fillText(ccy+fmtNum(last),W-14,22);
     // Exchange badge on line 2
     ctx.font='bold 9px system-ui'; ctx.textAlign='left';
-    const bw=ctx.measureText(h.exchange).width+10, bh=13;
+    const bw=ctx.measureText(exchDisplay).width+10, bh=13;
     ctx.fillStyle=h.exchange==='ZSE'?'rgba(0,168,78,0.35)':'rgba(56,189,248,0.35)';
     ctx.fillRect(14,28,bw,bh);
     ctx.fillStyle=h.exchange==='ZSE'?'#00A84E':'#38BDF8';
-    ctx.fillText(h.exchange,19,38);
+    ctx.fillText(exchDisplay,19,38);
     if(pctChg!==null){
       ctx.font='11px system-ui';
       ctx.fillStyle=pctChg>=0?'#00A84E':'#ef4444';
@@ -7877,9 +7881,20 @@ function renderZsePriceCharts(){
   });
   const stocks=Object.values(stockMap);
 
-  // Build price series per symbol
+  // Build price series per symbol — global priceHistory first, then personal logs on top
   const bySymbol={};
-  zsePriceHistory.forEach(r=>{ (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:r.note||''}); });
+  // 1. Global imported history (lowest priority)
+  priceHistory.forEach(r=>{
+    if(!stocks.find(s=>s.symbol===r.symbol)) return;
+    (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:''});
+  });
+  // 2. User's personal price logs (overrides global on same date)
+  zsePriceHistory.forEach(r=>{
+    if(!bySymbol[r.symbol]) bySymbol[r.symbol]=[];
+    const idx=bySymbol[r.symbol].findIndex(x=>x.date===r.recorded_date);
+    const pt={date:r.recorded_date,price:Number(r.price),note:r.note||''};
+    if(idx>=0) bySymbol[r.symbol][idx]=pt; else bySymbol[r.symbol].push(pt);
+  });
   stocks.forEach(s=>{
     if(!bySymbol[s.symbol]) bySymbol[s.symbol]=[];
     s.lots.forEach(h=>{

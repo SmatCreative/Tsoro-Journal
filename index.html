@@ -6713,9 +6713,34 @@ function priceTimeline(symbol,exchange){
   mine.forEach((v,d)=>{ if(!m.has(d)&&(!lastMarket||d>lastMarket)) m.set(d,v); });
   const mp=getMarketPrice(b,exchange)||getMarketPrice(symbol,exchange);
   if(mp&&mp.price_date) m.set(mp.price_date,Number(mp.price));
-  const arr=[...m.entries()].sort((x,y)=>x[0].localeCompare(y[0]));
+  const arr=repairPriceSeries([...m.entries()].sort((x,y)=>x[0].localeCompare(y[0])));
   _ptCache.map.set(k,arr);
   return arr;
+}
+// The imported history mixes units (some rows whole ZiG, some ZiG cents, interleaved day by day).
+// Walk back from the newest price (the Admin price, known good): a day ~100x off its neighbour is a unit
+// mix-up, not a market move, so scale it back. Then drop single-day spikes >4x away from both neighbours.
+function repairPriceSeries(arr){
+  const fixUnits=a=>{ for(let i=a.length-2;i>=0;i--){ const r=a[i][1]/a[i+1][1]; if(r>=30&&r<=300) a[i][1]/=100; else if(r>=1/300&&r<=1/30) a[i][1]*=100; } return a; };
+  // Drop runs of 1-3 days sitting >4x above or below the prices on both sides (e.g. the 6-7 Apr 2024 ZiG changeover rows)
+  const dropRuns=a=>{
+    const out=[]; let i=0;
+    while(i<a.length){
+      let cut=0;
+      if(i>0){
+        for(let L=1;L<=3&&i+L<a.length;L++){
+          const p=a[i-1][1], n=a[i+L][1], run=a.slice(i,i+L).map(x=>x[1]);
+          if(run.every(v=>v>p*4&&v>n*4)||run.every(v=>v<p/4&&v<n/4)){ cut=L; break; }
+        }
+      }
+      if(cut){ i+=cut; continue; }
+      out.push(a[i]); i++;
+    }
+    return out;
+  };
+  let a=arr.map(x=>[x[0],x[1]]);
+  a=dropRuns(fixUnits(a));
+  return dropRuns(fixUnits(a));
 }
 // Last price on or before the date (index into a timeline), or -1
 function timelineIndexAt(arr,d){ let lo=0,hi=arr.length-1,ix=-1; while(lo<=hi){ const mid=(lo+hi)>>1; if(arr[mid][0]<=d){ ix=mid; lo=mid+1; } else hi=mid-1; } return ix; }
@@ -7986,43 +8011,12 @@ function renderZsePriceCharts(){
   });
   const stocks=Object.values(stockMap);
 
-  // Build price series per symbol — global priceHistory first, then personal logs on top
+  // Same cleaned market timeline as the stock page; the user's own logs only extend it
   const bySymbol={};
-  // 1. Global imported history (lowest priority)
-  const _base=x=>x.replace(/\.(VX|ZW)$/i,'');
-  const _stockFor=r=>stocks.find(s=>s.exchange===r.exchange&&(s.symbol===r.symbol||_base(s.symbol)===r.symbol));
-  priceHistory.forEach(r=>{
-    const st=_stockFor(r); if(!st) return;
-    (bySymbol[st.symbol]=bySymbol[st.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:''});
-  });
-  // 2. User's personal price logs (overrides global on same date)
-  zsePriceHistory.forEach(r=>{
-    const st=_stockFor(r)||{symbol:r.symbol};
-    if(!bySymbol[st.symbol]) bySymbol[st.symbol]=[];
-    const idx=bySymbol[st.symbol].findIndex(x=>x.date===r.recorded_date);
-    const pt={date:r.recorded_date,price:Number(r.price),note:r.note||''};
-    if(idx>=0) bySymbol[st.symbol][idx]=pt; else bySymbol[st.symbol].push(pt);
-  });
-  // 3. Admin market price is the latest quote — it wins on its own date
   stocks.forEach(s=>{
-    const mp=getMarketPrice(s.symbol,s.exchange);
-    if(!mp||!mp.price_date) return;
-    const arr=bySymbol[s.symbol]=bySymbol[s.symbol]||[];
-    const pt={date:mp.price_date,price:Number(mp.price),note:'Admin price'};
-    const idx=arr.findIndex(x=>x.date===mp.price_date);
-    if(idx>=0) arr[idx]=pt; else arr.push(pt);
-  });
-  stocks.forEach(s=>{
-    if(!bySymbol[s.symbol]) bySymbol[s.symbol]=[];
-    s.lots.forEach(h=>{
-      if(h.buyDate&&h.buyPrice>0&&!bySymbol[s.symbol].find(r=>r.date===h.buyDate))
-        bySymbol[s.symbol].push({date:h.buyDate,price:Number(h.buyPrice),note:'Buy price'});
-      const pd=h.priceDate||new Date().toISOString().slice(0,10);
-      if(h.currentPrice>0&&!bySymbol[s.symbol].find(r=>r.date===pd))
-        bySymbol[s.symbol].push({date:pd,price:Number(h.currentPrice),note:'Latest'});
-    });
-    bySymbol[s.symbol].sort((a,b)=>a.date.localeCompare(b.date));
-    bySymbol[s.symbol]=bySymbol[s.symbol].filter((r,i,arr)=>i===0||r.date!==arr[i-1].date);
+    bySymbol[s.symbol]=priceTimeline(s.symbol,s.exchange).map(([date,price])=>({date,price,note:''}));
+    if(!bySymbol[s.symbol].length) s.lots.forEach(h=>{ if(h.buyDate&&h.buyPrice>0) bySymbol[s.symbol].push({date:h.buyDate,price:Number(h.buyPrice),note:'Buy price'}); });
+    bySymbol[s.symbol].sort((x,y)=>x.date.localeCompare(y.date));
   });
 
   // Entry markers per symbol (each lot's buy date+price, for arrows)

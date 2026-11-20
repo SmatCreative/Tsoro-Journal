@@ -6287,7 +6287,7 @@ async function saveAdminPrice(){
   if(!symbol||isNaN(price)||price<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
   const currency=exchange==='VFSE'?'USD':'ZiG';
   try{
-    const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()});
+    const{error}=await sb.from('market_prices').upsert({symbol,exchange,price,currency,price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'symbol,exchange'});
     if(error) throw error;
     marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
     // Log to price_history so the simulator has historical data

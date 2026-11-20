@@ -357,8 +357,6 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .sidebar{position:fixed;top:0;left:0;height:100vh;z-index:250;transform:translateX(-100%)}
   .sidebar.mobile-open{transform:translateX(0);box-shadow:8px 0 40px rgba(0,0,0,.55)}
   #sidebar-close-btn{display:flex!important}
-  /* Show bottom nav on mobile */
-  .mobile-nav{display:flex!important}
   .topbar-hamburger{display:flex}
   .topbar-mobile-brand{display:flex}
   .app{height:100dvh}
@@ -366,8 +364,7 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
   .sidebar{height:100dvh;padding-top:env(safe-area-inset-top,0px)}
   #import-btn{display:none}
   .btn-logout{display:none}
-  /* Clear bottom nav + safe area */
-  .content{padding:16px;padding-bottom:calc(56px + 16px + env(safe-area-inset-bottom,0px))}
+  .content{padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
   /* KPI strip + stats strip scroll horizontally on narrow screens */
   .kpi-strip,.stats-row{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
   .kpi-item,.stat-card{min-width:130px;scroll-snap-align:start}
@@ -926,41 +923,8 @@ tbody tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
-  <!-- Mobile bottom navigation -->
-  <nav class="mobile-nav" id="mobile-nav">
-    <button class="mobile-nav-item active" id="mnav-dashboard" onclick="navigate('dashboard')">
-      <i data-lucide="layout-dashboard"></i>
-      <span>Home</span>
-    </button>
-    <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')">
-      <i data-lucide="candlestick-chart"></i>
-      <span>Portfolio</span>
-    </button>
-    <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')">
-      <i data-lucide="receipt-text"></i>
-      <span>Trades</span>
-    </button>
-    <button class="mobile-nav-item" id="mnav-wallet" onclick="navigate('wallet')">
-      <i data-lucide="wallet"></i>
-      <span>Wallet</span>
-    </button>
-    <button class="mobile-nav-item" id="mnav-more" onclick="toggleMoreSheet()">
-      <i data-lucide="ellipsis"></i>
-      <span>More</span>
-    </button>
-  </nav>
   <!-- Mobile sidebar drawer backdrop -->
   <div class="mobile-sidebar-overlay" id="mobile-sidebar-overlay" onclick="closeMobileSidebar()"></div>
-  <div class="mobile-more-overlay" id="more-overlay" onclick="closeMoreSheet()"></div>
-  <div class="mobile-more-sheet" id="more-sheet">
-    <div class="mobile-more-handle"></div>
-    <div class="mobile-more-grid">
-      <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')">
-        <i data-lucide="flask-conical"></i>
-        <span>Simulator</span>
-      </button>
-    </div>
-  </div>
 </div>
 
 

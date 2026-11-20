@@ -2519,18 +2519,20 @@ function populateFilters(){
 // so they appear in Journal and Securities pages.
 // Skip any holding whose symbol already exists in the real Supabase trades array
 // (avoids duplicates when a position is tracked in both systems).
+function zseHoldingsNotInTrades(){
+  const realSymbols=new Set(trades.map(t=>t.symbol.toUpperCase()));
+  return zseHoldings.filter(h=>!realSymbols.has(h.symbol.toUpperCase()));
+}
 function zseHoldingsAsTrades(){
   try{
-    const realSymbols=new Set(trades.map(t=>t.symbol.toUpperCase()));
-    return zseHoldings
-      .filter(h=>!realSymbols.has(h.symbol.toUpperCase()))
+    return zseHoldingsNotInTrades()
       .map(h=>({
         id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
         market:h.instrumentType||'Stock', direction:'Long', type:'long', status:'open',
         entry:h.buyPrice, qty:h.shares,
         currency:h.exchange==='VFSE'?'USD':'ZiG',
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
-        exit:h.currentPrice!=null?h.currentPrice:null, exitDate:null,
+        exit:holdingPrice(h), exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
         _synthetic:true
       }));
@@ -2904,10 +2906,6 @@ function drawDailyChart(closed){
 async function drawPortfolioDonut(){
   const el=document.getElementById('db-donut'); if(!el)return;
   const segMap={};
-  zseHoldings.forEach(h=>{
-    const val=(h.price||0)*(h.shares||0);
-    if(val>0){const k=h.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:h.exchange||'ZSE',shares:0,price:h.price||0};segMap[k].value+=val;segMap[k].shares=(segMap[k].shares||0)+(h.shares||0);}
-  });
   allTrades().filter(t=>t.status==='open').forEach(t=>{
     const val=toUSD((t.exit??t.entry)*(t.qty||0),t.currency)||0;
     if(val>0){const k=t.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:t.market||'',qty:0,entry:t.entry||0,currency:t.currency||'USD'};segMap[k].value+=val;segMap[k].qty=(segMap[k].qty||0)+(t.qty||0);}
@@ -3655,7 +3653,7 @@ function renderAnalytics(){
       const ts=g.lots.reduce((s,h)=>s+h.shares,0);
       const tc=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
       const ll=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]);
-      const cp=ll.currentPrice??(tc/ts);
+      const cp=holdingPrice({...ll,buyPrice:tc/ts});
       const usd=mvToUSD2(g.exchange,ts*cp);
       return {label:g.symbol,val:usd??0,exchange:g.exchange};
     }).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
@@ -4528,7 +4526,7 @@ function _renderWallet(){
   const totalCashUSD = wallets.reduce((s,w)=>s+walletToUSD(w),0);
   const openTrades = trades.filter(t=>t.status==='open');
   const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty, t.currency)??t.entry*t.qty),0);
-  const zseStocksUSD = zseHoldingsValueUSD();
+  const zseStocksUSD = zseHoldingsValueUSD(true);
   const allOpenPositions = allTrades().filter(t=>t.status==='open');
   const combinedDeployedUSD = deployedUSD + zseStocksUSD;
   const grandTotal = totalCashUSD + deployedUSD + zseStocksUSD;
@@ -4914,7 +4912,7 @@ function drawWalletDonut(cashUSD, deployedUSD){
   if(deployedUSD>0) segments.push({label:'In Trades',val:deployedUSD,type:'trades'});
   privInvest.forEach(p=>{ const v=toUSD(Number(p.current_value??p.amount_invested),p.currency); if(v>0) segments.push({label:p.name,val:v,type:'invest'}); });
   const _zseGrpMap={};
-  zseHoldings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
+  zseHoldingsNotInTrades().forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!_zseGrpMap[k]) _zseGrpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; _zseGrpMap[k].lots.push(h); });
   Object.values(_zseGrpMap).forEach(g=>{
     const tot=g.lots.reduce((s,h)=>s+h.shares,0);
     const cost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
@@ -6651,8 +6649,8 @@ function calcSimulator(){
 // ═══════════════════════════════════════════════════════════════════
 
 // Total account value in USD — the number goals are measured against
-function zseHoldingsValueUSD(){
-  return zseHoldings.reduce((s,h)=>{
+function zseHoldingsValueUSD(excludeTracked){
+  return (excludeTracked?zseHoldingsNotInTrades():zseHoldings).reduce((s,h)=>{
     const price=holdingPrice(h);
     if(!price||!h.shares) return s;
     const ccy=h.exchange==='VFSE'?'USD':'ZiG';
@@ -6663,7 +6661,7 @@ function zseHoldingsValueUSD(){
 function accountValueUSD(){
   const cash=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const deployed=trades.filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
-  return cash+deployed+privInvestValueUSD()+zseHoldingsValueUSD();
+  return cash+deployed+privInvestValueUSD()+zseHoldingsValueUSD(true);
 }
 
 function goalPeriodPreset(){

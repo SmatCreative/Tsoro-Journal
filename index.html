@@ -6332,6 +6332,7 @@ async function saveAdminPrice(){
     showToast(`${symbol} price updated to ${displayPrice}`,'success');
     renderAdmin();
     renderTicker();
+    try{ renderZsePriceCharts(); }catch(_){}
   }catch(e){ showToast('Save failed: '+e.message,'error'); }
 }
 
@@ -7861,7 +7862,7 @@ function drawZseChart(canvas, h, pts, entries){
     const isVFEX=h.exchange==='VFSE'||h.exchange==='VFEX';
     const ccy=isVFEX?'$':'ZiG ';
     const exchDisplay=h.exchange==='VFSE'?'VFEX':h.exchange;
-    const symDisplay=h.symbol+(isVFEX?'.VX':'.ZW');
+    const symDisplay=/\.[A-Za-z]{2}$/.test(h.symbol)?h.symbol:h.symbol+(isVFEX?'.VX':'.ZW');
     const pctChg=avgBuyP>0?((last-avgBuyP)/avgBuyP*100):null;
     // Symbol (left) + Price (right) on line 1
     ctx.font='bold 14px system-ui'; ctx.textAlign='left';
@@ -7887,7 +7888,7 @@ function drawZseChart(canvas, h, pts, entries){
       const hl=days>=365?(days/365).toFixed(1)+'y':days>=30?Math.floor(days/30)+'mo':days+'d';
       ctx.font='10px system-ui'; ctx.textAlign='left';
       ctx.fillStyle=isDark?'rgba(255,255,255,0.38)':'rgba(0,0,0,0.38)';
-      ctx.fillText('Held '+hl,14,38);
+      ctx.fillText('Held '+hl,14+bw+8,38);
     }
     if(pts.length>=2){
       ctx.font='9px system-ui'; ctx.textAlign='center';
@@ -7934,16 +7935,28 @@ function renderZsePriceCharts(){
   // Build price series per symbol — global priceHistory first, then personal logs on top
   const bySymbol={};
   // 1. Global imported history (lowest priority)
+  const _base=x=>x.replace(/\.(VX|ZW)$/i,'');
+  const _stockFor=r=>stocks.find(s=>s.exchange===r.exchange&&(s.symbol===r.symbol||_base(s.symbol)===r.symbol));
   priceHistory.forEach(r=>{
-    if(!stocks.find(s=>s.symbol===r.symbol)) return;
-    (bySymbol[r.symbol]=bySymbol[r.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:''});
+    const st=_stockFor(r); if(!st) return;
+    (bySymbol[st.symbol]=bySymbol[st.symbol]||[]).push({date:r.recorded_date,price:Number(r.price),note:''});
   });
   // 2. User's personal price logs (overrides global on same date)
   zsePriceHistory.forEach(r=>{
-    if(!bySymbol[r.symbol]) bySymbol[r.symbol]=[];
-    const idx=bySymbol[r.symbol].findIndex(x=>x.date===r.recorded_date);
+    const st=_stockFor(r)||{symbol:r.symbol};
+    if(!bySymbol[st.symbol]) bySymbol[st.symbol]=[];
+    const idx=bySymbol[st.symbol].findIndex(x=>x.date===r.recorded_date);
     const pt={date:r.recorded_date,price:Number(r.price),note:r.note||''};
-    if(idx>=0) bySymbol[r.symbol][idx]=pt; else bySymbol[r.symbol].push(pt);
+    if(idx>=0) bySymbol[st.symbol][idx]=pt; else bySymbol[st.symbol].push(pt);
+  });
+  // 3. Admin market price is the latest quote — it wins on its own date
+  stocks.forEach(s=>{
+    const mp=getMarketPrice(s.symbol,s.exchange);
+    if(!mp||!mp.price_date) return;
+    const arr=bySymbol[s.symbol]=bySymbol[s.symbol]||[];
+    const pt={date:mp.price_date,price:Number(mp.price),note:'Admin price'};
+    const idx=arr.findIndex(x=>x.date===mp.price_date);
+    if(idx>=0) arr[idx]=pt; else arr.push(pt);
   });
   stocks.forEach(s=>{
     if(!bySymbol[s.symbol]) bySymbol[s.symbol]=[];
@@ -7971,8 +7984,15 @@ function renderZsePriceCharts(){
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
       ${stocks.map(s=>{
         const dbPts=zsePriceHistory.filter(r=>r.symbol===s.symbol&&r.exchange===s.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
-        const ccy=s.exchange==='VFEX'?'$':'ZiG ';
-        const histRows=dbPts.length?dbPts.map(r=>`
+        const ccy=s.exchange==='VFSE'?'$':'ZiG ';
+        const _mp=getMarketPrice(s.symbol,s.exchange);
+        const mpRow=(_mp&&_mp.price_date&&!dbPts.some(r=>r.recorded_date===_mp.price_date))?`
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px">
+            <div style="flex:1;color:var(--muted)">${_mp.price_date}</div>
+            <div style="font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${ccy}${Number(_mp.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})}</div>
+            <div style="font-size:11px;color:var(--muted2)">Admin price</div>
+          </div>`:'';
+        const histRows=(dbPts.length||mpRow)?mpRow+dbPts.map(r=>`
           <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:12px" id="zph-row-${r.id}">
             <div style="flex:1;color:var(--muted)">${r.recorded_date}</div>
             <div style="font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${ccy}${Number(r.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})}</div>
@@ -7986,7 +8006,7 @@ function renderZsePriceCharts(){
           <div style="background:var(--surface2);border-top:1px solid var(--border)">
             <div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
               <div style="display:flex;align-items:center;gap:8px">${stockLogo(s.symbol,26)}<div style="font-size:11px;font-weight:700;color:var(--text)">${escapeHtml(s.symbol)}</div><span style="font-size:10px;padding:2px 5px;border-radius:3px;background:${s.exchange==='ZSE'?'rgba(0,168,78,.13)':'rgba(56,189,248,.13)'};color:${s.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-weight:600">${escapeHtml(s.exchange)}</span></div>
-              <div style="font-size:11px;color:var(--muted)">Price Log (${dbPts.length})</div>
+              <div style="font-size:11px;color:var(--muted)">Price Log (${dbPts.length+(mpRow?1:0)})</div>
             </div>
             <div id="${histId(s.symbol)}" style="max-height:180px;overflow-y:auto">${histRows}</div>
           </div>

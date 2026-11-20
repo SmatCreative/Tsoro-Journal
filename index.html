@@ -2686,12 +2686,16 @@ function zseMoversCard(){
     const avgBuy=totalCost/totalShares;
     const isVFEX=g.exchange==='VFSE';
 
-    // Price history sorted most-recent first
+    // Price history sorted most-recent first (also match stripped symbol e.g. INFR for INFR.VX)
+    const _baseSymTicker=g.symbol.replace(/\.(VX|ZW)$/i,'');
     const hist=zsePriceHistory
-      .filter(r=>r.symbol===g.symbol&&r.exchange===g.exchange)
+      .filter(r=>(r.symbol===g.symbol||r.symbol===_baseSymTicker)&&r.exchange===g.exchange)
       .sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
 
-    const latestFromHist=hist.length?Number(hist[0].price):null;
+    const mpTicker=getMarketPrice(g.symbol,g.exchange);
+    const latestHistDate=hist.length?hist[0].recorded_date:null;
+    const useMpTicker=mpTicker&&mpTicker.price_date&&(!latestHistDate||mpTicker.price_date>=latestHistDate);
+    const latestFromHist=useMpTicker?Number(mpTicker.price):(hist.length?Number(hist[0].price):null);
     const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
     const cp=latestFromHist??(latestHolding?.currentPrice??avgBuy);
 
@@ -2705,6 +2709,7 @@ function zseMoversCard(){
 
     // Sparkline: up to 12 chronological price points
     const sparkPts=[...hist].reverse().slice(-12).map(r=>Number(r.price));
+    if(useMpTicker&&Number(mpTicker.price)!==sparkPts[sparkPts.length-1]) sparkPts.push(Number(mpTicker.price));
     if(!sparkPts.length) sparkPts.push(cp,cp);
     else if(sparkPts.length===1) sparkPts.push(sparkPts[0]);
 
@@ -6201,7 +6206,11 @@ async function loadMarketPrices(){
 }
 
 function getMarketPrice(symbol,exchange){
-  return marketPrices[symbol+'|'+exchange]||null;
+  if(marketPrices[symbol+'|'+exchange]) return marketPrices[symbol+'|'+exchange];
+  // Also try without exchange suffix (e.g. INFR.VX → INFR, MCMS.ZW → MCMS)
+  const stripped=symbol.replace(/\.(VX|ZW)$/i,'');
+  if(stripped!==symbol&&marketPrices[stripped+'|'+exchange]) return marketPrices[stripped+'|'+exchange];
+  return null;
 }
 
 async function renderAdmin(){
@@ -6292,6 +6301,8 @@ async function saveAdminPrice(){
     marketPrices[symbol+'|'+exchange]={symbol,exchange,price,currency,price_date:date};
     // Log to price_history so the simulator has historical data
     try{ await sb.from('price_history').upsert({symbol,exchange,price,currency,recorded_date:date,recorded_by:currentUser.id},{onConflict:'symbol,exchange,recorded_date'}); priceHistory.push({symbol,exchange,price,currency,recorded_date:date}); }catch(_){}
+    // Also write to zse_price_history so ZSE/VFEX charts and ticker pick up the new price immediately
+    try{ await recordZsePrice(symbol,exchange,price,currency,date,null); }catch(_){}
     document.getElementById('ap-symbol').value='';
     document.getElementById('ap-price').value='';
     showToast(`${symbol} price updated to ${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`,'success');
@@ -7649,7 +7660,9 @@ function getZigUsdRate(){
 }
 
 function holdingToUSD(h){
-  const price = h.currentPrice ?? h.buyPrice;
+  const mp=getMarketPrice(h.symbol,h.exchange);
+  const mpMoreRecent=mp&&mp.price_date&&(!h.priceDate||mp.price_date>=h.priceDate);
+  const price = mpMoreRecent ? Number(mp.price) : (h.currentPrice ?? h.buyPrice);
   const mv = h.shares * price;
   if(h.exchange==='VFSE') return mv; // already USD
   const rate = getZigUsdRate();
@@ -8270,10 +8283,12 @@ function renderZse(){
       const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
       const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
       const wavg=totalCost/totalShares;
-      // Pick price from most recently updated lot
+      // Pick price from most recently updated lot, overridden by Admin market price if more recent
       const latestLot=g.lots.reduce((b,h)=>{ if(!b.priceDate&&!h.priceDate) return b; if(!b.priceDate) return h; if(!h.priceDate) return b; return h.priceDate>b.priceDate?h:b; },g.lots[0]);
-      const currentPrice=latestLot.currentPrice??wavg;
-      const priceDate=latestLot.priceDate;
+      const mp=getMarketPrice(g.symbol,g.exchange);
+      const useMp=mp&&mp.price_date&&(!latestLot.priceDate||mp.price_date>=latestLot.priceDate);
+      const currentPrice=useMp?Number(mp.price):(latestLot.currentPrice??wavg);
+      const priceDate=useMp?mp.price_date:latestLot.priceDate;
       const mv=totalShares*currentPrice;
       const pnl=mv-totalCost;
       const pnlPct=totalCost>0?(pnl/totalCost*100):0;

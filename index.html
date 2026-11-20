@@ -131,14 +131,11 @@ body[data-page="dashboard"] .page-title{display:none}
 .ticker-track{display:flex;align-items:center;white-space:nowrap;animation:ticker-scroll 50s linear infinite;will-change:transform}
 .ticker-track:hover{animation-play-state:paused}
 @keyframes ticker-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-item{display:inline-flex;align-items:center;gap:10px;padding:0 22px;height:56px}
-.ticker-item>div:first-child{width:26px!important;height:26px!important}
-.ticker-inner{display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:10px;row-gap:0;margin-left:0!important}
-.ticker-top{display:contents}
-.ticker-top svg{display:none}
-.ticker-sym{grid-column:1;font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.01em}
-.ticker-price{grid-column:2;font-size:13px;font-weight:500;color:var(--muted2)}
-.ticker-chg{grid-column:1 / span 2;font-size:12px;font-weight:600}
+.ticker-item{display:inline-flex;align-items:baseline;gap:8px;padding:0 20px;height:56px;line-height:56px;font-size:13px}
+.ticker-sym{font-weight:600;color:var(--text);letter-spacing:-.01em}
+.ticker-item.held .ticker-sym::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--text);margin-right:7px;vertical-align:middle;position:relative;top:-1px}
+.ticker-price{font-weight:500;color:var(--muted2)}
+.ticker-chg{font-weight:600}
 .ticker-chg.up{color:var(--green)}.ticker-chg.down{color:var(--red)}.ticker-chg.flat{color:var(--muted)}
 
 /* ═══ Motion ═══ */
@@ -352,6 +349,37 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 .rail-chg{font-size:13px;font-weight:600;text-align:right}
 .rail-empty{font-size:14px;color:var(--muted);padding:12px 0}
 
+/* ═══ Price history ═══ */
+.ph-headrow{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:24px 0 28px}
+.ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:56px 64px}
+.ph-block{min-width:0}
+.ph-top{display:flex;align-items:center;gap:12px}
+.ph-id{flex:1;min-width:0}
+.ph-sym{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.ph-meta{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-quote{text-align:right}
+.ph-price{font-size:22px;font-weight:600;letter-spacing:-.035em;line-height:1.15}
+.ph-chg{font-size:13px;font-weight:600;white-space:nowrap}
+.ph-chg .when{color:var(--muted);font-weight:500}
+.ph-chart{height:200px;margin:14px 0 6px;touch-action:pan-y}
+.ph-log summary{list-style:none;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);padding:8px 0;display:inline-flex;gap:8px;align-items:center}
+.ph-log summary::-webkit-details-marker{display:none}
+.ph-log summary::after{content:'';width:7px;height:7px;border-right:1.8px solid currentColor;border-bottom:1.8px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s var(--ease-out)}
+.ph-log[open] summary::after{transform:rotate(225deg) translateY(-1px)}
+.ph-log summary:hover{color:var(--text)}
+.ph-log summary span{font-weight:500}
+.ph-rows{max-height:240px;overflow-y:auto;margin:0 -12px}
+.ph-row{display:grid;grid-template-columns:100px 1fr minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;font-size:14px}
+.ph-row:hover{background:var(--surface2)}
+.ph-row .d{color:var(--muted)}
+.ph-row .v{font-weight:600;text-align:right}
+.ph-row .n{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph-row .a{display:flex;gap:2px}
+.ph-row .a button{background:none;border:0;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted2);padding:4px 8px;border-radius:8px}
+.ph-row .a button:hover{background:var(--surface3);color:var(--text)}
+.ph-row .a button.del:hover{color:var(--red)}
+.ph-empty{font-size:14px;color:var(--muted);padding:8px 12px}
+
 /* ═══ Mobile tab bar ═══ */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(60px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);z-index:200;flex-direction:row}
 .mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;padding:6px 0 4px;transition:color .15s}
@@ -393,6 +421,9 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
   .stats-row,.kpi-strip,.wallet-summary-grid{gap:20px 32px}
   .stat-value{font-size:22px}
   .search-input{width:100%}
+  .ph-grid{grid-template-columns:minmax(0,1fr);gap:44px}
+  .ph-row{grid-template-columns:88px 1fr auto}
+  .ph-row .n{display:none}
   .search-wrap{flex:1 1 100%}
   .table-wrap{margin:0 -16px;padding:0 4px}
   .overlay{padding:0;align-items:flex-end}
@@ -1978,7 +2009,7 @@ function rerenderForTheme(){
 }
 function toggleTheme(){
   applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
-  rerenderForTheme();
+  requestAnimationFrame(()=>setTimeout(rerenderForTheme,0));
 }
 if(window.matchMedia){
   matchMedia('(prefers-color-scheme: light)').addEventListener('change',()=>{
@@ -5615,80 +5646,43 @@ function renderTicker(){
   const bar=document.getElementById('ticker-bar');
   const track=document.getElementById('ticker-track');
   if(!bar||!track) return;
-
-  const grpMap={};
-  zseHoldings.forEach(h=>{
-    const k=h.symbol+'|'+h.exchange;
-    if(!grpMap[k]) grpMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]};
-    grpMap[k].lots.push(h);
+  const base=x=>x.replace(/\.(VX|ZW)$/i,'');
+  // Every known price per stock (bulk history + the user's own logs), oldest first
+  const hist={};
+  const addH=r=>{ const p=Number(r.price); if(!(p>0)) return; const k=base(r.symbol)+'|'+r.exchange; (hist[k]=hist[k]||new Map()).set(r.recorded_date,p); };
+  priceHistory.forEach(addH); zsePriceHistory.forEach(addH);
+  const series={}; Object.entries(hist).forEach(([k,m])=>{ series[k]=[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0])); });
+  const held=new Set(zseHoldings.map(h=>base(h.symbol)+'|'+h.exchange));
+  // Whole market from Admin prices, plus any held stock the Admin list does not cover yet
+  const quotes=new Map();
+  Object.values(marketPrices).forEach(mp=>{ if(mp.exchange==='ZSE'||mp.exchange==='VFSE') quotes.set(base(mp.symbol)+'|'+mp.exchange,{price:Number(mp.price),date:mp.price_date}); });
+  held.forEach(k=>{
+    if(quotes.has(k)) return;
+    const a=series[k], lot=zseHoldings.find(h=>base(h.symbol)+'|'+h.exchange===k);
+    const lastH=a&&a.length?a[a.length-1]:null;
+    const p=lastH?lastH[1]:(lot.currentPrice??lot.buyPrice);
+    if(p>0) quotes.set(k,{price:p,date:lastH?lastH[0]:lot.priceDate});
   });
-
-  function tickerSpark(pts, isUp){
-    if(pts.length<2) return '';
-    const W=72,H=28,pad=2;
-    const min=Math.min(...pts),max=Math.max(...pts),range=max-min||1;
-    const n=pts.length;
-    const xs=pts.map((_,i)=>pad+i/(n-1)*(W-pad*2));
-    const ys=pts.map(p=>H-pad-((p-min)/range*(H-pad*2)));
-    const line='M'+xs.map((x,i)=>`${x.toFixed(1)},${ys[i].toFixed(1)}`).join('L');
-    const fill=line+`L${xs[n-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
-    const lc=isUp?'#00C853':'#FF5000';
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none" style="flex-shrink:0"><path d="${fill}" fill="${isUp?'rgba(0,200,83,.18)':'rgba(255,80,0,.18)'}"/><path d="${line}" stroke="${lc}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-  }
-
-  const items=Object.values(grpMap).map(g=>{
-    const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
-    const totalCost=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
-    const avgBuy=totalCost/totalShares;
-
-    const _baseSym=g.symbol.replace(/\.(VX|ZW)$/i,'');
-    const history=zsePriceHistory.filter(r=>(r.symbol===g.symbol||r.symbol===_baseSym)&&r.exchange===g.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
-    const latestHistDate=history.length?history[0].recorded_date:null;
-    const mpT=getMarketPrice(g.symbol,g.exchange);
-    const useMpT=mpT&&mpT.price_date&&(!latestHistDate||mpT.price_date>=latestHistDate);
-    const latestHolding=g.lots.filter(h=>h.currentPrice!=null).sort((a,b)=>(b.priceDate||'').localeCompare(a.priceDate||''))[0];
-    const holdingCp=latestHolding?.currentPrice!=null?latestHolding.currentPrice:null;
-    const cp=useMpT?Number(mpT.price):(history.length?Number(history[0].price):holdingCp);
-    if(cp==null) return null;
-
-    // Day change: latest vs previous price entry; fallback vs avg buy
-    const mpNewer=useMpT&&history.length&&mpT.price_date>history[0].recorded_date;
-    let prevPrice=mpNewer?Number(history[0].price):history.length>=2?Number(history[1].price):avgBuy;
-    const chgAmt=cp-prevPrice;
-    const chgPct=prevPrice?(chgAmt/prevPrice)*100:0;
-    const isUp=chgPct>0.005, isDown=chgPct<-0.005;
-    const cls=isUp?'up':isDown?'down':'flat';
-    const arrow=isUp?'▲':isDown?'▼':'—';
-    const sign=isUp?'+':'';
-
-    // Sparkline from price history (chronological, last 12 pts)
-    const sparkPts=[...history].reverse().slice(-12).map(r=>Number(r.price));
-    if(useMpT&&Number(mpT.price)!==sparkPts[sparkPts.length-1]) sparkPts.push(Number(mpT.price));
-    if(sparkPts.length<2) sparkPts.push(cp);
-    const spark=tickerSpark(sparkPts,isUp||(!isDown));
-
-    const ccy=g.exchange==='VFSE'?'$':'ZiG ';
-    const fmt=v=>Number(v).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4});
-
-    return `<div class="ticker-item">
-      ${stockLogo(g.symbol,32)}
-      <div class="ticker-inner" style="margin-left:10px">
-        <div class="ticker-top">
-          <span class="ticker-sym">${g.symbol}</span>
-          ${spark}
-        </div>
-        <span class="ticker-price">${ccy}${fmt(cp)}</span>
-        <span class="ticker-chg ${cls}">${arrow} ${sign}${fmt(Math.abs(chgAmt))} (${sign}${chgPct.toFixed(2)}%)</span>
-      </div>
-    </div>`;
-  }).filter(Boolean);
-
+  const items=[...quotes.entries()].map(([k,q])=>{
+    const [sym,ex]=k.split('|'); const a=series[k]||[];
+    let prev=null; for(let i=a.length-1;i>=0;i--){ if(!q.date||a[i][0]<q.date){ prev=a[i][1]; break; } }
+    const pct=prev?(q.price-prev)/prev*100:null;
+    return {sym,ex,held:held.has(k),price:q.price,pct};
+  }).sort((x,y)=>(y.held-x.held)||x.sym.localeCompare(y.sym));
   if(!items.length){ bar.classList.add('empty'); return; }
   bar.classList.remove('empty');
-  const html=items.join('');
+  const fmt=v=>Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4});
+  const html=items.map(t=>{
+    const cls=t.pct==null||Math.abs(t.pct)<0.005?'flat':t.pct>0?'up':'down';
+    const chg=t.pct==null?'—':(t.pct>0?'+':t.pct<0?'−':'')+Math.abs(t.pct).toFixed(2)+'%';
+    return `<div class="ticker-item${t.held?' held':''}" title="${t.ex==='VFSE'?'VFEX':'ZSE'}${t.held?' · you hold this':''}">
+      <span class="ticker-sym">${escapeHtml(t.sym)}</span>
+      <span class="ticker-price">${t.ex==='VFSE'?'$':'ZiG '}${fmt(t.price)}</span>
+      <span class="ticker-chg ${cls}">${chg}</span>
+    </div>`;
+  }).join('');
   track.innerHTML=html+html;
-  const dur=Math.max(30, items.length*9);
-  track.style.animationDuration=dur+'s';
+  track.style.animationDuration=Math.max(40,items.length*3.2)+'s';
 }
 window.addEventListener('resize',()=>{
   if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();
@@ -5696,6 +5690,7 @@ window.addEventListener('resize',()=>{
     const el=document.getElementById(id); if(!el)return;
     const inst=echarts.getInstanceByDom(el); if(inst)inst.resize();
   });
+  document.querySelectorAll('.ph-chart').forEach(el=>{ const inst=echarts.getInstanceByDom(el); if(inst) inst.resize(); });
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7746,208 +7741,6 @@ function calcNetProceeds(grossValue, charges){
   return { afterSell, afterWithdraw, totalPct, withdrawPct: charges.withdraw||0 };
 }
 
-function drawZseChart(canvas, h, pts, entries){
-  try {
-    const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 340;
-    const H = 210;
-    canvas.width  = W * (window.devicePixelRatio||1);
-    canvas.height = H * (window.devicePixelRatio||1);
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
-    const ctx = canvas.getContext('2d');
-    ctx.scale(window.devicePixelRatio||1, window.devicePixelRatio||1);
-
-    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    const PAD = {t:52, r:18, b:38, l:56};
-    const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
-
-    const prices = pts.map(p => p.price);
-    const last = prices[prices.length-1];
-    const avgBuyP = h.buyPrice > 0 ? h.buyPrice : prices[0];
-    const isUp  = last >= avgBuyP;
-    const minP  = Math.min(...prices, avgBuyP), maxP = Math.max(...prices, avgBuyP);
-    const span  = maxP - minP || Math.max(maxP * 0.05, 0.01);
-    const lo = minP - span*0.25, hi = maxP + span*0.25;
-
-    const xOf = i => PAD.l + (pts.length < 2 ? cW/2 : (i/(pts.length-1))*cW);
-    const yOf = v => PAD.t + cH - ((v-lo)/(hi-lo))*cH;
-    const mapped = pts.map((p,i) => ({x:xOf(i), y:yOf(p.price), ...p}));
-
-    // Render function — prog 0→1 drives the line-draw animation
-    function _render(prog){
-      ctx.clearRect(0,0,W,H);
-
-      // Background
-      if(isDark){
-        const bgG=ctx.createLinearGradient(0,0,0,H);
-        bgG.addColorStop(0,'#0d1f3c'); bgG.addColorStop(1,'#050d1f');
-        ctx.fillStyle=bgG; ctx.fillRect(0,0,W,H);
-      } else {
-        ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
-      }
-
-      // Grid
-      for(let i=0;i<=4;i++){
-        const y=PAD.t+(cH/4)*i, val=hi-((hi-lo)/4)*i;
-        ctx.strokeStyle=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.07)';
-        ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
-        ctx.fillStyle=isDark?'rgba(255,255,255,0.4)':'rgba(0,0,0,0.45)';
-        ctx.font='10px system-ui'; ctx.textAlign='right';
-        ctx.fillText((h.exchange==='VFSE'||h.exchange==='VFEX'?'$':'')+val.toFixed(2),PAD.l-5,y+3.5);
-      }
-
-    if(pts.length>=2){
-      const yBuy=yOf(avgBuyP);
-      const clipW=cW*prog;
-
-      function fillAreaPath(){
-        ctx.beginPath();
-        ctx.moveTo(mapped[0].x, PAD.t+cH);
-        ctx.lineTo(mapped[0].x, mapped[0].y);
-        for(let i=1;i<mapped.length-1;i++){
-          const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
-          ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
-        }
-        ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-        ctx.lineTo(mapped[mapped.length-1].x,PAD.t+cH);
-        ctx.closePath();
-      }
-
-      // Green zone (animated clip)
-      ctx.save();
-      ctx.beginPath(); ctx.rect(PAD.l,PAD.t,clipW,Math.max(0,yBuy-PAD.t)); ctx.clip();
-      const gG=ctx.createLinearGradient(0,PAD.t,0,yBuy);
-      gG.addColorStop(0,'rgba(0,200,83,0.38)'); gG.addColorStop(1,'rgba(0,200,83,0.06)');
-      fillAreaPath(); ctx.fillStyle=gG; ctx.fill();
-      ctx.restore();
-
-      // Red zone (animated clip)
-      ctx.save();
-      ctx.beginPath(); ctx.rect(PAD.l,yBuy,clipW,Math.max(0,PAD.t+cH-yBuy)); ctx.clip();
-      const rG=ctx.createLinearGradient(0,yBuy,0,PAD.t+cH);
-      rG.addColorStop(0,'rgba(255,80,0,0.28)'); rG.addColorStop(1,'rgba(255,80,0,0.04)');
-      fillAreaPath(); ctx.fillStyle=rG; ctx.fill();
-      ctx.restore();
-
-      // Cost-basis dashed line (animated clip)
-      ctx.save();
-      ctx.beginPath(); ctx.rect(PAD.l,0,clipW,H); ctx.clip();
-      ctx.setLineDash([5,4]); ctx.lineWidth=1;
-      ctx.strokeStyle='rgba(255,193,7,0.65)';
-      ctx.beginPath(); ctx.moveTo(PAD.l,yBuy); ctx.lineTo(PAD.l+cW,yBuy); ctx.stroke();
-      ctx.setLineDash([]);
-      const ccy2=h.exchange==='VFSE'?'$':'';
-      ctx.font='9px system-ui'; ctx.textAlign='right'; ctx.fillStyle='rgba(255,193,7,0.85)';
-      ctx.fillText('Cost '+ccy2+fmtNum(avgBuyP),PAD.l-3,yBuy-2);
-      ctx.restore();
-
-      // Price line (animated clip)
-      ctx.save();
-      ctx.beginPath(); ctx.rect(PAD.l,0,clipW,H); ctx.clip();
-      ctx.beginPath(); ctx.moveTo(mapped[0].x,mapped[0].y);
-      for(let i=1;i<mapped.length-1;i++){
-        const mx=(mapped[i].x+mapped[i+1].x)/2, my=(mapped[i].y+mapped[i+1].y)/2;
-        ctx.quadraticCurveTo(mapped[i].x,mapped[i].y,mx,my);
-      }
-      ctx.lineTo(mapped[mapped.length-1].x,mapped[mapped.length-1].y);
-      ctx.strokeStyle=isUp?'#00C853':'#FF5000'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
-      ctx.restore();
-    }
-
-    // Endpoint glow — fades in as line reaches the end
-    if(pts.length>=2&&prog>=0.92&&mapped.length>=1){
-      const a=Math.min(1,(prog-0.92)/0.08);
-      const lpt=mapped[mapped.length-1];
-      const dotCol=isUp?'#00C853':'#FF5000';
-      const glowCol=isUp?'rgba(0,200,83,':'rgba(255,80,0,';
-      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,13,0,Math.PI*2); ctx.fillStyle=glowCol+(0.10*a)+')'; ctx.fill();
-      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,8,0,Math.PI*2);  ctx.fillStyle=glowCol+(0.20*a)+')'; ctx.fill();
-      ctx.beginPath(); ctx.arc(lpt.x,lpt.y,4,0,Math.PI*2);  ctx.fillStyle=dotCol; ctx.globalAlpha=a; ctx.fill();
-      ctx.globalAlpha=1;
-      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=1.5; ctx.stroke();
-    }
-
-    // Entry arrows — reveal as line grows past them
-    if(pts.length>=2&&entries&&entries.length>=1){
-      const clipW=cW*prog;
-      const dateIdx={};
-      pts.forEach((p,i)=>{ dateIdx[p.date]=i; });
-      const seen={};
-      entries.forEach(entry=>{
-        if(!entry.date||seen[entry.date]) return;
-        seen[entry.date]=true;
-        const idx=dateIdx[entry.date];
-        if(idx==null) return;
-        const ax=xOf(idx), ay=yOf(entry.price);
-        if(ax>PAD.l+clipW) return;
-        const arrowLen=14;
-        ctx.save();
-        ctx.strokeStyle='rgba(251,191,36,0.9)'; ctx.fillStyle='rgba(251,191,36,0.9)'; ctx.lineWidth=1.5;
-        ctx.beginPath(); ctx.moveTo(ax,ay+arrowLen+6); ctx.lineTo(ax,ay+6); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(ax,ay+2); ctx.lineTo(ax-4.5,ay+9); ctx.lineTo(ax+4.5,ay+9); ctx.closePath(); ctx.fill();
-        ctx.restore();
-      });
-    }
-
-    // Header
-    const isVFEX=h.exchange==='VFSE'||h.exchange==='VFEX';
-    const ccy=isVFEX?'$':'ZiG ';
-    const exchDisplay=h.exchange==='VFSE'?'VFEX':h.exchange;
-    const symDisplay=/\.[A-Za-z]{2}$/.test(h.symbol)?h.symbol:h.symbol+(isVFEX?'.VX':'.ZW');
-    const pctChg=avgBuyP>0?((last-avgBuyP)/avgBuyP*100):null;
-    // Symbol (left) + Price (right) on line 1
-    ctx.font='bold 14px system-ui'; ctx.textAlign='left';
-    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
-    ctx.fillText(symDisplay,14,22);
-    ctx.font='bold 14px system-ui'; ctx.textAlign='right';
-    ctx.fillStyle=isDark?'rgba(255,255,255,0.94)':'#0d1f3c';
-    ctx.fillText(ccy+fmtNum(last),W-14,22);
-    // Exchange badge on line 2
-    ctx.font='bold 9px system-ui'; ctx.textAlign='left';
-    const bw=ctx.measureText(exchDisplay).width+10, bh=13;
-    ctx.fillStyle=h.exchange==='ZSE'?'rgba(0,200,83,0.35)':'rgba(56,189,248,0.35)';
-    ctx.fillRect(14,28,bw,bh);
-    ctx.fillStyle=h.exchange==='ZSE'?'#00C853':'#38BDF8';
-    ctx.fillText(exchDisplay,19,38);
-    if(pctChg!==null){
-      ctx.font='11px system-ui'; ctx.textAlign='right';
-      ctx.fillStyle=pctChg>=0?'#00C853':'#FF5000';
-      ctx.fillText((pctChg>=0?'\u25b2 +':'\u25bc ')+Math.abs(pctChg).toFixed(2)+'%',W-14,38);
-    }
-    if(h.buyDate){
-      const days=Math.floor((new Date()-new Date(h.buyDate))/86400000);
-      const hl=days>=365?(days/365).toFixed(1)+'y':days>=30?Math.floor(days/30)+'mo':days+'d';
-      ctx.font='10px system-ui'; ctx.textAlign='left';
-      ctx.fillStyle=isDark?'rgba(255,255,255,0.38)':'rgba(0,0,0,0.38)';
-      ctx.fillText('Held '+hl,14+bw+8,38);
-    }
-    if(pts.length>=2){
-      ctx.font='9px system-ui'; ctx.textAlign='center';
-      ctx.fillStyle=isDark?'rgba(255,255,255,0.32)':'rgba(0,0,0,0.35)';
-      const step=Math.max(1,Math.floor(pts.length/4));
-      pts.forEach((p,i)=>{ if(i%step===0||i===pts.length-1){ ctx.fillText(new Date(p.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}),xOf(i),PAD.t+cH+14); }});
-    } else {
-      ctx.font='10px system-ui'; ctx.textAlign='center';
-      ctx.fillStyle=isDark?'rgba(255,255,255,0.45)':'rgba(0,0,0,0.45)';
-      ctx.fillText(new Date(pts[0].date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),mapped[0].x,PAD.t+cH+14);
-      ctx.fillStyle=isDark?'rgba(255,255,255,0.28)':'rgba(0,0,0,0.30)';
-      ctx.font='11px system-ui';
-      ctx.fillText('Update price to grow this chart',W/2,PAD.t+cH/2+18);
-    }
-    } // end _render
-
-    // Animate the line drawing \u2014 cubic ease-out, ~52 frames at 60fps
-    let _f=0,_d=52;
-    (function _tick(){
-      _f++;
-      const t=Math.min(1,_f/_d);
-      _render(1-Math.pow(1-t,3));
-      if(t<1) requestAnimationFrame(_tick);
-    })();
-
-  } catch(e){ console.warn('[Tsoro] chart draw error:',e); }
-}
-
 function renderZsePriceCharts(){
   const el=document.getElementById('zse-price-charts'); if(!el) return;
   const holdings=zseHoldings;
@@ -8008,56 +7801,99 @@ function renderZsePriceCharts(){
     entryMap[s.symbol]=s.lots.filter(h=>h.buyDate&&h.buyPrice>0).map(h=>({date:h.buyDate,price:Number(h.buyPrice),shares:h.shares}));
   });
 
-  const canvasId=sym=>'zph-'+sym.replace(/[^a-zA-Z0-9]/g,'-');
-  const histId=sym=>'zph-hist-'+sym.replace(/[^a-zA-Z0-9]/g,'-');
+  const PH_RANGES=[{k:'1M',d:30},{k:'3M',d:91},{k:'1Y',d:365},{k:'All',d:null}];
+  const phRange=(()=>{ try{ return localStorage.getItem('tj_ph_range')||'1Y'; }catch(e){ return '1Y'; } })();
+  const slug=sym=>sym.replace(/[^a-zA-Z0-9]/g,'-');
+  const fmtPx=(v,ccy)=>ccy+Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
+  const heldFor=d=>{ if(!d) return ''; const days=Math.floor((Date.now()-new Date(d))/864e5); return days>=365?(days/365).toFixed(1)+'y':days>=30?Math.floor(days/30)+'mo':days+'d'; };
   el.innerHTML=`
-    <div style="font-size:15px;font-weight:600;letter-spacing:-.2px;margin-bottom:14px">Price History</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+    <div class="ph-headrow">
+      <h2 class="section-title" style="margin:0">Price history</h2>
+      <div class="range-tabs" role="tablist" aria-label="Price history range" style="margin:0">${PH_RANGES.map(r=>`<button class="range-tab${r.k===phRange?' active':''}" role="tab" aria-selected="${r.k===phRange}" onclick="setPhRange('${r.k}')">${r.k}</button>`).join('')}</div>
+    </div>
+    <div class="ph-grid">
       ${stocks.map(s=>{
-        const dbPts=zsePriceHistory.filter(r=>r.symbol===s.symbol&&r.exchange===s.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
+        const id=slug(s.symbol);
         const ccy=s.exchange==='VFSE'?'$':'ZiG ';
+        const totShares=s.lots.reduce((a,h)=>a+h.shares,0);
+        const avg=totShares?s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0)/totShares:0;
+        const dbPts=zsePriceHistory.filter(r=>r.symbol===s.symbol&&r.exchange===s.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
         const _mp=getMarketPrice(s.symbol,s.exchange);
         const mpRow=(_mp&&_mp.price_date&&!dbPts.some(r=>r.recorded_date===_mp.price_date))?`
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px">
-            <div style="flex:1;color:var(--muted)">${_mp.price_date}</div>
-            <div style="font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${ccy}${Number(_mp.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})}</div>
-            <div style="font-size:11px;color:var(--muted2)">Admin price</div>
-          </div>`:'';
-        const histRows=(dbPts.length||mpRow)?mpRow+dbPts.map(r=>`
-          <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12px" id="zph-row-${r.id}">
-            <div style="flex:1;color:var(--muted)">${r.recorded_date}</div>
-            <div style="font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${ccy}${Number(r.price).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4})}</div>
-            ${r.note?`<div style="font-size:11px;color:var(--muted2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.note)}</div>`:''}
-            <button class="btn btn-sm btn-ghost" style="padding:3px 7px;font-size:10px" onclick="editZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Edit</button>
-            <button class="btn btn-sm" style="padding:3px 7px;font-size:10px;background:transparent;color:var(--red);border:0" onclick="deleteZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Del</button>
-          </div>`).join('')
-          :'<div style="padding:8px 12px;font-size:12px;color:var(--muted)">No price history logged — click Update Price to start.</div>';
-        return `<div style="border-radius:var(--r);overflow:hidden;">
-          <canvas id="${canvasId(s.symbol)}" style="display:block;width:100%"></canvas>
-          <div style="background:var(--surface2);">
-            <div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
-              <div style="display:flex;align-items:center;gap:8px">${stockLogo(s.symbol,26)}<div style="font-size:11px;font-weight:700;color:var(--text)">${escapeHtml(s.symbol)}</div><span style="font-size:10px;padding:2px 5px;border-radius:3px;background:${s.exchange==='ZSE'?'rgba(0,200,83,.13)':'rgba(56,189,248,.13)'};color:${s.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-weight:600">${escapeHtml(s.exchange)}</span></div>
-              <div style="font-size:11px;color:var(--muted)">Price Log (${dbPts.length+(mpRow?1:0)})</div>
-            </div>
-            <div id="${histId(s.symbol)}" style="max-height:180px;overflow-y:auto">${histRows}</div>
+          <div class="ph-row"><span class="d">${_mp.price_date}</span><span class="v">${fmtPx(_mp.price,ccy)}</span><span class="n">Admin price</span><span></span></div>`:'';
+        const rows=mpRow+dbPts.map(r=>`
+          <div class="ph-row" id="zph-row-${r.id}"><span class="d">${r.recorded_date}</span><span class="v">${fmtPx(r.price,ccy)}</span><span class="n">${r.note?escapeHtml(r.note):''}</span>
+            <span class="a"><button onclick="editZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Edit</button><button class="del" onclick="deleteZsePriceEntry('${r.id}','${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')">Delete</button></span></div>`).join('');
+        const count=dbPts.length+(mpRow?1:0);
+        return `<div class="ph-block">
+          <div class="ph-top">
+            ${stockLogo(s.symbol,36)}
+            <div class="ph-id"><div class="ph-sym">${escapeHtml(s.symbol)}</div><div class="ph-meta">${s.exchange==='VFSE'?'VFEX':escapeHtml(s.exchange)}${s.buyDate?' · Held '+heldFor(s.buyDate):''} · Avg ${fmtPx(avg,ccy)}</div></div>
+            <div class="ph-quote"><div class="ph-price" id="ph-price-${id}"></div><div class="ph-chg" id="ph-chg-${id}"></div></div>
           </div>
+          <div class="ph-chart" id="zph-${id}"></div>
+          <details class="ph-log"><summary>Price log <span>${count}</span></summary>
+            <div id="zph-hist-${id}" class="ph-rows">${count?rows:'<div class="ph-empty">No prices logged yet. Use Update Price to start.</div>'}</div>
+          </details>
         </div>`;
       }).join('')}
     </div>`;
 
   setTimeout(()=>{
+    const muted=cssVar('--muted'), bg=cssVar('--bg'), ink=cssVar('--text');
+    const rr=PH_RANGES.find(r=>r.k===phRange)||PH_RANGES[2];
+    const start=rr.d?new Date(Date.now()-rr.d*864e5).toISOString().slice(0,10):'';
     stocks.forEach(s=>{
-      const canvas=document.getElementById(canvasId(s.symbol)); if(!canvas) return;
-      const pts=bySymbol[s.symbol]||[];
-      // synthetic holding for chart header
-      const latestLot=s.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,s.lots[0]);
+      const id=slug(s.symbol);
+      const box=document.getElementById('zph-'+id); if(!box) return;
+      const ccy=s.exchange==='VFSE'?'$':'ZiG ';
       const totShares=s.lots.reduce((a,h)=>a+h.shares,0);
-      const totCost=s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0);
-      const synthH={symbol:s.symbol,exchange:s.exchange,buyDate:s.buyDate,currentPrice:latestLot.currentPrice,buyPrice:totShares?totCost/totShares:s.lots[0].buyPrice};
-      const fallback=s.lots.map(h=>({date:h.buyDate||new Date().toISOString().slice(0,10),price:Number(h.buyPrice)||0,note:'Buy price'}));
-      drawZseChart(canvas,synthH,pts.length?pts:fallback,entryMap[s.symbol]||[]);
+      const avg=totShares?s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0)/totShares:0;
+      const all=(bySymbol[s.symbol]||[]).filter(p=>p.price>0);
+      let pts=start?all.filter(p=>p.date>=start):all;
+      const before=start?all.filter(p=>p.date<start).pop():null;
+      if(before) pts=[{date:start,price:before.price},...pts];
+      if(pts.length===1) pts=[pts[0],{...pts[0]}];
+      const priceEl=document.getElementById('ph-price-'+id), chgEl=document.getElementById('ph-chg-'+id);
+      if(!pts.length){ box.style.display='none'; priceEl.textContent='—'; return; }
+      const last=pts[pts.length-1].price, up=last>=avg;
+      const color=cssVar(up?'--green':'--red');
+      const chgHTML=(p,when)=>{ const d=p-avg, pct=avg?d/avg*100:0, u=d>=0; return `<span style="color:${u?'var(--green)':'var(--red)'}">${u?'+':'−'}${fmtPx(Math.abs(d),ccy)} (${u?'+':'−'}${Math.abs(pct).toFixed(2)}%)</span> <span class="when">${when}</span>`; };
+      const rest=()=>{ priceEl.textContent=fmtPx(last,ccy); chgEl.innerHTML=chgHTML(last,'vs your avg cost'); };
+      rest();
+      const dates=pts.map(p=>p.date);
+      const buys=(entryMap[s.symbol]||[]).filter(e=>dates.includes(e.date)).map(e=>[e.date,e.price]);
+      let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+      chart.setOption({
+        animationDuration:400,animationEasing:'cubicOut',
+        grid:{left:2,right:2,top:14,bottom:6},
+        xAxis:{type:'category',data:dates,show:false,boundaryGap:false},
+        yAxis:{type:'value',show:false,scale:true,min:v=>Math.min(v.min,avg),max:v=>Math.max(v.max,avg)},
+        tooltip:{trigger:'axis',showContent:false,axisPointer:{type:'line',lineStyle:{color:muted,width:1},label:{show:false}}},
+        series:[
+          {type:'line',data:pts.map(p=>p.price),showSymbol:false,symbol:'circle',symbolSize:9,
+            lineStyle:{width:2,color},itemStyle:{color,borderColor:bg,borderWidth:2},emphasis:{scale:false,lineStyle:{width:2}},
+            markLine:{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},
+              label:{show:true,position:'insideEndTop',formatter:'Avg cost',color:muted,fontSize:11,fontFamily:'Geist, system-ui, sans-serif'},
+              data:[{yAxis:avg}]}},
+          {type:'scatter',data:buys,symbolSize:7,itemStyle:{color:ink,borderColor:bg,borderWidth:2},silent:true,z:5}
+        ]
+      },true);
+      chart.off('updateAxisPointer');
+      chart.on('updateAxisPointer',e=>{
+        const ax=e.axesInfo&&e.axesInfo[0]; if(!ax) return;
+        const p=pts[ax.value]; if(!p) return;
+        priceEl.textContent=fmtPx(p.price,ccy);
+        chgEl.innerHTML=chgHTML(p.price,fmtHeroDate(p.date));
+      });
+      chart.getZr().off('globalout');
+      chart.getZr().on('globalout',rest);
     });
-  },60);
+  },40);
+}
+function setPhRange(k){
+  try{ localStorage.setItem('tj_ph_range',k); }catch(e){}
+  renderZsePriceCharts();
 }
 
 async function editZsePriceEntry(id,symbol,exchange){

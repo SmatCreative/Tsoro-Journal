@@ -7,22 +7,30 @@ related_targets: []
 
 ## Scope and visitor mode
 
-Operate. Primary surface: the full single-page app at index.html. The visitor's job is to know where their money is, log trades, and read performance analytics. Navigation spans Dashboard, Trade Journal, Analytics, Portfolio & Wallet, ZSE/VFEX Tracker, Investment Goals, Loans & Debts, Exchange Rates, ZSE Market, VFEX Market, Securities Analysis.
+Operate. The whole single-page app at index.html: Dashboard (Home), Trades, Analytics, Portfolio & Wallet, ZSE/VFEX, Goals & Giving, Pulse, Simulator, Admin, plus auth, modals and forms. The visitor's job is to know where their money is, update prices, log trades and read performance.
 
 ## Audience, job, action, proof, constraints
 
-ZSE/VFEX retail investors in Zimbabwe. Job: check portfolio state quickly, log a trade, review analytics. Primary action: read current P&L; secondary: add a trade. Proof: real price data from Supabase, real positions from localStorage. Constraints: single HTML file, all CSS/JS inline, Canvas 2D charts, no external framework, dark/light theme toggle must survive.
+ZSE/VFEX retail investors in Zimbabwe, phone and desktop equally. Job: see total value and today's move, scan holdings, log a trade. Primary action: read the portfolio number; secondary: New trade. Proof: real Supabase prices, holdings, wallets, wallet history. Constraints: single HTML file, inline CSS/JS, ECharts + Canvas 2D charts, theme toggle must survive and now defaults to the device setting.
+
+## Redesign request (2026-11-20)
+
+User asked for "the Robinhood look": clean, no tiles, no lines, no divisions. Answers: theme follows the device (toggle still overrides); slim top navigation bar replaces the sidebar (bottom tab bar stays on mobile); whole app in one pass, with Dashboard, ZSE/VFEX and Portfolio rebuilt.
 
 ## Direction contract
 
-**THESIS:** Tsoro Journal owns the ZSE/VFEX investor's clarity window — a clean, precise data surface that lets them know their position at a glance — refusing the card-over-card metric-tile scaffold that makes most dashboards feel like UI rather than information. The canon chosen and committed: executed at Robinhood × Yahoo Finance craft level, without irony.
+**THESIS:** Tsoro is one big number and one line: the page is the portfolio, not a dashboard about it. It refuses the incumbent tile wall (bordered stat strips, cards in cards, ruled tables, a sidebar panel) and lets whitespace, type size and the green/orange-red of the day do all the separating.
 
-**OWN-WORLD:** Deep navy `#0A0E1A` (dark shell) / `#F8F9FC` (light shell). Single brand accent `#00C853` (green, gain, primary action). Loss red `#FF3B30`. Text: Inter (400, 500, 600) with `font-variant-numeric: tabular-nums` on all monetary values. Border-radius 6px components, 4px inputs. Borders at 1px `rgba(255,255,255,0.08)` (dark) / `rgba(0,0,0,0.08)` (light). Shadows: `0 1px 3px rgba(0,0,0,0.12)`. No gradient text. No colored left-borders on cards. No kickers above headings. Canvas charts inherit palette through CSS custom properties.
+**OWN-WORLD:** Robinhood's grammar on Tsoro's facts. Page and surface are the same colour: pure white (#FFFFFF) or true black (#000000) by device. Near-black/white text, one grey for secondary (#6B6B73 / #8E8E96). Gain green #00C853 (text-safe #008A3E on white), loss orange-red #FF5000 (#D93A00 on white). Geist, tabular numerals, money set large and semibold. No borders, no card fills, no row rules; a faint fill (#F4F4F5 / #151517) only for inputs, hover and pressed states. Pill buttons: green with black ink for the primary action, grey fill for secondary. Charts are a single 2px line with no grid or axes, a dotted baseline, area-free.
 
-**STORY:** Investor opens; sees total portfolio USD and today's change. Taps a stock to see its lots. Opens Journal to log today's trade. Checks Analytics to see if their win rate is trending up. Checks ZSE Tracker for a price. Leaves with complete situational awareness.
+**STORY:** The investor opens Tsoro and reads their total and today's move before anything else. They drag across the line to see what they were worth on any day, glance at the holdings rail on the right, then drop into ZSE/VFEX to update a price or into Trades to log one. They leave knowing exactly where the money is.
 
-**FIRST VIEWPORT:** Full-width top nav bar: Tsoro Journal wordmark (left), page title (center), [theme toggle + user avatar] (right). Immediately below: a summary strip — total portfolio value at ~2.5rem tabular, day change at ~1.25rem green/red with up/down arrow, and 2–3 secondary stats in a horizontal row. Then the page's primary content area. On Desktop ≥1024px: sidebar (240px fixed left) for page navigation, main content area fills remaining space. On mobile: bottom tab bar for primary navigation, top area collapses to wordmark + avatar.
+**FIRST VIEWPORT:** Top bar 64px: "Tsoro" wordmark left; Home, Trades, Portfolio, ZSE / VFEX, Analytics, More in one quiet text row; New trade (green pill) and the account avatar right. Under it the holdings ticker as a borderless quiet strip. Content centred at max 1180px in two columns. Left (fluid): "Portfolio" label, the total at ~44px semibold, change line "+$4.21 (+0.77%) Today" in trend colour, then the value chart full column width (~280px tall), range tabs 1W 1M 3M 1Y All under it. Right rail (320px, sticky): "Holdings" heading and one row per stock: logo, symbol, shares, sparkline, price and day change. Mobile: single column, rail falls below the chart, bottom tab bar.
 
-**FORM:** Canon — classic financial standard. Standing exit taken by user. Quality bar: Robinhood + Yahoo Finance. Seed key 02128272, operate mode.
+**FORM:** The canon, pinned by the user ("the Robinhood look"); standing exit, no roll. Quality bar: Robinhood web and app, Yahoo Finance for data density on Analytics. Signature move: the day's trend colours the surface (chart line, change line, range tab, rail accents turn green or orange-red with the portfolio's move), and scrubbing the chart rewrites the big number to that day's value. Seed key: none (pinned direction).
 
-**FINISH:** unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Unresolved
+
+- Portfolio history before wallet snapshots exist uses current cash balances; label stays honest ("Portfolio value").

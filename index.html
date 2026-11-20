@@ -2432,7 +2432,7 @@ function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1
 // Aggregates mix ZiG and USD trades, so sum them in USD
 function pnlUSD(t){ const p=calcPnL(t)||0; if(!p) return 0; const u=toUSD(p,t.currency); return u==null?0:u; }
 function closeDate(t){ return String(t.exitDate||t.entryDate||'').slice(0,10); }
-function fmtNum(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:6}); }
+function fmtNum(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:4}); }
 function fmtMoney(n){ if(n==null)return '—'; return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function countUp(el,target,dur,fmt){
   if(!el||target==null||isNaN(target))return;
@@ -2449,7 +2449,7 @@ function countUp(el,target,dur,fmt){
 function animateCards(container,delay){(container||document).querySelectorAll('.wallet-sum-card,.card,.stat-card').forEach((c,i)=>{c.style.animationDelay=((delay||0)+i*65)+'ms';c.classList.add('anim-card');});}
 function fmtDateShort(d){ if(!d)return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); }
 function pnlClass(n){ return n==null?'pnl-zero':n>0?'pnl-pos':'pnl-neg'; }
-function pnlStr(n){ if(n==null)return '—'; return (n>=0?'+':'')+fmtNum(n); }
+function pnlStr(n){ if(n==null)return '—'; return (n>=0?'+':'−')+'$'+fmtMoney(Math.abs(n)); }
 const PALETTE=['#00C853','#38BDF8','#6366F1','#A855F7','#FF5000','#14B8A6','#D946EF','#EC4899','#84CC16','#06B6D4'];
 const symColors={}; let colorIdx=0;
 function getColor(s){ if(!symColors[s])symColors[s]=PALETTE[colorIdx++%PALETTE.length]; return symColors[s]; }
@@ -2599,7 +2599,7 @@ function renderDashboard(){
       </div>`).join('')}
   </div>`;
   document.getElementById('db-stats').innerHTML=[
-    {label:'Net P&L'+(()=>{const ccys=[...new Set(closed.map(t=>t.currency).filter(Boolean))];return ccys.length===1?' ('+ccys[0]+')':ccys.length>1?' (Multi)':''})(),val:closed.length?fmtPnL(totalPnL,[...new Set(closed.map(t=>t.currency).filter(Boolean))][0]||'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
+    {label:'Net P&L (USD)',val:closed.length?fmtPnL(totalPnL,'USD'):'—',cls:totalPnL>0?'green':totalPnL<0?'red':'',card:totalPnL>0?'green':totalPnL<0?'red':''},
     {label:'Win Rate',val:wr!=null?wr+'%':'—',cls:'',card:''},
     {label:'Open Positions',val:open,cls:open?'blue':'',card:open?'blue':''},
     {label:'Closed Trades',val:closed.length,cls:'',card:''},
@@ -6677,7 +6677,8 @@ function calcSimulator(){
   const up=gain>=0;
   const days=Math.max(1,Math.round((new Date(recTo.recorded_date)-new Date(recThen.recorded_date))/864e5));
   const annual=days>=90?(Math.pow(priceNow/priceThen,365/days)-1)*100:null;
-  const dur=days<60?days+' days':days<365?Math.round(days/30.44)+' months':(()=>{ const y=Math.floor(days/365.25), m=Math.round((days-y*365.25)/30.44); return y+(y===1?' year':' years')+(m?' '+m+' mo':''); })();
+  const months=Math.round(days/30.44);
+  const dur=days<60?days+' days':months<12?months+' months':(()=>{ const y=Math.floor(months/12), m=months%12; return y+(y===1?' year':' years')+(m?' '+m+' mo':''); })();
   const rate=ccy==='ZiG'?getZigUsdRate():null;
   const usdLine=rate?`<div style="font-size:14px;color:var(--muted);margin-top:4px">≈ $${fmtMoney(value/rate)} at today's rate of ${rate} ZiG per USD</div>`:'';
   const signed=(v,f)=>(v>=0?'+':'−')+f(Math.abs(v));

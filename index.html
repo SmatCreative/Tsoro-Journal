@@ -382,6 +382,27 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 .ph-row .a button.del:hover{color:var(--red)}
 .ph-empty{font-size:14px;color:var(--muted);padding:8px 12px}
 
+/* ═══ Security page & search ═══ */
+body[data-page="security"] .page-title{display:none}
+.ticker-item{cursor:pointer}
+.ticker-item:hover .ticker-sym{text-decoration:underline;text-underline-offset:3px}
+.link-btn{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;display:block}
+.link-btn:hover{text-decoration:underline;text-underline-offset:3px}
+.search-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.35);padding:72px 16px 16px;justify-content:center;align-items:flex-start}
+html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
+.search-overlay.open{display:flex;animation:cardEnter .15s var(--ease-out)}
+.search-panel{width:560px;max-width:100%;background:var(--elev);border-radius:20px;box-shadow:var(--pop-shadow);overflow:hidden;animation:modalIn .2s var(--ease-out)}
+.search-field{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 18px;color:var(--muted)}
+.search-field input{flex:1;border:0;background:none;outline:none;font-size:17px;color:var(--text);padding:8px 0}
+.search-results{max-height:min(60vh,520px);overflow-y:auto;padding:4px 8px 10px}
+.search-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px;border:0;background:none;border-radius:12px;cursor:pointer;text-align:left;color:var(--text)}
+.search-row:hover,.search-row:focus-visible,.search-row.hl{background:var(--surface2)}
+.sr-sym{flex:1;font-weight:600;display:flex;align-items:center;gap:8px}
+.sr-ex{font-size:12px;color:var(--muted);font-weight:500}
+.sr-held{font-size:11px;font-weight:600;color:var(--green);background:var(--green-bg);border-radius:999px;padding:1px 8px}
+.sr-px{display:flex;flex-direction:column;align-items:flex-end;font-size:14px;font-weight:600}
+.sr-px span{font-size:12px}
+
 /* ═══ Mobile tab bar ═══ */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:calc(60px + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:color-mix(in srgb,var(--bg) 84%,transparent);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);z-index:200;flex-direction:row}
 .mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;padding:6px 0 4px;transition:color .15s}
@@ -426,6 +447,7 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
   .ph-grid{grid-template-columns:minmax(0,1fr);gap:44px}
   .ph-row{grid-template-columns:88px 1fr auto}
   .ph-row .n{display:none}
+  .search-overlay{padding:12px 8px}
   .ph-top{flex-wrap:wrap;row-gap:4px}
   .ph-chg{white-space:normal}
   .ph-chg .when{display:block}
@@ -506,6 +528,7 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
     </nav>
     <div class="topbar-right">
       <button class="btn btn-ghost btn-sm" id="import-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
+      <button class="icon-btn" onclick="openSearch()" title="Search stocks ( / )" aria-label="Search stocks"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></button>
       <button class="btn btn-primary btn-sm" id="open-trade-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New trade</button>
       <button class="theme-toggle" id="theme-toggle-btn" title="Switch light / dark" aria-label="Switch light or dark theme"><svg id="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg id="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
       <div class="account-wrap" id="account-menu">
@@ -567,6 +590,9 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
           <aside class="home-rail" id="db-rail" aria-label="Holdings"></aside>
         </div>
       </div>
+
+      <!-- Security detail -->
+      <div class="page" id="page-security"><div id="sec-content"></div></div>
 
       <!-- Journal -->
       <div class="page" id="page-journal">
@@ -890,6 +916,12 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 
     </div>
 
+  <div class="search-overlay" id="search-overlay" onclick="if(event.target===this)closeSearch()">
+    <div class="search-panel" role="dialog" aria-label="Search stocks">
+      <div class="search-field"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="search-input" placeholder="Search ZSE and VFEX stocks" autocomplete="off" oninput="renderSearch()" onkeydown="searchKey(event)"><button class="icon-btn" onclick="closeSearch()" aria-label="Close search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
   <nav class="mobile-nav" aria-label="Main">
     <button class="mobile-nav-item active" id="mnav-dashboard" onclick="navigate('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
     <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>Trades</span></button>
@@ -2306,7 +2338,7 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'Simulator',admin:'Admin'};
+const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'Simulator',admin:'Admin'};
 const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','simulator','admin']);
 const MORE_PAGES=new Set(['goals-giving','pulse','simulator','admin']);
 function closeMenus(){
@@ -2893,13 +2925,156 @@ function renderHomeRail(){
   const fmtP=(v,usd)=>(usd?'$':'ZiG ')+Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
   el.innerHTML=`<div class="rail-title">Holdings<button onclick="navigate('zse')">See all</button></div>`+(rows.length?rows.map(m=>{
     const up=m.chgPct>=0, c=m.usingCost?'var(--muted)':up?'var(--green)':'var(--red)';
-    return `<div class="rail-row" role="link" tabindex="0" onclick="navigate('zse')" onkeydown="if(event.key==='Enter')navigate('zse')">
+    return `<div class="rail-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')">
       <div style="min-width:0"><div class="rail-sym">${escapeHtml(m.symbol)}</div><div class="rail-meta">${fmtNum(m.shares)} shares${m.valueUSD!=null?' · <span class="zen-value">$'+fmtMoney(m.valueUSD)+'</span>':''}</div></div>
       <div>${railSpark(m.sparkPts,up)}</div>
       <div><div class="rail-price">${fmtP(m.cp,m.isVFEX)}</div><div class="rail-chg" style="color:${c}"${m.usingCost?' title="Change vs your average cost (no previous price logged)"':''}>${up?'+':'−'}${Math.abs(m.chgPct).toFixed(2)}%</div></div>
     </div>`;
   }).join(''):'<div class="rail-empty">No ZSE or VFEX holdings yet.</div>');
 }
+
+// ── Security page: full price history for one stock ───────────────────
+const SEC_RANGES=[{k:'1M',d:30},{k:'3M',d:91},{k:'6M',d:182},{k:'1Y',d:365},{k:'3Y',d:1096},{k:'All',d:null}];
+let _sec={symbol:null,exchange:null,range:'All',from:'dashboard'};
+function openSecurity(symbol,exchange){
+  const from=document.body.dataset.page;
+  _sec={symbol:baseSymbol(symbol),exchange,range:'All',from:from&&from!=='security'?from:(_sec.from||'dashboard')};
+  closeMenus(); closeSearch();
+  navigate('security');
+}
+function secBack(){ navigate(_sec.from||'dashboard'); }
+function setSecRange(k){ _sec.range=k; renderSecurity(); }
+function secFmt(v,ccy){ return (ccy==='USD'?'$':'ZiG ')+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4}); }
+function renderSecurity(){
+  const el=document.getElementById('sec-content'); if(!el) return;
+  const {symbol,exchange}=_sec;
+  if(!symbol){ el.innerHTML='<div class="empty-state"><h3>Pick a stock</h3>Search or tap any stock to see its price history.</div>'; return; }
+  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const exName=exchange==='VFSE'?'VFEX':'ZSE';
+  const all=priceTimeline(symbol,exchange);
+  const back=`<button class="btn btn-ghost btn-sm" onclick="secBack()" style="margin-bottom:20px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg> Back</button>`;
+  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${exName} · prices in ${ccy}</div></div></div>`;
+  if(all.length<2){ el.innerHTML=back+head+`<div class="empty-state"><h3>Not enough price history</h3>${all.length?'Only one price is recorded so far.':'No prices are recorded for this stock yet.'}</div>`; return; }
+  const r=SEC_RANGES.find(x=>x.k===_sec.range)||SEC_RANGES[SEC_RANGES.length-1];
+  const lastDate=all[all.length-1][0];
+  let pts=all;
+  if(r.d){ const start=new Date(new Date(lastDate)-r.d*864e5).toISOString().slice(0,10); const i=timelineIndexAt(all,start); pts=all.slice(Math.max(0,i)); if(pts.length<2) pts=all.slice(-2); }
+  const first=pts[0], last=pts[pts.length-1];
+  const prices=all.map(p=>p[1]);
+  const hiI=prices.indexOf(Math.max(...prices)), loI=prices.indexOf(Math.min(...prices));
+  const rp=pts.map(p=>p[1]), rHi=Math.max(...rp), rLo=Math.min(...rp);
+  const pct=(a,b)=>b?(a-b)/b*100:0;
+  const chg=(a,b)=>{ const d=a-b, p=pct(a,b), u=d>=0; return `<span style="color:${u?'var(--green)':'var(--red)'}">${u?'+':'−'}${secFmt(Math.abs(d),ccy)} (${u?'+':'−'}${Math.abs(p).toFixed(2)}%)</span>`; };
+  const lots=zseHoldings.filter(h=>baseSymbol(h.symbol)===symbol&&h.exchange===exchange);
+  let posHtml='';
+  if(lots.length){
+    const sh=lots.reduce((a,h)=>a+h.shares,0), cost=lots.reduce((a,h)=>a+h.shares*h.buyPrice,0), avg=sh?cost/sh:0;
+    const mv=sh*last[1], gain=mv-cost, usd=v=>ccy==='USD'?v:toUSD(v,'ZiG');
+    const stat=(l,v,s)=>`<div><div class="wallet-sum-lbl">${l}</div><div class="wallet-sum-val zen-value">${v}</div>${s?`<div class="port-stat-sub">${s}</div>`:''}</div>`;
+    posHtml=`<h2 class="section-title">Your position</h2><div class="wallet-summary-grid">
+      ${stat('Shares',fmtNum(sh),lots.length>1?lots.length+' lots':'')}
+      ${stat('Average cost',secFmt(avg,ccy))}
+      ${stat('Market value',secFmt(mv,ccy),ccy==='ZiG'&&usd(mv)!=null?'≈ $'+fmtMoney(usd(mv)):'')}
+      ${stat('Total return',`<span style="color:${gain>=0?'var(--green)':'var(--red)'}">${gain>=0?'+':'−'}${secFmt(Math.abs(gain),ccy)}</span>`,(gain>=0?'+':'−')+Math.abs(pct(mv,cost)).toFixed(2)+'%')}
+    </div>`;
+  }
+  const st=(l,v,s)=>`<div><div class="wallet-sum-lbl">${l}</div><div class="wallet-sum-val" style="font-size:18px">${v}</div>${s?`<div class="port-stat-sub">${s}</div>`:''}</div>`;
+  el.innerHTML=back+head+`
+    <div class="hero">
+      <div class="hero-label" id="sec-label">${fmtHeroDate(last[0])}</div>
+      <div class="hero-value" id="sec-price">${secFmt(last[1],ccy)}</div>
+      <div class="hero-change" id="sec-change"></div>
+      <div class="hero-chart" id="sec-chart" style="height:320px"></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:-2px 0 14px"><span>${fmtHeroDate(first[0])}</span><span>${fmtHeroDate(last[0])}</span></div>
+      <div class="range-tabs" role="tablist" aria-label="Chart range">${SEC_RANGES.map(x=>`<button class="range-tab${x.k===r.k?' active':''}" role="tab" aria-selected="${x.k===r.k}" onclick="setSecRange('${x.k}')">${x.k}</button>`).join('')}<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="secSimulate()">Simulate</button></div>
+    </div>
+    <h2 class="section-title">Stats</h2>
+    <div class="wallet-summary-grid">
+      ${st(r.k==='All'?'Range high':r.k+' high',secFmt(rHi,ccy))}
+      ${st(r.k==='All'?'Range low':r.k+' low',secFmt(rLo,ccy))}
+      ${st('All-time high',secFmt(all[hiI][1],ccy),fmtHeroDate(all[hiI][0]))}
+      ${st('All-time low',secFmt(all[loI][1],ccy),fmtHeroDate(all[loI][0]))}
+      ${st('First price',secFmt(all[0][1],ccy),fmtHeroDate(all[0][0]))}
+      ${st('Since first price',chg(all[all.length-1][1],all[0][1]))}
+      ${st('Prices recorded',all.length.toLocaleString('en-US'))}
+    </div>
+    ${posHtml}
+    <div style="font-size:13px;color:var(--muted);max-width:68ch">${exchange==='ZSE'?'ZSE history starts at the ZiG launch on 5 April 2024; earlier prices were in the retired ZWL currency and cannot be compared. ':''}Closing prices from your imported history, your own price logs and Admin prices. Gaps mean no price was recorded those days.</div>`;
+  const priceEl=document.getElementById('sec-price'), chgEl=document.getElementById('sec-change'), lblEl=document.getElementById('sec-label');
+  const up=last[1]>=first[1];
+  const rangeWord=r.k==='All'?'All time':'Past '+({'1M':'month','3M':'3 months','6M':'6 months','1Y':'year','3Y':'3 years'})[r.k];
+  const rest=()=>{ priceEl.textContent=secFmt(last[1],ccy); lblEl.textContent='Last price · '+fmtHeroDate(last[0]); chgEl.innerHTML=chg(last[1],first[1])+` <span class="when">${rangeWord}</span>`; };
+  rest();
+  const box=document.getElementById('sec-chart');
+  const color=cssVar(up?'--green':'--red'), muted=cssVar('--muted');
+  const buys=lots.filter(h=>h.buyDate).map(h=>{ const i=timelineIndexAt(pts,h.buyDate); return i>=0&&pts[i][0]>=pts[0][0]?[pts[i][0],pts[i][1]]:null; }).filter(Boolean);
+  let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+  chart.setOption({
+    animationDuration:450,animationEasing:'cubicOut',
+    grid:{left:2,right:2,top:12,bottom:6},
+    xAxis:{type:'category',data:pts.map(p=>p[0]),show:false,boundaryGap:false},
+    yAxis:{type:'value',show:false,scale:true},
+    tooltip:{trigger:'axis',showContent:false,axisPointer:{type:'line',lineStyle:{color:muted,width:1},label:{show:false}}},
+    series:[
+      {type:'line',data:pts.map(p=>p[1]),showSymbol:false,symbol:'circle',symbolSize:10,lineStyle:{width:2,color},itemStyle:{color,borderColor:cssVar('--bg'),borderWidth:2},emphasis:{scale:false,lineStyle:{width:2}},
+        markLine:{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},label:{show:false},data:[{yAxis:first[1]}]}},
+      {type:'scatter',data:buys,symbolSize:8,itemStyle:{color:cssVar('--text'),borderColor:cssVar('--bg'),borderWidth:2},silent:true,z:5}
+    ]
+  },true);
+  chart.resize();
+  chart.off('updateAxisPointer');
+  chart.on('updateAxisPointer',e=>{
+    const ax=e.axesInfo&&e.axesInfo[0]; if(!ax) return;
+    const p=pts[ax.value]; if(!p) return;
+    priceEl.textContent=secFmt(p[1],ccy); lblEl.textContent=fmtHeroDate(p[0]);
+    chgEl.innerHTML=chg(p[1],first[1])+` <span class="when">since ${fmtHeroDate(first[0])}</span>`;
+  });
+  chart.getZr().off('globalout');
+  chart.getZr().on('globalout',rest);
+}
+function secSimulate(){
+  navigate('simulator');
+  const sy=document.getElementById('sim-symbol'), ex=document.getElementById('sim-exchange');
+  if(sy&&ex){ sy.value=_sec.symbol; ex.value=_sec.exchange; simSymbolChanged(true); }
+}
+
+// ── Stock search ──────────────────────────────────────────────────────
+function allSecurities(){
+  const keys=new Set();
+  Object.values(marketPrices).forEach(m=>{ if(m.exchange==='ZSE'||m.exchange==='VFSE') keys.add(baseSymbol(m.symbol)+'|'+m.exchange); });
+  priceHistory.forEach(r=>{ if(r.exchange==='ZSE'||r.exchange==='VFSE') keys.add(baseSymbol(r.symbol)+'|'+r.exchange); });
+  zseHoldings.forEach(h=>keys.add(baseSymbol(h.symbol)+'|'+h.exchange));
+  const held=new Set(zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+h.exchange));
+  return [...keys].map(k=>{ const [symbol,exchange]=k.split('|'); const tl=priceTimeline(symbol,exchange); const l=tl[tl.length-1], p=tl[tl.length-2]; return {symbol,exchange,held:held.has(k),last:l?l[1]:null,pct:l&&p&&p[1]?(l[1]-p[1])/p[1]*100:null}; })
+    .sort((a,b)=>(b.held-a.held)||a.symbol.localeCompare(b.symbol));
+}
+function openSearch(){
+  const ov=document.getElementById('search-overlay'); if(!ov) return;
+  ov.classList.add('open');
+  const inp=document.getElementById('search-input'); inp.value=''; renderSearch(); setTimeout(()=>inp.focus(),30);
+}
+function closeSearch(){ const ov=document.getElementById('search-overlay'); if(ov) ov.classList.remove('open'); }
+function renderSearch(){
+  const q=(document.getElementById('search-input').value||'').trim().toUpperCase();
+  const list=allSecurities().filter(s=>!q||s.symbol.includes(q)||(q==='VFEX'&&s.exchange==='VFSE')||(q==='ZSE'&&s.exchange==='ZSE'));
+  const box=document.getElementById('search-results');
+  box.innerHTML=list.length?list.slice(0,60).map((s,i)=>{
+    const ccy=s.exchange==='VFSE'?'USD':'ZiG';
+    const c=s.pct==null||Math.abs(s.pct)<0.005?'var(--muted)':s.pct>0?'var(--green)':'var(--red)';
+    return `<button class="search-row${i===0?' hl':''}" onclick="openSecurity('${escapeHtml(s.symbol)}','${s.exchange}')">
+      ${stockLogo(s.symbol,32)}
+      <span class="sr-sym">${escapeHtml(s.symbol)}${s.held?'<span class="sr-held">Held</span>':''}<span class="sr-ex">${s.exchange==='VFSE'?'VFEX':'ZSE'}</span></span>
+      <span class="sr-px">${s.last!=null?secFmt(s.last,ccy):'—'}<span style="color:${c}">${s.pct==null?'':(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}</span></span>
+    </button>`;
+  }).join(''):'<div class="ph-empty" style="padding:20px 12px">No stock matches that.</div>';
+}
+function searchKey(e){
+  if(e.key==='Escape'){ closeSearch(); return; }
+  if(e.key==='Enter'){ const b=document.querySelector('#search-results .search-row'); if(b) b.click(); }
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&!/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement||{}).tagName||'')&&document.getElementById('app').classList.contains('show')){ e.preventDefault(); openSearch(); }
+});
 
 function themeVal(darkVal, lightVal){ return document.documentElement.getAttribute('data-theme')==='light' ? lightVal : darkVal; }
 // Trace a smooth curve through points [{x,y}] using quadratic midpoints
@@ -3804,7 +3979,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -5711,7 +5886,7 @@ function renderTicker(){
   const html=items.map(t=>{
     const cls=t.pct==null||Math.abs(t.pct)<0.005?'flat':t.pct>0?'up':'down';
     const chg=t.pct==null?'—':(t.pct>0?'+':t.pct<0?'−':'')+Math.abs(t.pct).toFixed(2)+'%';
-    return `<div class="ticker-item${t.held?' held':''}" title="${t.ex==='VFSE'?'VFEX':'ZSE'}${t.held?' · you hold this':''}">
+    return `<div class="ticker-item${t.held?' held':''}" data-sym="${escapeHtml(t.sym)}" data-ex="${t.ex}" title="${t.ex==='VFSE'?'VFEX':'ZSE'}${t.held?' · you hold this':''} · view history">
       <span class="ticker-sym">${escapeHtml(t.sym)}</span>
       <span class="ticker-price">${t.ex==='VFSE'?'$':'ZiG '}${fmt(t.price)}</span>
       <span class="ticker-chg ${cls}">${chg}</span>
@@ -5719,6 +5894,7 @@ function renderTicker(){
   }).join('');
   track.innerHTML=html+html;
   track.style.animationDuration=Math.max(40,items.length*3.2)+'s';
+  track.onclick=e=>{ const it=e.target.closest('.ticker-item'); if(it) openSecurity(it.dataset.sym,it.dataset.ex); };
 }
 window.addEventListener('resize',()=>{
   if(document.getElementById('page-dashboard').classList.contains('active'))renderDashboard();
@@ -5726,6 +5902,7 @@ window.addEventListener('resize',()=>{
     const el=document.getElementById(id); if(!el)return;
     const inst=echarts.getInstanceByDom(el); if(inst)inst.resize();
   });
+  ['sec-chart'].forEach(id=>{ const el=document.getElementById(id); const i=el&&echarts.getInstanceByDom(el); if(i) i.resize(); });
   document.querySelectorAll('.ph-chart').forEach(el=>{ const inst=echarts.getInstanceByDom(el); if(inst) inst.resize(); });
 });
 
@@ -7877,7 +8054,7 @@ function renderZsePriceCharts(){
         return `<div class="ph-block">
           <div class="ph-top">
             ${stockLogo(s.symbol,36)}
-            <div class="ph-id"><div class="ph-sym">${escapeHtml(s.symbol)}</div><div class="ph-meta">${s.exchange==='VFSE'?'VFEX':escapeHtml(s.exchange)}${s.buyDate?' · Held '+heldFor(s.buyDate):''} · Avg ${fmtPx(avg,ccy)}</div></div>
+            <div class="ph-id"><button class="ph-sym link-btn" onclick="openSecurity('${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')" title="See full price history">${escapeHtml(s.symbol)}</button><div class="ph-meta">${s.exchange==='VFSE'?'VFEX':escapeHtml(s.exchange)}${s.buyDate?' · Held '+heldFor(s.buyDate):''} · Avg ${fmtPx(avg,ccy)}</div></div>
             <div class="ph-quote"><div class="ph-price" id="ph-price-${id}"></div><div class="ph-chg" id="ph-chg-${id}"></div></div>
           </div>
           <div class="ph-chart" id="zph-${id}"></div>
@@ -8267,7 +8444,7 @@ function renderZse(){
           <div style="display:flex;align-items:center;gap:9px">
             ${stockLogo(g.symbol)}
             <div>
-              <div style="font-weight:600;font-size:14px">${escapeHtml(g.symbol)}</div>
+              <button class="link-btn" style="font-weight:600;font-size:14px" onclick="openSecurity('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')" title="See full price history">${escapeHtml(g.symbol)}</button>
               <div style="font-size:11px;margin-top:2px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
                 <span class="badge" style="background:${g.exchange==='ZSE'?'rgba(0,200,83,.13)':'rgba(56,189,248,.13)'};color:${g.exchange==='ZSE'?'var(--green)':'var(--blue)'};font-size:10px;font-weight:600">${escapeHtml(g.exchange)}</span>
                 ${(()=>{const t=g.lots[0].instrumentType||'Stock';const cls=t==='ETF'?'badge-etf':t==='REIT'?'badge-reit':'badge-stock';return t!=='Stock'?`<span class="badge ${cls}" style="font-size:10px;font-weight:600">${t}</span>`:''})()}

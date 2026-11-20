@@ -2233,7 +2233,7 @@ async function loadAllData(){
       const typing=document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
       if(['dashboard','zse','wallet'].includes(pg)) renderPage(pg);
       else if(pg==='simulator'&&!typing) renderSimulator();
-      else if(pg==='simulator') calcSimulator();
+      else if(pg==='simulator') simSymbolChanged(true);
     });
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }

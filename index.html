@@ -2923,13 +2923,14 @@ function drawHeroChart(){
   const valEl=document.getElementById('db-grand-total'), chgEl=document.getElementById('db-hero-change'), lblEl=document.getElementById('db-hero-label');
   const r=HERO_RANGES.find(x=>x.k===heroRange)||HERO_RANGES[1];
   const pts=heroSlice();
-  if(pts.length<2){
-    el.style.display='none';
+  const tabs=el.parentElement&&el.parentElement.querySelector('.range-tabs');
+  if(pts.length<2||pts.every(p=>!p.v)){
+    el.style.display='none'; if(tabs) tabs.style.display='none';
     document.documentElement.setAttribute('data-trend','up');
-    if(chgEl) chgEl.innerHTML='<span class="when">Your value chart starts once you add holdings or wallet balances.</span>';
+    if(chgEl){ chgEl.style.color=''; chgEl.innerHTML='<span class="when">Your chart starts once you add wallet balances or holdings.</span>'; }
     return;
   }
-  el.style.display='';
+  el.style.display=''; if(tabs) tabs.style.display='';
   const base=pts[0].v, last=pts[pts.length-1].v;
   const d0=r.d?pts[0].d:null;
   const total=_heroModel?_heroModel.gain(d0,pts[pts.length-1].d):{gain:last-base,basis:base};

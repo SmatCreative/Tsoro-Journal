@@ -351,6 +351,22 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 .rail-chg{font-size:13px;font-weight:600;text-align:right}
 .rail-empty{font-size:14px;color:var(--muted);padding:12px 0}
 
+/* ═══ Getting started ═══ */
+.onb{margin-bottom:56px}
+.onb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.onb-hide{font-size:14px;font-weight:600;color:var(--muted)}
+.onb-steps{list-style:none;margin:0 -12px}
+.onb-step{display:flex;align-items:center;gap:14px;padding:12px;border-radius:12px}
+.onb-num{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:var(--surface2);color:var(--text)}
+.onb-step.done .onb-num{background:var(--green-bg);color:var(--green)}
+.onb-txt{flex:1;min-width:0}
+.onb-t{font-size:15px;font-weight:600}
+.onb-step.done .onb-t{color:var(--muted)}
+.onb-d{font-size:14px;color:var(--muted)}
+.onb-ok{font-size:13px;font-weight:600;color:var(--green)}
+.onb-tip{font-size:13px;color:var(--muted);margin-top:10px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
 /* ═══ Trade form extras ═══ */
 .form-more{margin-top:20px}
 .form-more summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--muted)}
@@ -455,6 +471,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
   .ph-grid{grid-template-columns:minmax(0,1fr);gap:44px}
   .ph-row{grid-template-columns:88px 1fr auto}
   .ph-row .n{display:none}
+  .onb-step{flex-wrap:wrap}
+  .onb-step .btn{margin-left:44px}
   .search-overlay{padding:12px 8px}
   .ph-top{flex-wrap:wrap;row-gap:4px}
   .ph-chg{white-space:normal}
@@ -549,6 +567,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
           <button class="menu-item" onclick="triggerProfilePicUpload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Change photo</button>
           <button class="menu-item" onclick="document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
           <button class="menu-item" onclick="document.body.classList.toggle('zen-mode')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Zen mode</button>
+          <button class="menu-item" onclick="showOnboarding()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Getting started</button>
           <div class="menu-sep"></div>
           <button class="menu-item" onclick="signOut()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
         </div>
@@ -566,6 +585,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <div class="page active" id="page-dashboard">
         <div class="home-grid">
           <div class="home-main">
+            <div id="db-onboard"></div>
             <div id="db-hero"></div>
             <div id="db-donut"></div>
             <div id="db-trading">
@@ -626,15 +646,12 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
 
       <!-- Wallet -->
       <div class="page" id="page-wallet">
-        <div id="wallet-quickstart" style="display:none;background:linear-gradient(135deg,rgba(0,200,83,.1),rgba(0,138,60,.04));border:0;border-radius:var(--r);padding:20px 24px;margin-bottom:20px;align-items:center;justify-content:space-between;gap:16px">
+        <div id="wallet-quickstart" style="display:none;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:40px">
           <div>
-            <div style="font-size:15px;font-weight:600;margin-bottom:4px">Track your account balance</div>
-            <div style="font-size:13px;color:var(--muted2)">Add your Deriv / MT5 balance here. Profits add to it, losses deduct from it automatically.</div>
+            <div style="font-size:17px;font-weight:600;margin-bottom:2px">Add your first wallet</div>
+            <div style="font-size:14px;color:var(--muted)">Track cash in your bank, broker and mobile money. Closed trades update the balance for you.</div>
           </div>
-          <button class="btn btn-primary" onclick="openWalletModal()" style="flex-shrink:0;padding:10px 20px;font-size:14px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add My First Wallet
-          </button>
+          <button class="btn btn-primary" onclick="openWalletModal()">Add wallet</button>
         </div>
         <div id="wallet-summary" style="margin-bottom:20px"></div>
         <div id="wallet-currency-breakdown" style="margin-bottom:16px"></div>
@@ -2621,6 +2638,7 @@ function renderDashboard(){
       <div class="range-tabs" role="tablist" aria-label="Chart range">${HERO_RANGES.map(r=>`<button class="range-tab${r.k===heroRange?' active':''}" role="tab" aria-selected="${r.k===heroRange}" onclick="setHeroRange('${r.k}')">${r.k}</button>`).join('')}</div>
     </div>
     <div class="bk-list">${bkHtml}</div>`;
+  renderOnboarding();
   _heroTotal=grandTotalUSD;
   _heroSeries=portfolioValueSeries();
   drawHeroChart();
@@ -2805,6 +2823,36 @@ function zseMoversCard(){
       </div>${lHTML}</div>`:''}
   </div>`;
 }
+
+// ── Getting started: three real steps on Home, ticked off from the user's own data ──
+let _onbForce=false;
+function onbKey(){ return 'tj_onb_hidden_'+(currentUser?currentUser.id:''); }
+function renderOnboarding(){
+  const el=document.getElementById('db-onboard'); if(!el) return;
+  const steps=[
+    {t:'Add your cash',d:'Your bank, broker and mobile money balances.',done:wallets.length>0,cta:'Add wallet',go:"navigate('wallet');setTimeout(()=>openWalletModal(),150)"},
+    {t:'Add the shares you own',d:'Each ZSE or VFEX stock, how many shares and what you paid.',done:zseHoldings.length>0,cta:'Add holding',go:"navigate('zse');setTimeout(()=>openZseHoldingModal(),150)"},
+    {t:'Log a trade',d:'Optional. Record buys and sells as you make them.',done:trades.length>0,cta:'New trade',go:"openNewTradeForm()"}
+  ];
+  const n=steps.filter(x=>x.done).length;
+  let hidden=false; try{ hidden=localStorage.getItem(onbKey())==='1'; }catch(e){}
+  if(!_onbForce&&(hidden||n===steps.length)){ el.innerHTML=''; return; }
+  const next=steps.findIndex(x=>!x.done);
+  el.innerHTML=`<section class="onb" aria-label="Get started">
+    <div class="onb-head">
+      <div><h2 class="section-title" style="margin:0">Get started</h2><div class="section-sub">${n===steps.length?'All set. Your numbers update as you go.':`${n} of ${steps.length} done. Tsoro does the maths once these are in.`}</div></div>
+      <button class="link-btn onb-hide" onclick="hideOnboarding()">Hide</button>
+    </div>
+    <ol class="onb-steps">${steps.map((x,i)=>`<li class="onb-step${x.done?' done':''}">
+      <span class="onb-num" aria-hidden="true">${x.done?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>':i+1}</span>
+      <div class="onb-txt"><div class="onb-t">${x.t}${x.done?'<span class="visually-hidden"> (done)</span>':''}</div><div class="onb-d">${x.d}</div></div>
+      ${x.done?'<span class="onb-ok">Done</span>':`<button class="btn btn-sm ${i===next?'btn-primary':'btn-ghost'}" onclick="${x.go}">${x.cta}</button>`}
+    </li>`).join('')}</ol>
+    <div class="onb-tip">Tip: tap any stock in the bar at the top, or use search, to see its full price history.</div>
+  </section>`;
+}
+function hideOnboarding(){ try{ localStorage.setItem(onbKey(),'1'); }catch(e){} _onbForce=false; renderOnboarding(); }
+function showOnboarding(){ try{ localStorage.removeItem(onbKey()); }catch(e){} _onbForce=true; navigate('dashboard'); const c=document.querySelector('.content'); if(c) c.scrollTop=0; }
 
 // ── Home hero: portfolio value over time ─────────────────────────────
 const HERO_RANGES=[{k:'1W',d:7,l:'Past week'},{k:'1M',d:30,l:'Past month'},{k:'3M',d:91,l:'Past 3 months'},{k:'1Y',d:365,l:'Past year'},{k:'All',d:null,l:'All time'}];

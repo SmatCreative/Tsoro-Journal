@@ -298,7 +298,7 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 .score-fill{height:100%;border-radius:var(--pill);transition:width .5s var(--ease-out)}
 .grade-badge{font-size:22px;font-weight:700;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 
-/* ═══ Pulse & simulator ═══ */
+/* ═══ News & simulator ═══ */
 .pulse-feed{display:flex;flex-direction:column;gap:44px;max-width:720px}
 .pulse-card{background:none;border:0;border-radius:0;padding:0}
 .pulse-date{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:6px}
@@ -541,11 +541,11 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <button class="nav-item" data-page="wallet">Portfolio</button>
       <button class="nav-item" data-page="zse">ZSE / VFEX</button>
       <button class="nav-item" data-page="analytics">Analytics</button>
+      <button class="nav-item" data-page="pulse">News</button>
       <div class="nav-more-wrap" id="nav-more">
         <button class="nav-more-btn" id="nav-more-btn" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu('nav-more',event)">More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
         <div class="popover" role="menu" style="left:0">
           <button class="nav-item" data-page="goals-giving"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
-          <button class="nav-item" data-page="pulse"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Pulse</button>
           <button class="nav-item" data-page="simulator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
           <div id="nav-admin-section" style="display:none"></div>
           <button class="nav-item" id="nav-admin" data-page="admin" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
@@ -865,11 +865,11 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         </div>
       </div>
 
-      <!-- Pulse — daily market commentary -->
+      <!-- News — daily market commentary (page id stays "pulse", table pulse_posts) -->
       <div class="page" id="page-pulse">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
           <div>
-            <div class="page-sub" style="margin:-22px 0 0">Your daily market commentary: thoughts, signals and observations.</div>
+            <div class="page-sub" style="margin:-22px 0 0">Market news and daily commentary on ZSE and VFEX.</div>
           </div>
           <button class="btn btn-primary" onclick="openPulseModal()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -952,6 +952,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>Trades</span></button>
     <button class="mobile-nav-item" id="mnav-wallet" onclick="navigate('wallet')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Portfolio</span></button>
     <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>ZSE</span></button>
+    <button class="mobile-nav-item" id="mnav-pulse" onclick="navigate('pulse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg><span>News</span></button>
     <button class="mobile-nav-item" id="mnav-more" onclick="toggleMoreSheet()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>More</span></button>
   </nav>
   <div class="mobile-more-overlay" id="more-overlay" onclick="closeMoreSheet()"></div>
@@ -960,7 +961,6 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div class="mobile-more-grid">
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> Analytics</button>
       <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
-      <button class="mobile-more-item" id="mmore-pulse" onclick="navigate('pulse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Pulse</button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
       <button class="mobile-more-item" id="mmore-admin" onclick="navigate('admin')" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
       <button class="mobile-more-item" onclick="closeMoreSheet();document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
@@ -2336,9 +2336,9 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',pulse:'Pulse',simulator:'Simulator',admin:'Admin'};
-const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','pulse','simulator','admin']);
-const MORE_PAGES=new Set(['goals-giving','pulse','simulator','admin']);
+const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',pulse:'News',simulator:'Simulator',admin:'Admin'};
+const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','simulator','admin']);
+const MORE_PAGES=new Set(['goals-giving','simulator','admin']);
 function closeMenus(){
   document.querySelectorAll('.nav-more-wrap.open,.account-wrap.open').forEach(m=>{ m.classList.remove('open'); const b=m.querySelector('[aria-haspopup]'); if(b) b.setAttribute('aria-expanded','false'); });
 }
@@ -6412,9 +6412,9 @@ function renderPulse(){
   const list=activeTag==='all'?pulsePosts:pulsePosts.filter(p=>(p.tags||[]).includes(activeTag));
   if(!list.length){
     el.innerHTML=`<div class="empty-state" style="padding:40px 20px">
-      <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg></div>
       <h3>${activeTag==='all'?'No posts yet':'No posts tagged '+activeTag}</h3>
-      <p>${activeTag==='all'?'Write your first daily Pulse — market thoughts, what you\'re watching, trade ideas.':'Try a different tag, or write a new post.'}</p>
+      <p>${activeTag==='all'?'Post the first market update: what moved, what you\'re watching, company news.':'Try a different tag, or write a new post.'}</p>
       ${activeTag==='all'?'<button class="btn btn-primary" style="margin-top:4px" onclick="openPulseModal()">Write First Post</button>':''}
     </div>`;
     return;
@@ -6561,7 +6561,7 @@ async function renderAdmin(){
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px">Community</div>
         <div style="display:flex;gap:24px">
           <div><div style="font-size:28px;font-weight:800;color:var(--accent)">${usersCount}</div><div style="font-size:11px;color:var(--muted)">Registered users</div></div>
-          <div><div style="font-size:28px;font-weight:800;color:var(--accent)">${pulsePosts.length}</div><div style="font-size:11px;color:var(--muted)">Pulse posts</div></div>
+          <div><div style="font-size:28px;font-weight:800;color:var(--accent)">${pulsePosts.length}</div><div style="font-size:11px;color:var(--muted)">News posts</div></div>
         </div>
       </div>
       <div class="card" style="padding:18px 20px">

@@ -441,6 +441,31 @@ html[data-theme="light"] .tour-spot{box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
   .pa-note{margin-top:-28px}
 }
 
+/* ═══ News post media ═══ */
+.pulse-card.has-img{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
+.pulse-content{min-width:0}
+.pulse-img{display:block;border-radius:14px;overflow:hidden;background:var(--surface2);aspect-ratio:16/10}
+.pulse-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s var(--ease-out)}
+.pulse-img:hover img{transform:scale(1.03)}
+.np-files{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;max-width:520px}
+.np-file,.np-doc-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface2);color:var(--text);text-decoration:none;font-size:14px;min-width:0}
+a.np-file:hover{background:var(--surface3)}
+.np-file svg,.np-doc-row svg{color:var(--muted);flex-shrink:0}
+.np-fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.np-fmeta{font-size:12px;color:var(--muted);white-space:nowrap}
+#np-docs{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+#np-docs .np-doc-row{align-self:stretch;padding:6px 6px 6px 12px}
+.np-drop{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:96px;border-radius:14px;border:1.5px dashed var(--border-s);background:none;color:var(--muted2);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s,color .15s}
+.np-drop:hover{background:var(--surface2);color:var(--text)}
+.np-preview{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2)}
+.np-preview img{display:block;width:100%;max-height:260px;object-fit:cover}
+.np-preview-actions{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+.np-preview-actions .btn{background:var(--elev);box-shadow:var(--pop-shadow)}
+@media(max-width:860px){
+  .pulse-card.has-img{grid-template-columns:1fr;gap:12px}
+  .pulse-img{aspect-ratio:16/9}
+}
+
 /* ═══ News page ═══ */
 .news-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:64px;align-items:start}
 .news-main{min-width:0}
@@ -1140,6 +1165,16 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <div class="form-group full">
         <label class="form-label">Your thoughts</label>
         <textarea class="form-input" id="pulse-body" rows="9" placeholder="What's moving today? Any setups you're watching? Macro thoughts, conviction levels, what the market is telling you…" style="resize:vertical;line-height:1.65;min-height:160px"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Feature image <span class="opt">(optional · JPG, PNG, WebP or GIF)</span></label>
+        <div id="np-image"></div>
+        <input type="file" id="np-image-input" accept="image/jpeg,image/png,image/webp,image/gif" hidden onchange="npPickImage(this)">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Documents <span class="opt">(optional · up to 5 files, 10 MB each)</span></label>
+        <div id="np-docs"></div>
+        <input type="file" id="np-docs-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt" hidden onchange="npPickDocs(this)">
       </div>
     </div>
     <div class="form-row" style="margin-top:14px">
@@ -7487,16 +7522,21 @@ function renderPulse(){
     const tags=(p.tags||[]).filter(Boolean);
     const dateStr=p.posted_at?new Date(p.posted_at+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}):'—';
     const isOwn=p.user_id===currentUser?.id;
-    return `<div class="pulse-card">
+    const img=npSafeUrl(p.image_url), files=npAttachments(p);
+    return `<div class="pulse-card${img?' has-img':''}">
+      ${img?`<a class="pulse-img" href="${escapeHtml(img)}" target="_blank" rel="noopener" aria-label="Open image full size"><img src="${escapeHtml(img)}" alt="${escapeHtml(p.title||'Post image')}" loading="lazy"></a>`:''}
+      <div class="pulse-content">
       <div class="pulse-date">${dateStr}</div>
       <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:8px">${escapeHtml(p.author_name||'Anonymous')}</div>
       ${p.title?`<div class="pulse-title">${escapeHtml(p.title)}</div>`:''}
       <div class="pulse-body">${escapeHtml(p.body||'')}</div>
       ${(()=>{ const chips=postSymbols(p).slice(0,6); return chips.length||tags.length?`<div class="pulse-tags">${chips.map(c=>newsChip(c)).join('')}${tags.filter(t=>!chips.some(c=>c.symbol===baseSymbol(t))).map(t=>`<span class="pulse-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''; })()}
+      ${files.length?`<div class="np-files">${files.map(npFileLink).join('')}</div>`:''}
       ${isOwn?`<div class="pulse-actions">
         <button class="btn btn-sm btn-ghost" style="font-size:11px" onclick="openPulseModal('${p.id}')">Edit</button>
         <button class="btn btn-sm btn-ghost" style="font-size:11px;color:var(--red)" onclick="deletePulsePost('${p.id}')">Delete</button>
       </div>`:''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -7570,6 +7610,104 @@ function renderNewsRail(){
     +block(trendTitle,trend.map(t=>newsRow(t.r,t.sub)),'Not enough recent prices yet.','','nb-trend');
 }
 
+// ── News post media: one feature image + up to 5 documents, stored in Supabase Storage (bucket news-media) ──
+const NEWS_BUCKET='news-media', NP_MAX_FILES=5, NP_MAX_BYTES=10*1024*1024;
+const NP_DOC_EXT=['pdf','doc','docx','xls','xlsx','ppt','pptx','csv','txt'];
+const NP_IMG_TYPES=['image/jpeg','image/png','image/webp','image/gif'];
+let _np={image:null,docs:[],removed:[]};
+function npPublicPrefix(){ return SUPA_URL+'/storage/v1/object/public/'+NEWS_BUCKET+'/'; }
+// Only show files from our own bucket, so a post can't pull in images or links from elsewhere
+function npSafeUrl(u){ return typeof u==='string'&&u.startsWith(npPublicPrefix())?u:null; }
+function npPathFromUrl(u){ const ok=npSafeUrl(u); return ok?decodeURIComponent(ok.slice(npPublicPrefix().length).split('?')[0]):null; }
+function npAttachments(p){ const a=Array.isArray(p&&p.attachments)?p.attachments:[]; return a.filter(x=>x&&npSafeUrl(x.url)&&x.path).slice(0,NP_MAX_FILES); }
+function npSize(b){ return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'; }
+function npExt(name){ const m=String(name||'').toLowerCase().match(/\.([a-z0-9]+)$/); return m?m[1]:''; }
+function npFileIcon(){ return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'; }
+function npFileLink(a){ return `<a class="np-file" href="${escapeHtml(a.url)}" target="_blank" rel="noopener" download="${escapeHtml(a.name)}">${npFileIcon()}<span class="np-fname">${escapeHtml(a.name)}</span><span class="np-fmeta">${escapeHtml(npExt(a.name).toUpperCase())} · ${npSize(Number(a.size)||0)}</span></a>`; }
+function npReset(post){
+  if(_np.image&&_np.image.preview) try{ URL.revokeObjectURL(_np.image.preview); }catch(e){}
+  const img=post&&npSafeUrl(post.image_url);
+  _np={image:img?{kind:'existing',url:img,path:npPathFromUrl(img)}:null,docs:post?npAttachments(post).map(a=>({kind:'existing',...a})):[],removed:[],changed:false};
+  npRender();
+}
+function npRender(){
+  const iw=document.getElementById('np-image'), dw=document.getElementById('np-docs'); if(!iw||!dw) return;
+  const im=_np.image;
+  iw.innerHTML=im?`<div class="np-preview"><img src="${escapeHtml(im.preview||im.url)}" alt="Feature image preview"><div class="np-preview-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('np-image-input').click()">Replace</button><button type="button" class="btn btn-ghost btn-sm" onclick="npRemoveImage()">Remove</button></div></div>`
+    :`<button type="button" class="np-drop" onclick="document.getElementById('np-image-input').click()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Add a feature image</button>`;
+  dw.innerHTML=_np.docs.map((d,i)=>`<div class="np-doc-row">${npFileIcon()}<span class="np-fname">${escapeHtml(d.name)}</span><span class="np-fmeta">${npSize(d.size)}</span><button type="button" class="icon-btn" aria-label="Remove ${escapeHtml(d.name)}" onclick="npRemoveDoc(${i})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')
+    +(_np.docs.length<NP_MAX_FILES?`<button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('np-docs-input').click()">Attach documents</button>`:'');
+}
+function npErr(t){ const e=document.getElementById('pulse-err'); if(e){ e.textContent=t; e.style.display='block'; } }
+function npPickImage(input){
+  const f=input.files&&input.files[0]; input.value=''; if(!f) return;
+  if(!NP_IMG_TYPES.includes(f.type)){ npErr('Feature images must be JPG, PNG, WebP or GIF.'); return; }
+  if(f.size>NP_MAX_BYTES*2){ npErr('That image is over 20 MB. Choose a smaller one.'); return; }
+  if(_np.image&&_np.image.kind==='existing') _np.removed.push(_np.image.path);
+  if(_np.image&&_np.image.preview) try{ URL.revokeObjectURL(_np.image.preview); }catch(e){}
+  _np.image={kind:'new',file:f,preview:URL.createObjectURL(f)}; _np.changed=true; npRender();
+}
+function npRemoveImage(){ if(_np.image&&_np.image.kind==='existing') _np.removed.push(_np.image.path); if(_np.image&&_np.image.preview) try{ URL.revokeObjectURL(_np.image.preview); }catch(e){} _np.image=null; _np.changed=true; npRender(); }
+function npPickDocs(input){
+  const files=[...(input.files||[])]; input.value='';
+  const bad=[];
+  for(const f of files){
+    if(_np.docs.length>=NP_MAX_FILES){ bad.push(f.name+' (limit is '+NP_MAX_FILES+' files)'); continue; }
+    if(!NP_DOC_EXT.includes(npExt(f.name))){ bad.push(f.name+' (file type not allowed)'); continue; }
+    if(f.size>NP_MAX_BYTES){ bad.push(f.name+' (over 10 MB)'); continue; }
+    _np.docs.push({kind:'new',file:f,name:f.name,size:f.size}); _np.changed=true;
+  }
+  if(bad.length) npErr('Not added: '+bad.join(', ')+'.');
+  npRender();
+}
+function npRemoveDoc(i){ const d=_np.docs[i]; if(!d) return; if(d.kind==='existing') _np.removed.push(d.path); _np.docs.splice(i,1); _np.changed=true; npRender(); }
+// Large photos are scaled to 1600px wide and saved as WebP/JPEG; GIFs stay as they are so animation survives
+async function npCompress(file){
+  if(file.type==='image/gif') return file.size<=NP_MAX_BYTES?{blob:file,type:file.type,ext:'gif'}:Promise.reject(new Error('GIFs must be under 10 MB.'));
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('That image could not be read.')); i.src=url; });
+    const scale=Math.min(1,1600/img.naturalWidth), w=Math.round(img.naturalWidth*scale), h=Math.round(img.naturalHeight*scale);
+    const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+    const toBlob=t=>new Promise(r=>c.toBlob(r,t,0.85));
+    let blob=await toBlob('image/webp'), type='image/webp', ext='webp';
+    if(!blob||blob.type!=='image/webp'){ blob=await toBlob('image/jpeg'); type='image/jpeg'; ext='jpg'; }
+    if(!blob) throw new Error('That image could not be processed.');
+    if(blob.size>NP_MAX_BYTES) throw new Error('That image is still over 10 MB after resizing.');
+    return {blob,type,ext};
+  } finally { URL.revokeObjectURL(url); }
+}
+function npSlug(name){ return String(name).toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)||'file'; }
+async function npUpload(blob,ext,base,type){
+  const path=`${currentUser.id}/${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}-${npSlug(base)}.${ext}`;
+  const{error}=await sb.storage.from(NEWS_BUCKET).upload(path,blob,{contentType:type||undefined,upsert:false,cacheControl:'31536000'});
+  if(error) throw error;
+  return {path,url:sb.storage.from(NEWS_BUCKET).getPublicUrl(path).data.publicUrl};
+}
+async function npUploadAll(progress){
+  const out={changed:!!_np.changed,uploaded:[],removed:[..._np.removed].filter(Boolean),image_url:null,attachments:[]};
+  if(!out.changed) return out;
+  try{
+    if(_np.image&&_np.image.kind==='new'){ progress('Uploading image…'); const c=await npCompress(_np.image.file); const u=await npUpload(c.blob,c.ext,_np.image.file.name,c.type); out.uploaded.push(u.path); out.image_url=u.url; }
+    else if(_np.image) out.image_url=_np.image.url;
+    let n=0; const newDocs=_np.docs.filter(d=>d.kind==='new').length;
+    for(const d of _np.docs){
+      if(d.kind==='existing'){ out.attachments.push({name:d.name,url:d.url,path:d.path,size:d.size,type:d.type||''}); continue; }
+      progress(`Uploading ${++n} of ${newDocs}…`);
+      const ext=npExt(d.name), u=await npUpload(d.file,ext,d.name,d.file.type);
+      out.uploaded.push(u.path); out.attachments.push({name:d.name,url:u.url,path:u.path,size:d.size,type:d.file.type||''});
+    }
+  }catch(e){ if(out.uploaded.length) sb.storage.from(NEWS_BUCKET).remove(out.uploaded).catch(()=>{}); throw e; }
+  return out;
+}
+function npErrorText(e){
+  const m=String(e&&e.message||e||'');
+  if(/bucket not found|image_url|attachments|schema cache/i.test(m)) return 'Images and documents need a one-time database update (supabase-news-media.sql) that hasn\'t been run yet. Your post was not saved.';
+  if(/mime|not supported|invalid.*type/i.test(m)) return 'That file type isn\'t allowed. Use JPG, PNG, WebP or GIF for images, and PDF, Word, Excel, PowerPoint, CSV or text for documents.';
+  if(/size|too large|exceeded/i.test(m)) return 'A file is over the 10 MB limit.';
+  return 'Save failed: '+m;
+}
+
 function filterPulse(tag){
   const filterEl=document.getElementById('pulse-filter'); if(!filterEl) return;
   filterEl.querySelectorAll('.pulse-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.tag===tag));
@@ -7577,6 +7715,7 @@ function filterPulse(tag){
 }
 
 function openPulseModal(id){
+  npReset(id?pulsePosts.find(x=>x.id===id):null);
   document.getElementById('pulse-edit-id').value=id||'';
   document.getElementById('pulse-modal-title').textContent=id?'Edit Post':'New Post';
   document.getElementById('pulse-err').style.display='none';
@@ -7609,10 +7748,14 @@ async function savePulsePost(){
   if(!body){ errEl.textContent='Please write something before publishing.'; errEl.style.display='block'; return; }
   if(!date){ errEl.textContent='Please set a date.'; errEl.style.display='block'; return; }
   const btn=document.getElementById('pulse-save-btn'); btn.disabled=true; btn.textContent='Saving…';
+  let media=null;
   try{
+    media=await npUploadAll(t=>{ btn.textContent=t; });
     const row={title:title||null,body,tags,posted_at:date,user_id:currentUser.id,author_name:currentProfile?.display_name||currentUser?.email?.split('@')[0]||'Anonymous'};
+    if(media.changed){ row.image_url=media.image_url; row.attachments=media.attachments; }
     if(id){
-      const{error}=await sb.from('pulse_posts').update({title:title||null,body,tags,posted_at:date}).eq('id',id);
+      const upd={title:title||null,body,tags,posted_at:date}; if(media.changed){ upd.image_url=media.image_url; upd.attachments=media.attachments; }
+      const{error}=await sb.from('pulse_posts').update(upd).eq('id',id);
       if(error) throw error;
       const idx=pulsePosts.findIndex(x=>x.id===id); if(idx>=0) pulsePosts[idx]={...pulsePosts[idx],...row,id};
     } else {
@@ -7620,15 +7763,21 @@ async function savePulsePost(){
       if(error) throw error;
       pulsePosts.unshift(data);
     }
-    closePulseModal(); renderPulse(); showToast('Post published.','success');
-  }catch(e){ errEl.textContent='Save failed: '+e.message; errEl.style.display='block'; }
+    if(media.removed.length) sb.storage.from(NEWS_BUCKET).remove(media.removed).catch(()=>{});
+    closePulseModal(); renderPulse(); try{ renderNewsRail(); }catch(_){} showToast('Post published.','success');
+  }catch(e){
+    if(media&&media.uploaded.length) sb.storage.from(NEWS_BUCKET).remove(media.uploaded).catch(()=>{});
+    errEl.textContent=npErrorText(e); errEl.style.display='block';
+  }
   finally{ btn.disabled=false; btn.textContent='Publish'; }
 }
 
 async function deletePulsePost(id){
   if(!confirm('Delete this post?')) return;
+  const post=pulsePosts.find(x=>x.id===id);
   const{error}=await sb.from('pulse_posts').delete().eq('id',id);
   if(error){ showToast('Delete failed: '+error.message,'error'); return; }
+  if(post){ const paths=[npPathFromUrl(post.image_url),...npAttachments(post).map(a=>a.path)].filter(Boolean); if(paths.length) sb.storage.from(NEWS_BUCKET).remove(paths).catch(()=>{}); }
   pulsePosts=pulsePosts.filter(x=>x.id!==id); renderPulse();
   showToast('Post deleted.','success');
 }

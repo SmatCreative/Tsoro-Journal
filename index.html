@@ -702,7 +702,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <div class="popover" role="menu">
           <div class="menu-head"><strong id="user-email-display">—</strong>Personal account</div>
           <button class="menu-item" onclick="triggerProfilePicUpload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Change photo</button>
-          <button class="menu-item" onclick="document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
+          <button class="menu-item" onclick="openImport()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
           <button class="menu-item" onclick="document.body.classList.toggle('zen-mode')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Zen mode</button>
           <button class="menu-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
           <button class="menu-item" onclick="showOnboarding()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Getting started</button>
@@ -1109,7 +1109,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <button class="mobile-more-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
       <button class="mobile-more-item" id="mmore-admin" onclick="navigate('admin')" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
-      <button class="mobile-more-item" onclick="closeMoreSheet();document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
+      <button class="mobile-more-item" onclick="closeMoreSheet();openImport()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
     </div>
   </div>
 </div>
@@ -1401,18 +1401,24 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
 </div>
 
 <!-- Import CSV Modal -->
-<div class="overlay" id="import-modal">
-  <div class="modal" style="max-width:480px">
+<div class="overlay" id="import-modal" onclick="if(event.target===this)closeImport()">
+  <div class="modal" style="max-width:760px" role="dialog" aria-modal="true" aria-labelledby="imp-title">
     <div class="modal-header">
-      <div class="modal-title">Import Trades (CSV)</div>
-      <button class="modal-close" onclick="document.getElementById('import-modal').classList.remove('open')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="modal-title" id="imp-title">Import from CSV</div>
+      <button class="modal-close" onclick="closeImport()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <p style="color:var(--muted2);font-size:13px;margin-bottom:14px">CSV headers: <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-size:12px">symbol,market,type,direction,qty,entry,entryDate,exit,exitDate,fee,strategy,notes</code></p>
-    <div class="form-group"><label class="form-label">Choose CSV File</label><input class="form-input" type="file" id="csv-file" accept=".csv"></div>
-    <div class="form-row" style="margin-top:14px">
-      <button class="btn btn-primary" onclick="importCSV()">Import</button>
-      <button class="btn btn-ghost" onclick="document.getElementById('import-modal').classList.remove('open')">Cancel</button>
-      <span id="import-msg" style="font-size:12px;margin-left:auto"></span>
+    <div class="seg" role="tablist" aria-label="What are you importing" style="margin-bottom:16px" id="imp-kind"></div>
+    <div id="imp-help" class="pa-sub" style="font-size:13px;line-height:1.55;margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+      <label class="btn btn-primary btn-sm" style="cursor:pointer">Choose CSV file<input type="file" id="csv-file" accept=".csv,.txt,text/csv" hidden onchange="impRead(this)"></label>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="impTemplate()">Download template</button>
+      <span id="imp-file" class="pa-sub"></span>
+    </div>
+    <div id="imp-preview"></div>
+    <div class="form-row" style="margin-top:16px;align-items:center">
+      <button class="btn btn-primary" id="imp-go" onclick="impCommit()" disabled>Import</button>
+      <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
+      <span id="import-msg" class="pa-sub" style="margin-left:auto"></span>
     </div>
   </div>
 </div>
@@ -2672,8 +2678,164 @@ async function applyPnLToWallet(trade, pnl){
 }
 
 // ── Import CSV ─────────────────────────────────────────────────────
-document.getElementById('import-btn').addEventListener('click',()=>document.getElementById('import-modal').classList.add('open'));
-async function importCSV(){ const file=document.getElementById('csv-file').files[0]; if(!file){showToast('Please select a CSV file.','warn');return;} const btn=document.querySelector('#import-modal .btn-primary'); btn.disabled=true; btn.textContent='…'; const reader=new FileReader(); reader.onload=async e=>{const lines=e.target.result.split('\n').filter(l=>l.trim()); const headers=lines[0].split(',').map(h=>h.trim().toLowerCase()); const rows=[]; for(let i=1;i<lines.length;i++){const cols=lines[i].split(',');const row={};headers.forEach((h,j)=>row[h]=(cols[j]||'').trim());if(!row.symbol)continue;const exitVal=row.exit?parseFloat(row.exit):null;rows.push({user_id:currentUser.id,type:row.type||'day',symbol:row.symbol.toUpperCase(),market:row.market||'',exchange:row.exchange?row.exchange.toUpperCase():null,currency:row.currency||'USD',direction:row.direction||'Long',qty:parseFloat(row.qty)||0,entry:parseFloat(row.entry)||0,entry_date:row.entrydate||row.entryDate||null,exit:exitVal,exit_date:row.exitdate||row.exitDate||null,sl:row.sl?parseFloat(row.sl):null,tp:row.tp?parseFloat(row.tp):null,fee:parseFloat(row.fee)||0,strategy:row.strategy||null,notes:row.notes||null,status:exitVal?'closed':'open'});} try{const{error}=await sb.from('trades').insert(rows);if(error)throw error;await loadTrades();renderAll();document.getElementById('import-msg').textContent='Imported '+rows.length+' trades';setTimeout(()=>{document.getElementById('import-msg').textContent='';document.getElementById('import-modal').classList.remove('open');},2000);}catch(err){showToast('Import failed: '+err.message,'error');}finally{btn.disabled=false;btn.textContent='Import';}}; reader.readAsText(file); }
+document.getElementById('import-btn').addEventListener('click',()=>openImport());
+// ── CSV import: holdings (shares you own) or journal trades, checked row by row before anything is saved ──
+let _imp={kind:'holdings',rows:[],file:''};
+const IMP_COLS={
+  holdings:{symbol:['symbol','ticker','stock','code','security','counter','share','company'],exchange:['exchange','market','board','listing'],
+    shares:['shares','quantity','qty','units','holding','holdings','volume','number of shares'],price:['buy price','price','avg price','average price','cost price','avg cost','average cost','cost per share','purchase price','unit price','buy'],
+    total:['total cost','cost','amount','total','consideration','value paid'],date:['buy date','date','purchase date','trade date','date bought','bought'],currency:['currency','ccy'],notes:['notes','note','comment','comments','memo']},
+  trades:{symbol:['symbol','ticker','stock','code','security','instrument'],exchange:['exchange','board','listing'],market:['market','asset class','type of asset'],
+    direction:['direction','side','buy/sell','action','dir'],qty:['qty','quantity','shares','units','volume','size'],entry:['entry','entry price','buy price','price','open price'],
+    date:['entry date','entrydate','date','open date','trade date'],exit:['exit','exit price','close price','sell price'],exitDate:['exit date','exitdate','close date','sell date'],
+    fee:['fee','fees','charges','commission','costs'],currency:['currency','ccy'],notes:['notes','note','comment','strategy']}
+};
+function openImport(kind){ if(typeof closeMenus==='function') closeMenus(); _imp={kind:kind||_imp.kind||'holdings',rows:[],file:''}; impRender(); document.getElementById('import-modal').classList.add('open'); }
+function closeImport(){ document.getElementById('import-modal').classList.remove('open'); const f=document.getElementById('csv-file'); if(f) f.value=''; }
+function impSetKind(k){ _imp={kind:k,rows:[],file:''}; const f=document.getElementById('csv-file'); if(f) f.value=''; impRender(); }
+function impRender(){
+  document.getElementById('imp-kind').innerHTML=[['holdings','Shares I own'],['trades','Trades']].map(([k,l])=>`<button class="seg-btn${_imp.kind===k?' active':''}" role="tab" aria-selected="${_imp.kind===k}" onclick="impSetKind('${k}')">${l}</button>`).join('');
+  document.getElementById('imp-help').innerHTML=_imp.kind==='holdings'
+    ?'Adds your ZSE and VFEX shares to <b>ZSE / VFEX</b>. One row per purchase: <b>symbol, shares, buy price, buy date</b>, and optionally exchange, currency and notes. ZSE prices are whole ZiG (1.45, not 145 cents); cent prices are spotted and converted. Exchange is filled in for listed stocks if left out.'
+    :'Adds buys and sells to your <b>Trades</b> journal: <b>symbol, quantity, price, date</b>, and optionally direction (buy/sell), close price and date, fees, currency, exchange and notes.';
+  document.getElementById('imp-file').textContent=_imp.file?_imp.file:'';
+  impPreview();
+}
+// CSV parsing that copes with quotes, commas inside quotes, Windows line endings, and ; or tab separators
+function impParse(text){
+  text=text.replace(/^﻿/,'');
+  const first=text.split(/\r?\n/).find(l=>l.trim())||'';
+  const delim=[',',';','\t'].map(d=>[d,first.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; continue; }
+    if(c==='"') q=true;
+    else if(c===delim){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c;
+  }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  return rows.map(r=>r.map(x=>x.trim())).filter(r=>r.some(x=>x!==''));
+}
+function impNum(v){ if(v==null) return NaN; let t=String(v).replace(/[\s$]|ZiG|ZWG|USD|US\$/gi,''); if(/^\(.*\)$/.test(t)) t='-'+t.slice(1,-1); if(/,\d{1,2}$/.test(t)&&!/\./.test(t)) t=t.replace(',','.'); t=t.replace(/,/g,''); return t===''?NaN:Number(t); }
+// Dates: 2021-02-22, 22/02/2021 (day first, as used in Zimbabwe), 22 Feb 2021, Feb 22 2021
+function impDate(v){
+  const t=String(v||'').trim(); if(!t) return null;
+  let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return impYmd(+m[1],+m[2],+m[3]);
+  m=t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/); if(m){ let y=+m[3]; if(y<100) y+=2000; let d=+m[1], mo=+m[2]; if(mo>12&&d<=12){ const x=d; d=mo; mo=x; } return impYmd(y,mo,d); }
+  const ms=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  m=t.toLowerCase().match(/^(\d{1,2})\s+([a-z]{3})[a-z]*\.?,?\s+(\d{4})$/); if(m&&ms.includes(m[2])) return impYmd(+m[3],ms.indexOf(m[2])+1,+m[1]);
+  m=t.toLowerCase().match(/^([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})$/); if(m&&ms.includes(m[1])) return impYmd(+m[3],ms.indexOf(m[1])+1,+m[2]);
+  return 'bad';
+}
+function impYmd(y,mo,d){ const dt=new Date(Date.UTC(y,mo-1,d)); if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==mo-1||dt.getUTCDate()!==d) return 'bad'; return dt.toISOString().slice(0,10); }
+function impMap(header,kind){
+  const h=header.map(x=>x.toLowerCase().replace(/[_*]+/g,' ').replace(/\s+/g,' ').trim()), map={};
+  Object.entries(IMP_COLS[kind]).forEach(([k,names])=>{ let i=h.findIndex(x=>names.includes(x)); if(i<0) i=h.findIndex(x=>names.some(n=>n.length>3&&x.includes(n))); if(i>=0&&!Object.values(map).includes(i)) map[k]=i; });
+  return map;
+}
+function impRead(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  if(f.size>2*1024*1024){ showToast('That file is over 2 MB. Split it into smaller files.','warn'); input.value=''; return; }
+  const r=new FileReader();
+  r.onload=e=>{ _imp.file=f.name; _imp.rows=impValidate(impParse(String(e.target.result||''))); document.getElementById('imp-file').textContent=f.name; impPreview(); };
+  r.onerror=()=>showToast('That file could not be read.','error');
+  r.readAsText(f);
+}
+function impValidate(grid){
+  if(grid.length<2) return [{err:'The file needs a header row and at least one data row.'}];
+  const kind=_imp.kind, map=impMap(grid[0],kind), today=qToday();
+  const need=kind==='holdings'?['symbol','shares']:['symbol','qty','entry'];
+  const missing=need.filter(k=>map[k]==null); if(kind==='holdings'&&map.price==null&&map.total==null) missing.push('price');
+  if(missing.length) return [{err:`Couldn't find a column for: ${missing.join(', ')}. Your headers: ${grid[0].join(', ')}. Use the template for the expected names.`}];
+  const get=(r,k)=>map[k]!=null?(r[map[k]]??''):'';
+  const secs=allSecurities();
+  const seen=new Set();
+  return grid.slice(1,1001).map((r,i)=>{
+    const o={line:i+2,warn:[],err:null};
+    const rawSym=get(r,'symbol'); const sym=baseSymbol(rawSym.replace(/\s+/g,'').toUpperCase());
+    if(!sym){ o.err='No symbol'; return o; }
+    o.symbol=sym;
+    let ex=exKey(get(r,'exchange').toUpperCase().replace('VFSE','VFEX'));
+    if(ex&&!['ZSE','VFSE'].includes(ex)&&kind==='holdings'){ o.err='Exchange must be ZSE or VFEX'; return o; }
+    if(!ex){ const m=secs.filter(x=>x.symbol===sym); if(m.length===1){ ex=m[0].exchange; o.warn.push((ex==='VFSE'?'VFEX':'ZSE')+' filled in'); } else if(kind==='holdings'){ o.err=m.length?'Listed on both exchanges: add an exchange column':'Unknown stock: add an exchange column (ZSE or VFEX)'; return o; } }
+    o.symbol=sym; o.exchange=ex;
+    const ccyRaw=get(r,'currency').toUpperCase();
+    const ccy=ccyRaw==='ZWG'||ccyRaw==='ZIG'?'ZiG':ccyRaw==='USD'||ccyRaw==='US$'?'USD':(ex==='ZSE'?'ZiG':ex==='VFSE'?'USD':(ccyRaw||'USD'));
+    if(kind==='holdings'&&((ex==='ZSE'&&ccy!=='ZiG')||(ex==='VFSE'&&ccy!=='USD'))){ o.err=`${ex==='VFSE'?'VFEX':'ZSE'} shares are priced in ${ex==='VFSE'?'USD':'ZiG'}, not ${ccy}`; return o; }
+    o.ccy=ccy;
+    const d=impDate(get(r,'date'));
+    if(d==='bad'){ o.err='Date not understood: "'+get(r,'date')+'"'; return o; }
+    if(d&&d>today){ o.err='Date is in the future'; return o; }
+    o.date=d; if(!d) o.warn.push('no date: returns will be less accurate');
+    o.notes=get(r,'notes').slice(0,500);
+    if(kind==='holdings'){
+      const sh=impNum(get(r,'shares')); if(!(sh>0)){ o.err='Shares must be a number above 0'; return o; }
+      let px=impNum(get(r,'price')); const tot=impNum(get(r,'total'));
+      if(!(px>0)&&tot>0){ px=tot/sh; o.warn.push('price worked out from total cost'); }
+      if(!(px>0)){ o.err='Buy price must be a number above 0'; return o; }
+      // ZSE quotes are in cents; Tsoro uses whole ZiG. A price ~100x the market that day was entered in cents.
+      const tl=priceTimeline(sym,ex); if(tl.length){ const j=timelineIndexAt(tl,d||tl[tl.length-1][0]); const mk=tl[j>=0?j:0][1]; const ratio=px/mk; if(ex==='ZSE'&&ratio>40&&ratio<250){ px=px/100; o.warn.push('converted from ZiG cents'); } else if(ratio>3||ratio<1/3) o.warn.push(`price is far from the market (${secFmt(mk,ccy)}) that day`); }
+      o.shares=sh; o.price=px;
+      const dupKey=[sym,ex,sh,px.toFixed(6),d||''].join('|');
+      if(seen.has(dupKey)){ o.err='Same row appears twice in the file'; return o; } seen.add(dupKey);
+      if(zseHoldings.some(h=>baseSymbol(h.symbol)===sym&&h.exchange===ex&&Math.abs(h.shares-sh)<1e-9&&Math.abs(h.buyPrice-px)<1e-9&&(h.buyDate||'')===(d||''))){ o.err='Already in Tsoro'; return o; }
+    } else {
+      const q=impNum(get(r,'qty')), en=impNum(get(r,'entry')); if(!(q>0)){ o.err='Quantity must be a number above 0'; return o; } if(!(en>0)){ o.err='Price must be a number above 0'; return o; }
+      const dirRaw=get(r,'direction').toLowerCase(); o.direction=/^(sell|short|s)$/.test(dirRaw)?'Short':'Long';
+      const xp=get(r,'exit')===''?null:impNum(get(r,'exit')); if(xp!=null&&!(xp>0)){ o.err='Close price must be a number above 0'; return o; }
+      const xd=impDate(get(r,'exitDate')); if(xd==='bad'){ o.err='Close date not understood'; return o; }
+      if(xd&&d&&xd<d){ o.err='Close date is before the open date'; return o; }
+      const fee=impNum(get(r,'fee')); o.fee=fee>0?fee:0;
+      o.qty=q; o.entry=en; o.exit=xp; o.exitDate=xp!=null?(xd||d||today):null; o.market=get(r,'market')||'Stock';
+      if(trades.some(t=>baseSymbol(t.symbol)===sym&&Math.abs(t.qty-q)<1e-9&&Math.abs(t.entry-en)<1e-9&&String(t.entryDate||'').slice(0,10)===(d||''))){ o.err='Already in Tsoro'; return o; }
+    }
+    return o;
+  });
+}
+function impPreview(){
+  const el=document.getElementById('imp-preview'), go=document.getElementById('imp-go'); if(!el) return;
+  const rows=_imp.rows;
+  if(!rows.length){ el.innerHTML=''; go.disabled=true; go.textContent='Import'; return; }
+  if(rows.length===1&&rows[0].err&&rows[0].line==null){ el.innerHTML=`<div class="pa-check">${escapeHtml(rows[0].err)}</div>`; go.disabled=true; return; }
+  const ok=rows.filter(r=>!r.err), bad=rows.length-ok.length;
+  const H=_imp.kind==='holdings';
+  el.innerHTML=`<div class="pa-sub" style="margin-bottom:8px"><b style="color:var(--text)">${ok.length} ready</b>${bad?` · ${bad} will be skipped`:''}${rows.length>=1000?' · only the first 1,000 rows are read':''}</div>
+  <div class="table-wrap" style="max-height:300px;overflow:auto;margin:0"><table><thead><tr><th>Row</th><th>Stock</th>${H?'<th style="text-align:right">Shares</th><th style="text-align:right">Buy price</th>':'<th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Close</th>'}<th>Date</th><th>Check</th></tr></thead><tbody>
+  ${rows.slice(0,200).map(r=>`<tr${r.err?' style="opacity:.55"':''}><td class="num">${r.line}</td><td><b>${escapeHtml(r.symbol||'—')}</b> <span class="pa-sub">${r.exchange==='VFSE'?'VFEX':escapeHtml(r.exchange||'')}</span></td>
+    ${H?`<td class="num">${r.shares!=null?fmtNum(r.shares):'—'}</td><td class="num">${r.price!=null?secFmt(r.price,r.ccy):'—'}</td>`:`<td>${r.direction==='Short'?'Sell':'Buy'}</td><td class="num">${r.qty!=null?fmtNum(r.qty):'—'}</td><td class="num">${r.entry!=null?fmtNum(r.entry):'—'}</td><td class="num">${r.exit!=null?fmtNum(r.exit):'Open'}</td>`}
+    <td style="white-space:nowrap">${r.date||'—'}</td><td>${r.err?`<span style="color:var(--red)">${escapeHtml(r.err)}</span>`:r.warn.length?`<span style="color:var(--yellow)">${escapeHtml(r.warn.join('; '))}</span>`:'<span style="color:var(--green)">OK</span>'}</td></tr>`).join('')}
+  </tbody></table></div>`;
+  go.disabled=!ok.length; go.textContent=ok.length?`Import ${ok.length} ${H?'holding':'trade'}${ok.length===1?'':'s'}`:'Import';
+}
+async function impCommit(){
+  const ok=_imp.rows.filter(r=>!r.err); if(!ok.length) return;
+  const go=document.getElementById('imp-go'); go.disabled=true; go.textContent='Importing…';
+  try{
+    if(_imp.kind==='holdings'){
+      const now=Date.now();
+      const items=ok.map((r,i)=>{ const existing=zseHoldings.find(h=>baseSymbol(h.symbol)===r.symbol&&h.exchange===r.exchange); const nm=COMPANY[r.exchange+':'+r.symbol]||'';
+        return {id:(now+i).toString(36)+Math.random().toString(36).slice(2,6),symbol:existing?existing.symbol:r.symbol,exchange:r.exchange,shares:r.shares,buyPrice:r.price,buyDate:r.date,currentPrice:null,priceDate:null,notes:r.notes,instrumentType:/ETF/.test(nm)?'ETF':/REIT/.test(nm)?'REIT':'Stock',business_group:null}; });
+      for(let i=0;i<items.length;i+=200){ const{error}=await sb.from('zse_holdings').insert(items.slice(i,i+200).map(toZseHoldingRow)); if(error) throw error; }
+      zseHoldings.push(...items);
+    } else {
+      const rows=ok.map(r=>({user_id:currentUser.id,symbol:r.symbol,market:r.market,exchange:r.exchange?(r.exchange==='VFSE'?'VFEX':r.exchange):null,currency:r.ccy,direction:r.direction,qty:r.qty,entry:r.entry,entry_date:r.date||qToday(),
+        exit:r.exit,exit_date:r.exitDate,fee:r.fee,notes:r.notes||null,status:r.exit!=null?'closed':'open',type:r.exit!=null&&r.exitDate&&r.exitDate===(r.date||'')?'day':'long',sl:null,tp:null,strategy:null}));
+      for(let i=0;i<rows.length;i+=200){ const{error}=await sb.from('trades').insert(rows.slice(i,i+200)); if(error) throw error; }
+      await loadTrades();
+    }
+    closeImport(); renderAll(); try{ renderTicker(); }catch(_){}
+    showToast(`Imported ${ok.length} ${_imp.kind==='holdings'?'holding':'trade'}${ok.length===1?'':'s'}.`,'success');
+    if(_imp.kind==='holdings') navigate('zse'); else navigate('journal');
+  }catch(e){ document.getElementById('import-msg').textContent='Import failed: '+e.message+'. Nothing after the failed batch was saved.'; go.disabled=false; go.textContent='Try again'; }
+}
+function impTemplate(){
+  const csv=_imp.kind==='holdings'
+    ?'symbol,exchange,shares,buy price,buy date,notes\nDLTA,ZSE,100,34.00,2026-07-22,Example: ZSE price in whole ZiG\nINN,VFEX,24,1.41,2026-07-22,Example: VFEX price in US dollars\n'
+    :'symbol,exchange,direction,quantity,price,date,close price,close date,fees,currency,notes\nSIM,VFEX,buy,100,0.70,2026-10-09,,,0,USD,Still open\nDLTA,ZSE,buy,50,30.00,2026-08-01,34.00,2026-11-20,2.50,ZiG,Closed trade\n';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=_imp.kind==='holdings'?'tsoro-holdings-template.csv':'tsoro-trades-template.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
+}
 
 // ── Helpers ────────────────────────────────────────────────────────
 function calcPnL(t){ if(t.exit==null)return null; return (t.direction==='Long'?1:-1)*(t.exit-t.entry)*t.qty-(t.fee||0); }
@@ -2799,12 +2961,14 @@ function renderDashboard(){
   const bizCashUSD=wallets.filter(w=>w.business_group).reduce((s,w)=>s+(walletToUSD(w)||0),0);
   const plainCashUSD=walletCashUSD-bizCashUSD;
   const zseUSD=zseHoldingsValueUSD();
+  // Shares on ZSE / VFEX (holdings plus journal trades in listed stocks); everything else open is "other trades"
+  const listedUSD=openTrades.filter(t=>t._synthetic||listedTradeKey(t)).reduce((s,t)=>s+(toUSD(openTradePx(t)*t.qty,t.currency)??0),0);
   const privUSD=privInvestValueUSD();
   const bkItems=[
     {label:'Cash',val:plainCashUSD,icon:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',show:plainCashUSD>0,inTotal:true,page:'wallet'},
     {label:'Business',val:bizCashUSD,icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',show:bizCashUSD>0,inTotal:true,page:'wallet'},
-    {label:'Active Trades',val:deployedUSD,icon:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',show:deployedUSD>0,inTotal:true,page:'wallet'},
-    {label:'ZSE / VFEX',val:zseUSD,icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',show:zseUSD>0,inTotal:false,page:'zse'},
+    {label:'ZSE / VFEX shares',val:listedUSD,icon:'',show:listedUSD>0,inTotal:true,page:'zse'},
+    {label:'Other open trades',val:deployedUSD-listedUSD,icon:'',show:deployedUSD-listedUSD>0.005,inTotal:true,page:'journal'},
     {label:'Private',val:privUSD,icon:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',show:privUSD>0,inTotal:false,page:'wallet'},
   ];
   const bkHtml=bkItems.filter(b=>b.show).map(b=>`
@@ -4353,7 +4517,7 @@ async function drawPortfolioDonut(){
   const el=document.getElementById('db-donut'); if(!el)return;
   const segMap={};
   allTrades().filter(t=>t.status==='open').forEach(t=>{
-    const val=toUSD((t.exit??t.entry)*(t.qty||0),t.currency)||0;
+    const val=toUSD(openTradePx(t)*(t.qty||0),t.currency)||0;
     if(val>0){const k=t.symbol;if(!segMap[k])segMap[k]={symbol:k,value:0,exchange:t.market||'',qty:0,entry:t.entry||0,currency:t.currency||'USD'};segMap[k].value+=val;segMap[k].qty=(segMap[k].qty||0)+(t.qty||0);}
   });
   const cashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
@@ -4751,7 +4915,8 @@ function renderTradingAnalytics(){
   // ── Extended risk metrics (FinanceToolkit / Ghostfolio patterns) ─
   // Sortino: penalise only downside deviation
   const downside=pnls.filter(v=>v<0);
-  const downsideStd=downside.length?Math.sqrt(downside.reduce((s,v)=>s+v*v,0)/downside.length):0;
+  // Downside deviation over ALL trades (gains count as zero), the standard Sortino definition
+  const downsideStd=pnls.length?Math.sqrt(downside.reduce((s,v)=>s+v*v,0)/pnls.length):0;
   const sortino=downsideStd>0?pnlMean/downsideStd:null;
 
   // Calmar: mean return / max drawdown
@@ -4859,14 +5024,14 @@ function renderTradingAnalytics(){
     });
     // No SL habit
     if(noSLCount>=Math.ceil(closed.length*0.4))
-      pts.push({level:'danger',title:'Stop loss absent on most trades',text:`${noSLCount} of ${closed.length} trades had no stop loss. This is your biggest structural risk — a single unprotected large move can erase many winning trades.`});
+      if(noSLCount<closed.length) pts.push({level:'danger',title:'Stop loss absent on most trades',text:`${noSLCount} of ${closed.length} trades had no stop loss. This is your biggest structural risk — a single unprotected large move can erase many winning trades.`});
     // One trade dominates losses
     if(worstPnL!=null&&grossL>0&&Math.abs(worstPnL)/grossL>0.5){
       const t=closed[pnls.indexOf(worstPnL)];
       pts.push({level:'warn',title:'Single trade dominates losses',text:`${t?t.symbol:'One trade'} represents ${(Math.abs(worstPnL)/grossL*100).toFixed(0)}% of all your losses. This is a position sizing or missing stop-loss problem.`});
     }
     // Win rate + PF both below threshold
-    if(wr<40&&(pf==null||pf<1))
+    if(closed.length>=5&&wins.length>0&&wr<40&&(pf==null||pf<1))
       pts.push({level:'danger',title:'Win rate and profit factor both critical',text:`At ${wr.toFixed(1)}% win rate you need an average winner ${((1-wr/100)/(wr/100)).toFixed(1)}x larger than your average loser just to break even. Your current avg win ($${fmtMoney(avgWin)}) vs avg loss ($${fmtMoney(avgLoss)}) does not meet this.`});
     // Direction bias
     const dirLoss={};
@@ -4968,7 +5133,7 @@ function renderTradingAnalytics(){
       {l:'Sharpe',v:sharpe!=null?sharpe.toFixed(2):'—',col:sharpe!=null&&sharpe>=1?'var(--green)':sharpe!=null&&sharpe>=0?'var(--yellow)':'var(--red)'},
       {l:'Avg R',v:avgR!=null?avgR.toFixed(2)+'R':'—',col:avgR!=null&&avgR>=1?'var(--green)':avgR!=null&&avgR>=0?'var(--yellow)':'var(--red)'},
       {l:'Streak',v:streak?(streakDir==='W'?streak+'W':streak+'L'):'—',col:streakDir==='W'?'var(--green)':'var(--red)'},
-      {l:'No SL',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'},
+      ...(noSLCount<closed.length?[{l:'No SL',v:noSLCount+'/'+closed.length,col:noSLCount>0?'var(--yellow)':'var(--green)'}]:[]),
       {l:'Closed',v:closed.length,col:'var(--text)'},
     ].map((s,i)=>'<div class="kpi-item" style="animation:cardEnter .4s cubic-bezier(.22,1,.36,1) '+(i*40)+'ms both"><div class="kpi-label">'+s.l+'</div><div class="kpi-value anim-num" style="color:'+s.col+';animation-delay:'+(i*40+100)+'ms">'+s.v+'</div></div>').join('')
   +'</div>';
@@ -5004,8 +5169,8 @@ function renderTradingAnalytics(){
   // ── Risk metrics card (FinanceToolkit / OpenBB patterns) ─────────
   const riskCard='<div class="card"><div class="card-header"><div class="card-title">Risk metrics</div><div style="font-size:11px;color:var(--muted)">Requires ≥20 closed trades for VaR</div></div>'
     +`<div class="risk-grid">`
-    +[['Sortino Ratio',sortino!=null?sortino.toFixed(3):'—'],
-      ['Calmar Ratio',calmar!=null?calmar.toFixed(3):'—'],
+    +[['Sortino (per trade)',sortino!=null?sortino.toFixed(3):'—'],
+      ['Avg trade ÷ max drawdown',calmar!=null?calmar.toFixed(3):'—'],
       ['VaR 95%',var95!=null?'−$'+fmtMoney(var95):'Need 20+ trades'],
       ['CVaR 95%',cvar95!=null?'−$'+fmtMoney(cvar95):'Need 20+ trades'],
       ['Ulcer Index',ulcer!=null?ulcer.toFixed(2)+'%':'—'],
@@ -5055,7 +5220,7 @@ function renderTradingAnalytics(){
   const summaryCard='<div class="card"><div class="card-header"><div class="card-title">Summary statistics</div></div>'
     +[['Total closed',closed.length],['Win rate',closed.length?wr.toFixed(1)+'%':'—'],['Profit factor',pf!=null?pf.toFixed(2):'—'],
       ['Gross profit','+$'+fmtMoney(grossP)],['Gross loss','−$'+fmtMoney(grossL)],['Max drawdown','−$'+fmtMoney(maxDD)],
-      ['Sharpe ratio',sharpe!=null?sharpe.toFixed(2):'—'],['Sortino ratio',sortino!=null?sortino.toFixed(2):'—'],
+      ['Sharpe (per trade)',sharpe!=null?sharpe.toFixed(2):'—'],['Sortino (per trade)',sortino!=null?sortino.toFixed(2):'—'],
       ['Expectancy/trade',expectancy!=null?(expectancy>=0?'+':'')+'$'+fmtMoney(expectancy):'—'],
       ['Kelly % (half)',kellyPct!=null?(kellyPct/2).toFixed(1)+'%':'—'],
       ['Best trade',bestPnL!=null?'+$'+fmtMoney(bestPnL):'—'],['Worst trade',worstPnL!=null?'−$'+fmtMoney(Math.abs(worstPnL)):'—'],
@@ -5965,9 +6130,9 @@ function _renderWallet(){
   if(qs){ qs.style.display=wallets.length===0?'flex':'none'; }
 
   // ── Totals ──
-  const totalCashUSD = wallets.reduce((s,w)=>s+walletToUSD(w),0);
-  const openTrades = trades.filter(t=>t.status==='open');
-  const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(t.entry*t.qty, t.currency)??t.entry*t.qty),0);
+  const totalCashUSD = wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
+  const openTrades = trades.filter(t=>t.status==='open'&&t.market!=='Forex');
+  const deployedUSD = openTrades.reduce((s,t)=>s+(toUSD(openTradePx(t)*t.qty, t.currency)??0),0);
   const zseStocksUSD = zseHoldingsValueUSD(true);
   const allOpenPositions = allTrades().filter(t=>t.status==='open');
   const combinedDeployedUSD = deployedUSD + zseStocksUSD;
@@ -6005,7 +6170,7 @@ function _renderWallet(){
         let usdLine='';
         if(ccy!=='USD'&&ccy!=='USDT'){
           usdLine=getLatestRate(ccy)
-            ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px">≈ $'+fmtNum(d.usd)+' USD</div>'
+            ? '<div style="font-size:11px;color:var(--muted2);margin-top:2px">≈ $'+fmtMoney(d.usd)+' USD</div>'
             : '<div style="font-size:11px;color:var(--yellow);margin-top:2px">Add rate to see USD equiv.</div>';
         }
         return '<div style="min-width:140px">'
@@ -6031,9 +6196,9 @@ function _renderWallet(){
   // ZiG77.50 in MCMS.ZW = ZiG217.50)
   const posByWallet={};
   // Supabase trades
-  trades.filter(t=>t.status==='open').forEach(t=>{
+  trades.filter(t=>t.status==='open'&&t.market!=='Forex').forEach(t=>{
     const w=findLinkedWallet(t); if(!w) return;
-    let val=t.entry*t.qty;
+    let val=openTradePx(t)*t.qty;
     if(t.currency!==w.currency){ const c=convertCcy(val,t.currency,w.currency); if(c==null) return; val=c; }
     (posByWallet[w.id]=posByWallet[w.id]||{val:0,items:[]});
     posByWallet[w.id].val+=val;
@@ -6474,7 +6639,7 @@ function drawDeployedBar(cashUSD, deployedUSD, openTrades){
   const listEl=document.getElementById('wallet-open-list');
   if(listEl){
     listEl.innerHTML=openTrades.length?openTrades.map((t,i)=>{
-      const price=t.exit??t.entry;
+      const price=openTradePx(t);
       const val=price*t.qty;
       const usd=toUSD(val,t.currency);
       const tag=t._synthetic?`<span style="font-size:10px;background:rgba(56,189,248,.12);color:var(--blue);border-radius:4px;padding:1px 5px;margin-left:4px">${t.exchange||'ZSE'}</span>`:'';
@@ -6556,7 +6721,7 @@ async function deleteCapital(id){
 function capToUSD(amount, currency){
   if(!currency||currency==='USD') return amount;
   const r=getLatestRate(currency);
-  return r ? amount/r.units_per_usd : amount;
+  return r ? amount/r.units_per_usd : 0; // unknown rate: never treat ZiG as dollars
 }
 
 // Build timeline: list of {date, invested, value} points
@@ -8277,8 +8442,9 @@ function zseHoldingsValueUSD(excludeTracked){
 }
 function accountValueUSD(){
   const cash=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
-  const deployed=trades.filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(t.entry*t.qty,t.currency)??0),0);
-  return cash+deployed+privInvestValueUSD()+zseHoldingsValueUSD(true);
+  // Same total as Home (wallets + open positions at market), plus private investments
+  const deployed=allTrades().filter(t=>t.status==='open').reduce((s,t)=>s+(toUSD(openTradePx(t)*t.qty,t.currency)??0),0);
+  return cash+deployed+privInvestValueUSD();
 }
 
 function goalPeriodPreset(){
@@ -8524,7 +8690,7 @@ function renderBizCFO(){
   bizHistory.forEach(h=>{
     const amt=Number(h.amount)||0;
     const w=wallets.find(x=>x.id===h.wallet_id);
-    const usdAmt=w?(capToUSD(amt,w.currency)||amt):amt;
+    const usdAmt=w?(capToUSD(amt,w.currency)??amt):amt;
     if(h.tx_type==='deposit'||h.tx_type==='transfer_in') totalIn+=usdAmt;
     else if(h.tx_type==='withdrawal'||h.tx_type==='transfer_out') totalOut+=usdAmt;
   });
@@ -8546,7 +8712,7 @@ function renderBizCFO(){
     if(!monthlyData[month]) monthlyData[month]={in:0,out:0};
     const amt=Number(h.amount)||0;
     const w=wallets.find(x=>x.id===h.wallet_id);
-    const usdAmt=w?(capToUSD(amt,w.currency)||amt):amt;
+    const usdAmt=w?(capToUSD(amt,w.currency)??amt):amt;
     if(h.tx_type==='deposit'||h.tx_type==='transfer_in') monthlyData[month].in+=usdAmt;
     else if(h.tx_type==='withdrawal'||h.tx_type==='transfer_out') monthlyData[month].out+=usdAmt;
   });
@@ -8559,7 +8725,7 @@ function renderBizCFO(){
   const totalAssets=assets.reduce((s,p)=>s+(capToUSD(Number(p.current_value??p.amount_invested),p.currency)||0),0);
   const totalDepreciationUSD=assets.reduce((s,p)=>{
     const d=Math.max(0,Number(p.amount_invested)-Number(p.current_value??p.amount_invested));
-    return s+(capToUSD(d,p.currency)||d);
+    return s+(capToUSD(d,p.currency)??d);
   },0);
 
   const latestByWallet={};
@@ -8844,16 +9010,15 @@ function loanInterestOwed(loan){
   const due   = loan.due_date ? new Date(loan.due_date) : new Date();
   const now   = new Date();
   const endDate = now < due ? now : due;
-  const days = Math.max(0, Math.round((endDate - start)/86400000));
-  if(loan.rate_type==='flat'){
-    return principal * (rate/100);
-  } else if(loan.rate_type==='monthly'){
-    const months = days/30.44;
-    return principal * (Math.pow(1+rate/100, months) - 1);
-  } else { // annual
-    const years = days/365.25;
-    return principal * (Math.pow(1+rate/100, years) - 1);
-  }
+  if(loan.rate_type==='flat') return principal * (rate/100);
+  // Compound on the outstanding balance between payments: each repayment reduces what earns interest from then on
+  const per = loan.rate_type==='monthly' ? 30.44 : 365.25;
+  const grow=(bal,from,to)=>{ const d=Math.max(0,(to-from)/86400000); return bal*Math.pow(1+rate/100, d/per); };
+  const pays=loanPayments.filter(p=>p.loan_id===loan.id&&p.paid_date&&new Date(p.paid_date)<endDate).map(p=>({d:new Date(p.paid_date),a:Number(p.amount)||0})).sort((a,b)=>a.d-b.d);
+  let bal=principal, t=start, interest=0;
+  for(const p of pays){ if(p.d<t) { bal=Math.max(0,bal-p.a); continue; } const nb=grow(bal,t,p.d); interest+=nb-bal; bal=Math.max(0,nb-p.a); t=p.d; }
+  const nb=grow(bal,t,endDate); interest+=nb-bal;
+  return interest;
 }
 
 function loanTotalOwed(loan){
@@ -9792,10 +9957,10 @@ function renderZse(){
           ${priceStale?'<div style="font-size:10px;color:var(--yellow)">'+priceDate+'</div>':''}
           ${!hasCurrentPrice?'<div style="font-size:10px;color:var(--muted)">buy price</div>':''}
         </td>
-        <td style="text-align:right;font-weight:600">${sym}${fmtNum(mv)}</td>
+        <td style="text-align:right;font-weight:600">${sym}${fmtMoney(mv)}</td>
         <td class="${pnlClass(pnl)}" style="text-align:right">
-          <div>${pnl>=0?'+':''}${sym}${fmtNum(Math.abs(pnl))}</div>
-          <div style="font-size:11px;opacity:.8">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%</div>
+          <div>${pnl>=0?'+':'−'}${sym}${fmtMoney(Math.abs(pnl))}</div>
+          <div style="font-size:11px;opacity:.8">${pnlPct>=0?'+':'−'}${Math.abs(pnlPct).toFixed(1)}%</div>
         </td>
         <td style="text-align:right">
           ${usd!=null?'<div style="font-weight:600;color:var(--accent2)">$'+fmtMoney(usd)+'</div>':'<div style="color:var(--muted);font-size:12px">No rate</div>'}

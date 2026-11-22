@@ -382,6 +382,8 @@ html[data-theme="light"]{--s1:#008A3E;--s2:#0B63CE;--s3:#B86E00}
 .pa-note{font-size:13px;color:var(--muted);max-width:72ch;margin:-36px 0 48px;line-height:1.55}
 .pa-callout{font-size:14px;color:var(--text2);max-width:72ch;margin:-32px 0 32px;line-height:1.55}
 .pa-callout.warn b{color:var(--yellow)}
+.pa-check{font-size:14px;line-height:1.55;color:var(--text2);background:var(--yellow-bg);border-radius:14px;padding:14px 16px;margin:-12px 0 32px;max-width:80ch}
+.pa-check b{color:var(--text)}
 .pa-callout b{color:var(--text)}
 .pa-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 56px;margin-bottom:56px}
 .pa-h3{font-size:15px;font-weight:600;margin-bottom:12px}
@@ -3410,7 +3412,10 @@ function perfEngine(){
       prev*=a*b; I[i]=prev; } return I; };
   const I=chain(V,VP,IN,OUT);
   keys.forEach(k=>K[k].I=chain(K[k].V,K[k].VP,K[k].IN,K[k].OUT));
-  return {dates,V,IN,OUT,DIV,PE,FE,I,K,keys,meta,lots,first,today,skipped:[...new Set(skipped)],undated:lots.filter(l=>l.undated).length};
+  // A purchase price far from that day's market price usually means a wrong buy date or price units
+  const mismatch=lots.filter(l=>{ if(!l.tl) return false; const j=timelineIndexAt(l.tl,l.buyDate); if(j<0||daysBetween(l.tl[j][0],l.buyDate)>7) return false; const r=l.buyPx/l.tl[j][1]; return r>1.5||r<1/1.5; })
+    .map(l=>{ const j=timelineIndexAt(l.tl,l.buyDate); return {symbol:l.symbol,exchange:l.exchange,ccy:l.ccy,buyDate:l.buyDate,paid:l.buyPx,mkt:l.tl[j][1],src:l.src}; });
+  return {dates,V,IN,OUT,DIV,PE,FE,I,K,keys,meta,lots,first,today,mismatch,skipped:[...new Set(skipped)],undated:lots.filter(l=>l.undated).length};
 }
 
 // Results for the window (a, today]. a = null means since the first purchase.
@@ -3474,7 +3479,10 @@ function benchIndex(exchange){
   const syms=[...new Set(priceHistory.filter(r=>r.exchange===exchange).map(r=>baseSymbol(r.symbol)))];
   const ccy=exchange==='VFSE'?'USD':'ZiG';
   const tls=syms.map(s=>priceTimeline(s,exchange)).filter(t=>t.length>=20);
-  const from=exchange==='ZSE'?ZIG_START:(tls.reduce((m,t)=>t[0][0]<m?t[0][0]:m,qToday()));
+  // ZSE needs a recorded ZiG rate to be in dollars; it starts at the first rate on record (never before the ZiG launch)
+  const fx0=fxSeries()[0];
+  if(exchange==='ZSE'&&!fx0){ const out={weeks:[],level:[],count:[],n:0,exchange}; _benchCache.val[exchange]=out; return out; }
+  const from=exchange==='ZSE'?(fx0[0]>ZIG_START?fx0[0]:ZIG_START):(tls.reduce((m,t)=>t[0][0]<m?t[0][0]:m,qToday()));
   const weeks=weekList(from,qToday());
   const series=tls.map(t=>weeklyUsd(t,ccy,weeks));
   const minN=exchange==='ZSE'?5:2;
@@ -3581,6 +3589,7 @@ function renderPortfolioAnalytics(){
   const r=PA_RANGES.find(x=>x.k===_paRange)||PA_RANGES[PA_RANGES.length-1];
   const W=E?engWindow(E,paStart(r)):null;
   let html='';
+  if(E&&E.mismatch.length) html+=`<div class="pa-check" role="note"><b>Check ${E.mismatch.length===1?'this purchase':'these purchases'}.</b> ${E.mismatch.map(m=>`${escapeHtml(m.symbol)}: you paid ${secFmt(m.paid,m.ccy)} on ${fmtHeroDate(m.buyDate)}, but the market price that day was ${secFmt(m.mkt,m.ccy)}.`).join(' ')} A wrong buy date or price makes your return and worst drop below inaccurate. Fix it on <button class="link-btn" style="display:inline;text-decoration:underline;text-underline-offset:3px" onclick="navigate('zse')">ZSE / VFEX</button>.</div>`;
 
   // 1 · Return headline + benchmark chart
   if(W){
@@ -3609,7 +3618,7 @@ function renderPortfolioAnalytics(){
     const firstW=weeks.findIndex((w,i)=>pw[i]!=null);
     let mktRet=null;
     if(firstW>=0&&(wz+wv)>0){
-      const a=weeks[firstW], z=bAt(bz,a), zz=bAt(bz,weeks[weeks.length-1]), v=bAt(bv,a), vv=bAt(bv,weeks[weeks.length-1]);
+      const a=weeks[firstW], cov=B=>B.weeks.length&&B.weeks[0]<=a, z=cov(bz)?bAt(bz,a):null, zz=bAt(bz,weeks[weeks.length-1]), v=cov(bv)?bAt(bv,a):null, vv=bAt(bv,weeks[weeks.length-1]);
       const parts=[]; if(z&&zz&&wz) parts.push([wz,zz/z-1]); if(v&&vv&&wv) parts.push([wv,vv/v-1]);
       const ws=parts.reduce((s,p)=>s+p[0],0); if(ws>0) mktRet=parts.reduce((s,p)=>s+p[0]*p[1],0)/ws;
     }
@@ -3758,7 +3767,7 @@ function renderPortfolioAnalytics(){
     <p><b>Money-weighted return</b> uses the Modified Dietz method: gain ÷ (starting value + money added, weighted by how long it was invested). Periods longer than a year are also shown per year.</p>
     <p><b>Dollars.</b> ZiG values convert at the ZiG/USD rate in force on each date, using your own Rates entries and the shared daily rate. Before the first recorded rate, the first rate is used. Holdings are valued at the latest market price; open journal trades in ZSE or VFEX stocks are valued at the market price, other trades at their entry price.</p>
     <p><b>What drove your return</b> splits the money-weighted gain by holding; the points add up to the total. <b>Where the gain came from</b> splits each day's dollar change into the price move (at the previous day's rate) and the exchange-rate move.</p>
-    <p><b>Market</b> is a stand-in: an equal-weighted average of every ZSE stock (from April 2024, the ZiG launch) and every VFEX stock with enough history, in dollars. Weekly moves over 3× in either direction are treated as data errors and skipped. Beta and volatility use weekly returns and need at least 12 weeks.</p>
+    <p><b>Market</b> is a stand-in: an equal-weighted average of every ZSE stock (from the first recorded ZiG rate, never before the April 2024 ZiG launch) and every VFEX stock with enough history, in dollars. Weekly moves over 3× in either direction are treated as data errors and skipped. Beta and volatility use weekly returns and need at least 12 weeks.</p>
     <p><b>Volatility</b> is the standard deviation of weekly log returns × √52. <b>Worst drop</b> is the maximum drawdown. <b>Trading</b> looks at how often the recorded price changed over the past 90 days. <b>Break-even</b> is your average cost ÷ (1 − selling charges).</p>
   </div></details>`;
   el.innerHTML=html;
@@ -3802,10 +3811,13 @@ function drawPaChart(weeks,pw,bz,bv,wz,wv){
   const rebase=arr=>{ const b=arr.find(v=>v!=null); return arr.map(v=>v==null||b==null?null:+((v/b-1)*100).toFixed(2)); };
   const at=B=>ws.map(w=>{ const i=idxAtOrBefore(B.weeks,w); return i>=0?B.level[i]:null; });
   const series=[{name:'You',data:rebase(pw.slice(start)),c:'--s1',w:2.5}];
-  if(wz>0&&bz.n) series.push({name:'ZSE market',data:rebase(at(bz)),c:'--s2',w:1.75});
-  if(wv>0&&bv.n) series.push({name:'VFEX market',data:rebase(at(bv)),c:'--s3',w:1.75});
+  const covers=B=>B.n&&B.weeks.length&&B.weeks[0]<=ws[0];
+  const missing=[];
+  if(wz>0){ if(covers(bz)) series.push({name:'ZSE market',data:rebase(at(bz)),c:'--s2',w:1.75}); else missing.push('ZSE'); }
+  if(wv>0){ if(covers(bv)) series.push({name:'VFEX market',data:rebase(at(bv)),c:'--s3',w:1.75}); else missing.push('VFEX'); }
   const lg=document.getElementById('pa-legend');
-  if(lg) lg.innerHTML=series.map(s=>`<span><i style="background:var(${s.c})"></i>${s.name}</span>`).join('')+(series.length>1?'<span class="pa-sub">Equal-weighted stand-ins, in dollars</span>':'');
+  if(lg) lg.innerHTML=series.map(s=>`<span><i style="background:var(${s.c})"></i>${s.name}</span>`).join('')+(series.length>1?'<span class="pa-sub">Equal-weighted stand-ins, in dollars</span>':'')
+    +(missing.includes('ZSE')?`<span class="pa-sub">ZSE market line shows for periods after the first recorded ZiG rate${fxSeries()[0]?' ('+fmtHeroDate(fxSeries()[0][0])+')':''}.</span>`:'');
   const muted=cssVar('--muted'), text2=cssVar('--text2');
   let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
   chart.setOption({

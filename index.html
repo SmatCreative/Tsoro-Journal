@@ -441,6 +441,36 @@ html[data-theme="light"] .tour-spot{box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
   .pa-note{margin-top:-28px}
 }
 
+/* ═══ Alive ═══ */
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes flashUpK{0%{background-color:color-mix(in srgb,var(--green) 26%,transparent)}100%{background-color:transparent}}
+@keyframes flashDownK{0%{background-color:color-mix(in srgb,var(--red) 24%,transparent)}100%{background-color:transparent}}
+@keyframes livePulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes popIn{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
+.flash-up{animation:flashUpK 1.5s var(--ease-out)}
+.flash-down{animation:flashDownK 1.5s var(--ease-out)}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.sim-card,.pa-bar-row){animation:rowIn .42s var(--ease-out) both}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(2){animation-delay:35ms}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(3){animation-delay:70ms}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(4){animation-delay:105ms}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(5){animation-delay:140ms}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(6){animation-delay:175ms}
+.page.entering :is(.rail-row,.pa-row,.pulse-card,.bk-row,.ph-row,.onb-step,.news-block,.wallet-summary-grid>div,.table-wrap tbody tr,.pa-bar-row):nth-child(n+7){animation-delay:210ms}
+.page.entering :is(.pa-track i,.bar-fill,.deploy-track>*){transform-origin:left center;animation:growX .7s var(--ease-out) .12s both}
+.page.entering .pa-div span.pos{transform-origin:left center;animation:growX .6s var(--ease-out) .15s both}
+.page.entering .pa-div span.neg{transform-origin:right center;animation:growX .6s var(--ease-out) .15s both}
+.page.entering .pa-track52 i{animation:popIn .4s var(--ease-out) .3s both}
+.page.entering .hero-value{animation:rowIn .45s var(--ease-out) both}
+.page.entering .hero-change{animation:rowIn .45s var(--ease-out) .06s both}
+.live-dot{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle;animation:livePulse 2.4s ease-out infinite}
+.sr-held,.liq-ok{transition:transform .15s}
+.btn,.range-tab,.seg-btn,.pa-row,.rail-row,.search-row,.news-chip,.np-file{transition:background-color .15s,color .15s,transform .12s var(--ease-out)}
+.range-tab:active,.seg-btn:active,.pulse-filter-btn:active,.sim-quick-btn:active,.icon-btn:active{transform:scale(.94)}
+.rail-row:active,.pa-row[role="link"]:active,.search-row:active,.np-file:active{transform:scale(.985)}
+.onb-step.done .onb-num{animation:popIn .35s var(--ease-out) both}
+@media(prefers-reduced-motion:reduce){.page.entering *{animation:none!important}.live-dot{animation:none}}
+
 /* ═══ News post media ═══ */
 .pulse-card.has-img{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
 .pulse-content{min-width:0}
@@ -2444,6 +2474,7 @@ async function loadAllData(){
     renderAll();
     renderTicker();
     maybeStartFirstTour();
+    startLivePrices();
     // Bulk market history is large; paint first, then fill charts and the ticker when it lands
     loadPriceHistory().then(()=>{
       renderTicker();
@@ -2543,7 +2574,7 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('.nav-more-wrap,.account-wrap')||e.target.closest('.popover .nav-item,.popover .menu-item')) closeMenus();
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeMenus(); closeMoreSheet(); } });
-function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; document.body.dataset.page=page; const mb=document.getElementById('nav-more-btn'); if(mb) mb.classList.toggle('active',MORE_PAGES.has(page)); closeMenus(); const c=document.querySelector('.content'); if(c){ c.scrollTop=0; } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); renderPage(page); }
+function navigate(page){ document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.page===page)); document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById('page-'+page).classList.add('active'); document.getElementById('topbar-title').textContent=PAGE_TITLES[page]||page; document.body.dataset.page=page; markEntering(page); const mb=document.getElementById('nav-more-btn'); if(mb) mb.classList.toggle('active',MORE_PAGES.has(page)); closeMenus(); const c=document.querySelector('.content'); if(c){ c.scrollTop=0; } document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.toggle('active',MOBILE_MORE_PAGES.has(page)?b.id==='mnav-more':b.id==='mnav-'+page)); document.querySelectorAll('.mobile-more-item').forEach(b=>b.classList.toggle('active',b.id==='mmore-'+page)); closeMoreSheet(); renderPage(page); }
 function toggleMoreSheet(){const s=document.getElementById('more-sheet');if(s)s.classList.contains('open')?closeMoreSheet():openMoreSheet();}
 function openMoreSheet(){const s=document.getElementById('more-sheet'),o=document.getElementById('more-overlay');if(s)s.classList.add('open');if(o)o.classList.add('open');}
 function closeMoreSheet(){const s=document.getElementById('more-sheet'),o=document.getElementById('more-overlay');if(s)s.classList.remove('open');if(o)o.classList.remove('open');}
@@ -2987,9 +3018,12 @@ function renderDashboard(){
     </div>
     <div class="bk-list">${bkHtml}</div>`;
   renderOnboarding();
+  const _prevHero=_heroShown;
   _heroTotal=grandTotalUSD;
   _heroSeries=portfolioValueSeries();
   drawHeroChart();
+  glideNumber(document.getElementById('db-grand-total'),_prevHero==null?grandTotalUSD*0.92:_prevHero,grandTotalUSD,v=>'$'+fmtMoney(v));
+  _heroShown=grandTotalUSD;
   renderHomeRail();
   const tradingEl=document.getElementById('db-trading');
   if(tradingEl){
@@ -3296,13 +3330,15 @@ function drawHeroChart(){
     tooltip:{trigger:'axis',showContent:false,axisPointer:{type:'line',lineStyle:{color:muted,width:1},label:{show:false}}},
     series:[{type:'line',data:pts.map(p=>+p.v.toFixed(2)),showSymbol:false,symbol:'circle',symbolSize:10,
       lineStyle:{width:2,color},itemStyle:{color,borderColor:cssVar('--bg'),borderWidth:2},emphasis:{scale:false,lineStyle:{width:2}},
-      markLine:{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1,opacity:.8},label:{show:false},data:[{yAxis:+base.toFixed(2)}]}}]
+      markLine:{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1,opacity:.8},label:{show:false},data:[{yAxis:+base.toFixed(2)}]}},
+      liveDot(pts.length-1,+last.toFixed(2),color)]
   },true);
   chart.resize();
   chart.off('updateAxisPointer');
   chart.on('updateAxisPointer',e=>{
     const ax=e.axesInfo&&e.axesInfo[0]; if(!ax) return;
     const p=pts[ax.value]; if(!p) return;
+    stopGlide(valEl);
     valEl.textContent='$'+fmtMoney(p.v);
     lblEl.textContent=fmtHeroDate(p.d);
     const g=_heroModel?_heroModel.gain(d0,p.d):{gain:p.v-base,basis:base};
@@ -3324,7 +3360,7 @@ function renderHomeRail(){
   const fmtP=(v,usd)=>(usd?'$':'ZiG ')+Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
   el.innerHTML=`<div class="rail-title">Holdings<button onclick="navigate('zse')">See all</button></div>`+(rows.length?rows.map(m=>{
     const up=m.chgPct>=0, c=m.usingCost?'var(--muted)':up?'var(--green)':'var(--red)';
-    return `<div class="rail-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')">
+    return `<div class="rail-row" data-k="${escapeHtml(baseSymbol(m.symbol))}|${m.exchange}" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')">
       <div style="min-width:0"><div class="rail-sym">${escapeHtml(m.symbol)}</div><div class="rail-meta">${fmtNum(m.shares)} shares${m.valueUSD!=null?' · <span class="zen-value">$'+fmtMoney(m.valueUSD)+'</span>':''}</div></div>
       <div>${railSpark(m.sparkPts,up)}</div>
       <div><div class="rail-price">${fmtP(m.cp,m.isVFEX)}</div><div class="rail-chg" style="color:${c}"${m.usingCost?' title="Change vs your average cost (no previous price logged)"':''}>${up?'+':'−'}${Math.abs(m.chgPct).toFixed(2)}%</div></div>
@@ -3419,7 +3455,8 @@ function renderSecurity(){
     series:[
       {type:'line',data:pts.map(p=>p[1]),showSymbol:false,symbol:'circle',symbolSize:10,lineStyle:{width:2,color},itemStyle:{color,borderColor:cssVar('--bg'),borderWidth:2},emphasis:{scale:false,lineStyle:{width:2}},
         markLine:{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},label:{show:false},data:[{yAxis:first[1]}]}},
-      {type:'scatter',data:buys,symbolSize:8,itemStyle:{color:cssVar('--text'),borderColor:cssVar('--bg'),borderWidth:2},silent:true,z:5}
+      {type:'scatter',data:buys,symbolSize:8,itemStyle:{color:cssVar('--text'),borderColor:cssVar('--bg'),borderWidth:2},silent:true,z:5},
+      liveDot(pts.length-1,last[1],color)
     ]
   },true);
   chart.resize();
@@ -4054,10 +4091,11 @@ function drawPaChart(weeks,pw,bz,bv,wz,wv){
     tooltip:{trigger:'axis',backgroundColor:cssVar('--elev'),borderWidth:0,textStyle:{color:cssVar('--text'),fontSize:12},extraCssText:'box-shadow:var(--pop-shadow);border-radius:12px;padding:10px 12px',
       axisPointer:{type:'line',lineStyle:{color:muted,width:1}},
       formatter:ps=>`<div style="color:${muted};margin-bottom:4px">Week to ${fmtHeroDate(ws[ps[0].dataIndex])}</div>`+ps.map(p=>p.value==null?'':`<div style="display:flex;gap:10px;justify-content:space-between"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.seriesName}</span><b>${p.value>=0?'+':MINUS}${Math.abs(p.value).toFixed(2)}%</b></div>`).join('')},
-    series:series.map((s,i)=>({name:s.name,type:'line',data:s.data,showSymbol:false,symbol:'circle',symbolSize:8,connectNulls:true,z:10-i,
+    series:[...series.map((s,i)=>({name:s.name,type:'line',data:s.data,showSymbol:false,symbol:'circle',symbolSize:8,connectNulls:true,z:10-i,
       lineStyle:{width:s.w,color:cssVar(s.c)},itemStyle:{color:cssVar(s.c),borderColor:cssVar('--bg'),borderWidth:2},emphasis:{scale:false,lineStyle:{width:s.w}},
       endLabel:{show:series.length>1,formatter:()=>s.name,color:text2,fontSize:11,fontWeight:600,distance:8},labelLayout:{moveOverlap:'shiftY'},
-      markLine:i===0?{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},label:{show:false},data:[{yAxis:0}]}:undefined}))
+      markLine:i===0?{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},label:{show:false},data:[{yAxis:0}]}:undefined})),
+      (()=>{ const d=series[0].data; let j=d.length-1; while(j>0&&d[j]==null) j--; return liveDot(j,d[j],cssVar('--s1')); })()]
   },true);
   chart.resize();
 }
@@ -7746,7 +7784,7 @@ function newsChip(x){
 }
 function newsRow(r,sub){
   const up=r.chg>=0, ccy=r.exchange==='VFSE'?'USD':'ZiG';
-  return `<div class="rail-row news-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" title="${escapeHtml(companyName(r.symbol,r.exchange))}">
+  return `<div class="rail-row news-row" data-k="${escapeHtml(r.symbol)}|${r.exchange}" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" title="${escapeHtml(companyName(r.symbol,r.exchange))}">
     <div style="min-width:0"><div class="rail-sym">${escapeHtml(r.symbol)}</div><div class="rail-meta">${escapeHtml(sub||companyName(r.symbol,r.exchange))}</div></div>
     <div>${railSpark(r.tl.slice(-20).map(p=>p[1]),up)}</div>
     <div><div class="rail-price">${secFmt(r.last[1],ccy)}</div><div class="rail-chg" style="${tone(r.chg)}">${fPct(r.chg)}</div></div>
@@ -10227,6 +10265,79 @@ function viewImage(url){
   overlay.querySelector('img').src=url;
 }
 
+// ── Alive: motion that carries meaning (live prices, drawing charts, counting numbers) ──
+const REDUCED_MOTION=(()=>{ try{ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })();
+// A soft ripple on the latest point of a price line, like a live market chart
+function liveDot(i,v,color){
+  if(v==null||i<0) return {type:'scatter',data:[]};
+  return REDUCED_MOTION
+    ?{type:'scatter',data:[[i,v]],symbolSize:7,itemStyle:{color},silent:true,z:6,animation:false}
+    :{type:'effectScatter',data:[[i,v]],symbolSize:7,showEffectOn:'render',rippleEffect:{brushType:'fill',scale:3.4,period:2.8,number:2},itemStyle:{color},silent:true,z:6,animationDelay:450};
+}
+let _heroShown=null; const _glides=new WeakMap();
+function stopGlide(el){ const c=el&&_glides.get(el); if(c){ try{ c.stop(); }catch(e){} _glides.delete(el); } }
+// Numbers glide to their new value instead of jumping (no overshoot: this is money)
+function glideNumber(el,from,to,fmt){
+  if(!el||to==null||!isFinite(to)) return;
+  stopGlide(el);
+  if(REDUCED_MOTION||typeof Motion==='undefined'||from==null||Math.abs(to-from)<0.005){ el.textContent=fmt(to); return; }
+  const c=Motion.animate(from,to,{duration:0.7,ease:[0.16,1,0.3,1],onUpdate:v=>{ el.textContent=fmt(v); },onComplete:()=>{ el.textContent=fmt(to); _glides.delete(el); }});
+  _glides.set(el,c);
+}
+// Live prices: check the shared market prices every 90 seconds while Tsoro is open, and on return to the tab.
+// When a price moves, refresh what's on screen and flash that stock green or red.
+let _liveTimer=null, _liveBusy=false, _liveAt=0;
+async function refreshLivePrices(){
+  if(_liveBusy||!currentUser||document.hidden) return;
+  _liveBusy=true;
+  try{
+    const{data,error}=await sb.from('market_prices').select('symbol,exchange,price,currency,price_date');
+    if(error||!data) return;
+    const moved=[];
+    data.forEach(r=>{
+      const k=r.symbol+'|'+r.exchange, raw=Number(r.price), px=r.exchange==='ZSE'?raw/100:raw, old=marketPrices[k];
+      if(!old||Number(old.price_raw??old.price)!==raw||old.price_date!==r.price_date){
+        if(old&&(r.exchange==='ZSE'||r.exchange==='VFSE')&&Number(old.price)>0&&px!==Number(old.price)) moved.push({k:baseSymbol(r.symbol)+'|'+r.exchange,up:px>Number(old.price)});
+        marketPrices[k]={...(old||{}),...r,price_raw:raw,price:px};
+        if(r.exchange!==FX_EXCHANGE){ priceHistory=priceHistory.filter(h=>!(h.symbol===r.symbol&&h.exchange===r.exchange&&h.recorded_date===r.price_date)); priceHistory.push({symbol:r.symbol,exchange:r.exchange,price:px,currency:r.exchange==='VFSE'?'USD':'ZiG',recorded_date:r.price_date}); }
+      }
+    });
+    _liveAt=Date.now();
+    if(!moved.length) return;
+    const pg=document.body.dataset.page||'dashboard';
+    const busy=document.querySelector('.overlay.open,.search-overlay.open,.tour.open')||(document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+    renderTicker();
+    if(!busy&&['dashboard','zse','security','pulse','analytics','wallet'].includes(pg)) renderPage(pg);
+    requestAnimationFrame(()=>flashMoves(moved));
+    try{ checkWatchAlerts(); }catch(e){}
+  }catch(e){ console.warn('[Tsoro] live prices:',e.message); }
+  finally{ _liveBusy=false; }
+}
+function flashMoves(moved){
+  if(REDUCED_MOTION) return;
+  moved.forEach(m=>{
+    const [sym,ex]=m.k.split('|');
+    document.querySelectorAll(`[data-k="${CSS.escape(m.k)}"],.ticker-item[data-sym="${CSS.escape(sym)}"][data-ex="${CSS.escape(ex)}"]`).forEach(el=>{
+      el.classList.remove('flash-up','flash-down'); void el.offsetWidth; el.classList.add(m.up?'flash-up':'flash-down');
+      setTimeout(()=>el.classList.remove('flash-up','flash-down'),1600);
+    });
+  });
+}
+function startLivePrices(){
+  if(_liveTimer) return;
+  _liveTimer=setInterval(refreshLivePrices,90000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-_liveAt>60000) refreshLivePrices(); });
+}
+// Rows and figures arrive in a quick cascade when you open a page (not on every refresh)
+let _enterTimer=null;
+function markEntering(page){
+  if(REDUCED_MOTION) return;
+  const el=document.getElementById('page-'+page); if(!el) return;
+  document.querySelectorAll('.page.entering').forEach(p=>p.classList.remove('entering'));
+  el.classList.add('entering'); clearTimeout(_enterTimer);
+  _enterTimer=setTimeout(()=>el.classList.remove('entering'),1100);
+}
+
 function applyMotionInteractions(root){
   if(typeof Motion==='undefined') return;
   const {animate:mA,hover:mH,press:mP}=Motion;
@@ -10237,7 +10348,7 @@ function applyMotionInteractions(root){
       return ()=>mA(el,{y:0},{type:'spring',visualDuration:0.2,bounce:0});
     });
   });
-  (root||document).querySelectorAll('.btn-primary,.auth-btn').forEach(el=>{
+  (root||document).querySelectorAll('.btn-primary,.btn-ghost,.auth-btn,.news-chip').forEach(el=>{
     if(el.dataset.mp) return; el.dataset.mp='1';
     mP(el,()=>{
       mA(el,{scale:0.97},{type:'spring',stiffness:600,damping:45});

@@ -441,6 +441,28 @@ html[data-theme="light"] .tour-spot{box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
   .pa-note{margin-top:-28px}
 }
 
+/* ═══ News page ═══ */
+.news-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:64px;align-items:start}
+.news-main{min-width:0}
+.news-rail{position:sticky;top:0;min-width:0}
+.news-block{margin-bottom:36px}
+.news-block .rail-title{font-size:18px}
+.news-asof{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:0}
+.news-row{grid-template-columns:minmax(0,1fr) 56px 84px;padding:9px 12px}
+.news-row .rail-sym{font-size:14px;color:var(--text)}
+.news-row .rail-meta{font-size:12px}
+.news-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--pill);background:var(--surface2);color:var(--text);border:0;cursor:pointer;font-family:inherit}
+.news-chip:hover{background:var(--surface3)}
+.news-chip b{font-weight:600}
+@media(max-width:1080px){.news-grid{grid-template-columns:minmax(0,1fr) 280px;gap:40px}}
+@media(max-width:860px){
+  .news-grid{grid-template-columns:minmax(0,1fr);gap:0}
+  .news-rail{position:static;order:-1;display:grid;grid-template-columns:1fr;margin-bottom:24px}
+  .news-rail .news-row:nth-of-type(n+4){display:none}
+  .news-rail .news-block{margin-bottom:24px}
+  .news-rail .news-block.nb-watch,.news-rail .news-block.nb-trend{display:none}
+}
+
 /* ═══ Getting started ═══ */
 .onb{margin-bottom:56px}
 .onb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
@@ -969,8 +991,13 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
             New Post
           </button>
         </div>
-        <div class="pulse-filter-row" id="pulse-filter"></div>
-        <div class="pulse-feed" id="pulse-feed"></div>
+        <div class="news-grid">
+          <div class="news-main">
+            <div class="pulse-filter-row" id="pulse-filter"></div>
+            <div class="pulse-feed" id="pulse-feed"></div>
+          </div>
+          <aside class="news-rail" id="news-rail" aria-label="Market movers"></aside>
+        </div>
       </div>
 
       <!-- What If? Simulator -->
@@ -2381,7 +2408,7 @@ async function loadAllData(){
       renderTicker();
       const pg=document.body.dataset.page||'dashboard';
       const typing=document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
-      if(['dashboard','zse','wallet','security'].includes(pg)) renderPage(pg);
+      if(['dashboard','zse','wallet','security','pulse'].includes(pg)) renderPage(pg);
       else if(pg==='analytics'&&!typing) renderPage(pg);
       else if(pg==='simulator'&&!typing) renderSimulator();
       else if(pg==='simulator') simSymbolChanged(true);
@@ -5064,7 +5091,7 @@ function renderTradingAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse'){renderPulse();renderNewsRail();} else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -7465,13 +7492,82 @@ function renderPulse(){
       <div style="font-size:11px;color:var(--accent);font-weight:600;margin-bottom:8px">${escapeHtml(p.author_name||'Anonymous')}</div>
       ${p.title?`<div class="pulse-title">${escapeHtml(p.title)}</div>`:''}
       <div class="pulse-body">${escapeHtml(p.body||'')}</div>
-      ${tags.length?`<div class="pulse-tags">${tags.map(t=>`<span class="pulse-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''}
+      ${(()=>{ const chips=postSymbols(p).slice(0,6); return chips.length||tags.length?`<div class="pulse-tags">${chips.map(c=>newsChip(c)).join('')}${tags.filter(t=>!chips.some(c=>c.symbol===baseSymbol(t))).map(t=>`<span class="pulse-tag">${escapeHtml(t)}</span>`).join('')}</div>`:''; })()}
       ${isOwn?`<div class="pulse-actions">
         <button class="btn btn-sm btn-ghost" style="font-size:11px" onclick="openPulseModal('${p.id}')">Edit</button>
         <button class="btn btn-sm btn-ghost" style="font-size:11px;color:var(--red)" onclick="deletePulsePost('${p.id}')">Delete</button>
       </div>`:''}
     </div>`;
   }).join('');
+}
+
+// ── News: market rail (gainers, losers, trending) and ticker chips ──
+const COMPANY={
+  'ZSE:AFDS':'African Distillers','ZSE:ARIS':'Ariston Holdings','ZSE:ARTD':'ART Corporation','ZSE:BAT':'BAT Zimbabwe','ZSE:CAFCA':'Cafca','ZSE:CBZ':'CBZ Holdings','ZSE:CFI':'CFI Holdings',
+  'ZSE:DLTA':'Delta Corporation','ZSE:DZL':'Dairibord Holdings','ZSE:ECO':'Econet Wireless','ZSE:FBC':'FBC Holdings','ZSE:FIDL':'Fidelity Life','ZSE:FML':'First Mutual Holdings',
+  'ZSE:FMP':'First Mutual Properties','ZSE:GBH':'General Beltings','ZSE:HIPO':'Hippo Valley Estates','ZSE:MASH':'Mashonaland Holdings','ZSE:MEIK':'Meikles','ZSE:MSHL':'Masimba Holdings',
+  'ZSE:NMB':'NMB Holdings','ZSE:NPKZ':'Nampak Zimbabwe','ZSE:NTS':'National Tyre Services','ZSE:OKZ':'OK Zimbabwe','ZSE:PROL':'Proplastics','ZSE:RIOZ':'RioZim','ZSE:RTG':'Rainbow Tourism Group',
+  'ZSE:SACL':'Starafrica Corporation','ZSE:SEED':'Seed Co','ZSE:TANG':'Tanganda Tea','ZSE:TSL':'TSL Limited','ZSE:TURN':'Turnall Holdings','ZSE:UNIF':'Unifreight Africa','ZSE:WILD':'Willdale',
+  'ZSE:ZBFH':'ZB Financial Holdings','ZSE:ZECO':'Zeco Holdings','ZSE:ZIMP':'Zimpapers','ZSE:ZIMR':'Zimre Holdings','ZSE:ZSEH':'ZSE Holdings','ZSE:TIG':'Tigere REIT','ZSE:REV':'Revitus REIT',
+  'ZSE:MCMS':'Morgan & Co Multi-Sector ETF','ZSE:MIZ':'Morgan & Co Made in Zim ETF','ZSE:DMCS':'Datvest Consumer Staples ETF',
+  'VFSE:AXIA':'Axia Corporation','VFSE:CMCL':'Caledonia Mining','VFSE:INN':'Innscor Africa','VFSE:PHL':'Padenga Holdings','VFSE:SIM':'Simbisa Brands','VFSE:SCIL':'Seed Co International',
+  'VFSE:FCA':'First Capital Bank','VFSE:NED':'Nedbank Group','VFSE:WPHL':'West Property Holdings','VFSE:KAV':'Kavango Resources'
+};
+function companyName(symbol,exchange){ return COMPANY[exKey(exchange)+':'+baseSymbol(symbol)]||(exKey(exchange)==='VFSE'?'VFEX':'ZSE'); }
+// Latest move for every listed stock that has a fresh price (within 5 days of the newest price on record)
+function marketMovers(){
+  const rows=allSecurities().map(x=>{ const tl=priceTimeline(x.symbol,x.exchange), l=tl[tl.length-1], p=tl[tl.length-2];
+    if(!l||!p||!(p[1]>0)) return null; const chg=l[1]/p[1]-1; if(Math.abs(Math.log(1+chg))>MAX_WEEKLY) return null;
+    return {...x,tl,last:l,prev:p,chg}; }).filter(Boolean);
+  const latest=rows.reduce((m,r)=>r.last[0]>m?r.last[0]:m,'');
+  const fresh=rows.filter(r=>daysBetween(r.last[0],latest)<=5&&daysBetween(r.prev[0],r.last[0])<=5); // a move over more than 5 days isn't a day's move
+  return {latest,fresh,
+    gainers:fresh.filter(r=>r.chg>0).sort((a,b)=>b.chg-a.chg).slice(0,5),
+    losers:fresh.filter(r=>r.chg<0).sort((a,b)=>a.chg-b.chg).slice(0,5)};
+}
+// Stocks a post talks about: its tags plus tickers written in capitals in the headline or text
+function postSymbols(p){
+  const known=new Map(); allSecurities().forEach(x=>{ if(!known.has(x.symbol)) known.set(x.symbol,x); });
+  const found=new Map();
+  (p.tags||[]).forEach(t=>{ const b=baseSymbol(t); if(known.has(b)) found.set(b,known.get(b)); });
+  const text=(p.title||'')+' '+(p.body||'');
+  (text.match(/\b[A-Z]{2,6}(?:\.(?:VX|ZW))?\b/g)||[]).forEach(w=>{ const b=baseSymbol(w); if(known.has(b)&&!['ZSE','VFEX','USD','ZIG','ETF','REIT','CEO','GDP'].includes(b)) found.set(b,known.get(b)); });
+  return [...found.values()];
+}
+function newsChip(x){
+  const tl=priceTimeline(x.symbol,x.exchange), l=tl[tl.length-1], p=tl[tl.length-2];
+  const chg=l&&p&&p[1]?l[1]/p[1]-1:null;
+  return `<button class="news-chip" onclick="openSecurity('${escapeHtml(x.symbol)}','${x.exchange}')" title="${escapeHtml(companyName(x.symbol,x.exchange))}">${escapeHtml(x.symbol)}${chg!=null?` <b style="${tone(chg)}">${fPct(chg)}</b>`:''}</button>`;
+}
+function newsRow(r,sub){
+  const up=r.chg>=0, ccy=r.exchange==='VFSE'?'USD':'ZiG';
+  return `<div class="rail-row news-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" title="${escapeHtml(companyName(r.symbol,r.exchange))}">
+    <div style="min-width:0"><div class="rail-sym">${escapeHtml(r.symbol)}</div><div class="rail-meta">${escapeHtml(sub||companyName(r.symbol,r.exchange))}</div></div>
+    <div>${railSpark(r.tl.slice(-20).map(p=>p[1]),up)}</div>
+    <div><div class="rail-price">${secFmt(r.last[1],ccy)}</div><div class="rail-chg" style="${tone(r.chg)}">${fPct(r.chg)}</div></div>
+  </div>`;
+}
+function renderNewsRail(){
+  const el=document.getElementById('news-rail'); if(!el) return;
+  const M=marketMovers();
+  const asOf=M.latest?`<span class="news-asof">${fmtHeroDate(M.latest)}</span>`:'';
+  // Trending: stocks mentioned most in News over the past 30 days; otherwise the biggest moves of the past week
+  const since=addDays(qToday(),-30), counts=new Map();
+  pulsePosts.filter(p=>(p.posted_at||'')>=since).forEach(p=>postSymbols(p).forEach(x=>{ const k=x.symbol+'|'+x.exchange; counts.set(k,(counts.get(k)||0)+1); }));
+  let trendTitle='Trending in News', trend=[...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,n])=>{ const r=M.fresh.find(f=>f.symbol+'|'+f.exchange===k); return r?{r,sub:n+' post'+(n===1?'':'s')}:null; }).filter(Boolean);
+  if(!trend.length){
+    trendTitle='Biggest moves this week';
+    const wk=addDays(M.latest||qToday(),-7);
+    trend=M.fresh.map(r=>{ const i=timelineIndexAt(r.tl,wk); const base=i>=0?r.tl[i][1]:null; return base?{r:{...r,chg:r.last[1]/base-1},sub:null}:null; })
+      .filter(x=>x&&Math.abs(x.r.chg)>0&&Math.abs(Math.log(1+x.r.chg))<=MAX_WEEKLY).sort((a,b)=>Math.abs(b.r.chg)-Math.abs(a.r.chg)).slice(0,5);
+  }
+  const watch=watchlist.map(w=>{ const tl=priceTimeline(w.symbol,w.exchange), l=tl[tl.length-1], p=tl[tl.length-2]; return l?{symbol:w.symbol,exchange:w.exchange,tl,last:l,chg:p&&p[1]?l[1]/p[1]-1:0}:null; }).filter(Boolean);
+  const block=(title,rows,empty,extra,cls)=>`<section class="news-block ${cls||''}"><h2 class="rail-title">${title}${extra||''}</h2>${rows.length?rows.join(''):`<div class="rail-empty">${empty}</div>`}</section>`;
+  el.innerHTML=
+    block('My watchlist',watch.slice(0,5).map(r=>newsRow(r)),`Nothing yet. <button class="link-btn" style="display:inline;text-decoration:underline;text-underline-offset:3px" onclick="openWatchModal()">Watch a stock</button>`,`<button onclick="navigate('zse');setTimeout(()=>document.getElementById('zse-watchlist')?.scrollIntoView({block:'start'}),120)">${watch.length?'See all':''}</button>`,'nb-watch')
+    +block('Top gainers',M.gainers.map(r=>newsRow(r)),'No gainers on the latest trading day.',asOf)
+    +block('Top losers',M.losers.map(r=>newsRow(r)),'No losers on the latest trading day.',asOf)
+    +block(trendTitle,trend.map(t=>newsRow(t.r,t.sub)),'Not enough recent prices yet.','','nb-trend');
 }
 
 function filterPulse(tag){

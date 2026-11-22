@@ -351,6 +351,94 @@ html:not([data-theme="light"]) .type-btn.active{background:var(--surface3)}
 .rail-chg{font-size:13px;font-weight:600;text-align:right}
 .rail-empty{font-size:14px;color:var(--muted);padding:12px 0}
 
+/* ═══ Investor analytics ═══ */
+:root{--s1:#00A84E;--s2:#3D7FE0;--s3:#C98204}
+html[data-theme="light"]{--s1:#008A3E;--s2:#0B63CE;--s3:#B86E00}
+.seg{display:inline-flex;background:var(--surface2);border-radius:var(--pill);padding:4px;margin-bottom:36px}
+.seg-btn{height:34px;padding:0 18px;border:0;border-radius:var(--pill);background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s,color .15s}
+.seg-btn:hover{color:var(--text)}
+.seg-btn.active{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.seg-btn:focus-visible,.pa-row:focus-visible,.pa-help:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pa-hero .hero-label{display:flex;align-items:center;gap:6px}
+.pa-help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;cursor:help;position:relative;vertical-align:1px;margin-left:2px;text-transform:none;letter-spacing:0;flex-shrink:0}
+.pa-help:hover::after,.pa-help:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(280px,80vw);background:var(--elev);color:var(--text);font-size:12px;font-weight:500;line-height:1.45;padding:10px 12px;border-radius:12px;box-shadow:var(--pop-shadow);z-index:50;white-space:normal;text-align:left;pointer-events:none}
+.pa-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted2);margin:-6px 0 14px}
+.pa-legend span{display:inline-flex;align-items:center;gap:6px}
+.pa-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pa-list{margin:0 -12px 56px}
+.pa-row{display:grid;grid-template-columns:minmax(120px,1.1fr) minmax(80px,2fr) minmax(90px,auto) minmax(80px,auto);align-items:center;gap:16px;padding:10px 12px;border-radius:12px;transition:background-color .12s}
+.pa-row[role="link"]{cursor:pointer}
+.pa-row[role="link"]:hover{background:var(--surface2)}
+.pa-name{display:flex;align-items:center;gap:10px;font-weight:600;min-width:0}
+.pa-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-num{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pa-muted{color:var(--muted);font-weight:500}
+.pa-sub{font-size:12px;color:var(--muted);font-weight:500}
+.pa-div{position:relative;height:8px}
+.pa-div::before{content:'';position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--surface3)}
+.pa-div span{position:absolute;top:0;height:8px;border-radius:4px}
+.pa-div span.pos{left:calc(50% + 1px);background:var(--green)}
+.pa-div span.neg{right:calc(50% + 1px);background:var(--red)}
+.pa-note{font-size:13px;color:var(--muted);max-width:72ch;margin:-36px 0 48px;line-height:1.55}
+.pa-callout{font-size:14px;color:var(--text2);max-width:72ch;margin:-32px 0 32px;line-height:1.55}
+.pa-callout.warn b{color:var(--yellow)}
+.pa-callout b{color:var(--text)}
+.pa-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 56px;margin-bottom:56px}
+.pa-h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.pa-bar-row{display:grid;grid-template-columns:minmax(70px,auto) 1fr 52px;align-items:center;gap:12px;font-size:14px;padding:5px 0}
+.pa-bar-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
+.pa-bar-row b{text-align:right;font-weight:600}
+.pa-track{height:6px;background:var(--surface2);border-radius:var(--pill);overflow:hidden}
+.pa-track i{display:block;height:100%;background:var(--s1);border-radius:var(--pill)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.liq{display:inline-block;font-size:12px;font-weight:600;border-radius:var(--pill);padding:2px 9px;white-space:nowrap}
+.liq-ok{color:var(--green);background:var(--green-bg)}
+.liq-thin,.liq-few{color:var(--yellow);background:var(--yellow-bg)}
+.liq-stale{color:var(--red);background:var(--red-bg)}
+table.corr{width:auto}
+table.corr th{padding:6px 8px;font-size:12px;text-align:center;position:static}
+table.corr th[scope="row"]{text-align:left;color:var(--text2)}
+table.corr td.cc{width:52px;min-width:52px;height:40px;padding:0;text-align:center;font-size:12px;font-weight:600;border-radius:6px!important;border:2px solid var(--bg)!important}
+table.corr td.self{color:var(--muted);background:var(--surface2)}
+table.corr tbody tr:hover td{background-color:inherit}
+.pa-presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.pa-scen-inputs{display:flex;flex-wrap:wrap;gap:16px 24px;margin-bottom:28px}
+.pa-scen-inputs label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:var(--muted2)}
+.pa-scen-inputs label span{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.pa-scen-inputs input{width:110px}
+.pa-method{max-width:76ch;margin:8px 0 24px;font-size:14px;color:var(--text2);line-height:1.6}
+.pa-method summary{cursor:pointer;font-weight:600;color:var(--text);padding:8px 0;list-style-position:inside}
+.pa-method p{margin:10px 0}
+.pa-range52{max-width:520px;margin-bottom:28px}
+.pa-track52{position:relative;height:6px;background:var(--surface2);border-radius:var(--pill);margin-top:8px}
+.pa-track52 i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--text);border:3px solid var(--bg);transform:translate(-50%,-50%)}
+.wl-row{grid-template-columns:minmax(140px,1.4fr) minmax(90px,1fr) minmax(130px,1.2fr) auto}
+.wl-actions{display:flex;gap:2px;justify-content:flex-end}
+.sec-head-actions{margin-left:auto;display:flex;gap:8px}
+
+/* ═══ Tutorials ═══ */
+.tour{display:none;position:fixed;inset:0;z-index:500}
+.tour.open{display:block}
+.tour-spot{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.58);transition:left .28s var(--ease-out),top .28s var(--ease-out),width .28s var(--ease-out),height .28s var(--ease-out);pointer-events:none}
+.tour-spot.none{left:50%!important;top:50%!important;width:0!important;height:0!important}
+html[data-theme="light"] .tour-spot{box-shadow:0 0 0 9999px rgba(0,0,0,.42)}
+.tour-card{position:fixed;background:var(--elev);color:var(--text);border-radius:20px;padding:20px 20px 16px;box-shadow:var(--pop-shadow);outline:none;transition:top .28s var(--ease-out),left .28s var(--ease-out);animation:modalIn .22s var(--ease-out)}
+.tour-step{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.tour-card h3{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.tour-body{font-size:14px;line-height:1.55;color:var(--text2)}
+.tour-body b{color:var(--text)}
+.tour-actions{display:flex;align-items:center;gap:8px;margin-top:16px}
+.tour-skip{font-size:13px;font-weight:600;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.tour-spot,.tour-card{transition:none}}
+@media(max-width:860px){
+  .pa-cols{grid-template-columns:1fr}
+  .pa-row{grid-template-columns:minmax(90px,1fr) minmax(60px,1fr) auto;gap:10px}
+  .pa-row .pa-muted{display:none}
+  .wl-row{grid-template-columns:minmax(0,1fr) auto auto}
+  .wl-row>.pa-num:nth-child(2){display:none}
+  .pa-note{margin-top:-28px}
+}
+
 /* ═══ Getting started ═══ */
 .onb{margin-bottom:56px}
 .onb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
@@ -567,6 +655,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
           <button class="menu-item" onclick="triggerProfilePicUpload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Change photo</button>
           <button class="menu-item" onclick="document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
           <button class="menu-item" onclick="document.body.classList.toggle('zen-mode')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Zen mode</button>
+          <button class="menu-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
           <button class="menu-item" onclick="showOnboarding()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Getting started</button>
           <div class="menu-sep"></div>
           <button class="menu-item" onclick="signOut()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
@@ -640,7 +729,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       </div>
 
       <!-- Analytics -->
-      <div class="page" id="page-analytics"><div class="analytics-grid" id="analytics-grid"></div></div>
+      <div class="page" id="page-analytics"><div class="seg" id="an-tabs" role="tablist" aria-label="Analytics view"></div><div id="an-portfolio"></div><div class="analytics-grid" id="analytics-grid"></div></div>
 
 
 
@@ -850,6 +939,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
 
         <div id="zse-holdings-table" style="margin-bottom:24px"></div>
 
+        <div id="zse-watchlist" style="margin-bottom:56px"></div>
+
         <!-- Price History Charts -->
         <div id="zse-price-charts" style="margin-bottom:24px"></div>
 
@@ -961,6 +1052,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div class="mobile-more-grid">
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> Analytics</button>
       <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
+      <button class="mobile-more-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
       <button class="mobile-more-item" id="mmore-admin" onclick="navigate('admin')" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
       <button class="mobile-more-item" onclick="closeMoreSheet();document.getElementById('import-modal').classList.add('open')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import CSV</button>
@@ -968,6 +1060,31 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
   </div>
 </div>
 
+
+<!-- Watchlist Modal -->
+<div class="overlay" id="watch-modal" onclick="if(event.target===this)closeWatchModal()">
+  <div class="modal" style="max-width:520px" role="dialog" aria-modal="true" aria-labelledby="wl-title">
+    <div class="modal-header"><div class="modal-title" id="wl-title">Watch a stock</div><button class="modal-close" onclick="closeWatchModal()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div id="wl-err" class="form-error" style="display:none;margin-bottom:10px"></div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-group"><label class="form-label" for="wl-symbol">Stock</label><input class="form-input" id="wl-symbol" list="wl-sym-list" placeholder="e.g. DLTA" autocomplete="off" style="text-transform:uppercase" oninput="wlHint()"><datalist id="wl-sym-list"></datalist></div>
+      <div class="form-group"><label class="form-label" for="wl-exchange">Exchange</label><select class="form-select" id="wl-exchange" onchange="wlHint()"><option value="ZSE">ZSE</option><option value="VFSE">VFEX</option></select></div>
+      <div class="form-group"><label class="form-label" for="wl-direction">Tell me when the price is</label><select class="form-select" id="wl-direction"><option value="above">At or above</option><option value="below">At or below</option></select></div>
+      <div class="form-group"><label class="form-label" for="wl-target">Target price <span class="opt">(optional)</span></label><input class="form-input" id="wl-target" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00"></div>
+      <div class="form-group full"><div class="pa-sub" id="wl-hint"></div></div>
+      <div class="form-group full"><label class="form-label" for="wl-note">Note <span class="opt">(optional)</span></label><input class="form-input" id="wl-note" placeholder="Why you're watching it"></div>
+    </div>
+    <div class="form-row" style="margin-top:18px"><button class="btn btn-primary" id="wl-save" onclick="saveWatch()">Save</button><button class="btn btn-ghost" onclick="closeWatchModal()">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Tutorials picker -->
+<div class="search-overlay" id="tutorials-overlay" onclick="if(event.target===this)closeTutorials()" onkeydown="if(event.key==='Escape')closeTutorials()">
+  <div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="tut-title">
+    <div class="search-field" style="justify-content:space-between"><div><div id="tut-title" style="font-size:17px;font-weight:700;color:var(--text)">Tutorials</div><div class="pa-sub">Pick a topic for a short walk-through.</div></div><button class="icon-btn" onclick="closeTutorials()" aria-label="Close tutorials"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="search-results" id="tutorials-list"></div>
+  </div>
+</div>
 
 <!-- Pulse Post Modal -->
 <div class="overlay" id="pulse-modal">
@@ -2253,17 +2370,20 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadWatchlist()]);
     renderAll();
     renderTicker();
+    maybeStartFirstTour();
     // Bulk market history is large; paint first, then fill charts and the ticker when it lands
     loadPriceHistory().then(()=>{
       renderTicker();
       const pg=document.body.dataset.page||'dashboard';
       const typing=document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
-      if(['dashboard','zse','wallet'].includes(pg)) renderPage(pg);
+      if(['dashboard','zse','wallet','security'].includes(pg)) renderPage(pg);
+      else if(pg==='analytics'&&!typing) renderPage(pg);
       else if(pg==='simulator'&&!typing) renderSimulator();
       else if(pg==='simulator') simSymbolChanged(true);
+      checkWatchAlerts();
     });
   } catch(e){ console.error('[Tsoro] loadAllData:', e.stack||e); showLoadError('Data load failed: '+(e.message||e)); }
   finally { _loadingData=false; }
@@ -2601,7 +2721,7 @@ function renderDashboard(){
   const open=openTrades.length;
   // Account-level numbers pulled from Wallet + open positions (incl. ZSE/VFSE)
   const walletCashUSD=wallets.reduce((s,w)=>s+(walletToUSD(w)||0),0);
-  const deployedUSD=openTrades.reduce((s,t)=>s+(toUSD((t.exit??t.entry)*t.qty,t.currency)??0),0);
+  const deployedUSD=openTrades.reduce((s,t)=>s+(toUSD(openTradePx(t)*t.qty,t.currency)??0),0);
   const accountValueUSD=walletCashUSD+deployedUSD;
   // Summary strip — no gradient card, just the numbers
   const todayStr=new Date().toISOString().slice(0,10);
@@ -2872,7 +2992,7 @@ function portfolioModel(){
   const today=new Date().toISOString().slice(0,10);
   const pos=[];
   zseHoldingsNotInTrades().forEach(h=>pos.push({from:h.buyDate||'',shares:h.shares,buy:h.buyPrice,ccy:h.exchange==='VFSE'?'USD':'ZiG',tl:priceTimeline(h.symbol,h.exchange)}));
-  trades.filter(t=>t.status==='open'&&t.market!=='Forex').forEach(t=>pos.push({from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',fixed:t.exit??t.entry}));
+  trades.filter(t=>t.status==='open'&&t.market!=='Forex').forEach(t=>{ const px=openTradePx(t), lk=listedTradeKey(t), marked=lk&&px!==(t.exit??t.entry); pos.push(marked?{from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',tl:priceTimeline(baseSymbol(t.symbol),lk)}:{from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',fixed:t.exit??t.entry}); });
   const usd=(v,ccy)=>{ const u=toUSD(v,ccy); return u==null?0:u; };
   const held=(p,d)=>d!=null&&(!p.from||p.from<=d);
   const priceOf=(p,d)=>{ if(p.fixed!=null) return p.fixed; const i=timelineIndexAt(p.tl,d); return i>=0?p.tl[i][1]:p.buy; };
@@ -3004,7 +3124,8 @@ function renderSecurity(){
   const exName=exchange==='VFSE'?'VFEX':'ZSE';
   const all=priceTimeline(symbol,exchange);
   const back=`<button class="btn btn-ghost btn-sm" onclick="secBack()" style="margin-bottom:20px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg> Back</button>`;
-  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${exName} · prices in ${ccy}</div></div></div>`;
+  const watched=isWatched(symbol,exchange);
+  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${exName} · prices in ${ccy} · ${escapeHtml(sectorOf(symbol,exchange))}</div></div><div class="sec-head-actions"><button class="btn ${watched?'btn-ghost':'btn-primary'} btn-sm" onclick="openWatchModal('${escapeHtml(symbol)}','${exchange}')">${watched?'Watching · Edit':'Watch'}</button></div></div>`;
   if(all.length<2){ el.innerHTML=back+head+`<div class="empty-state"><h3>Not enough price history</h3>${all.length?'Only one price is recorded so far.':'No prices are recorded for this stock yet.'}</div>`; return; }
   const r=SEC_RANGES.find(x=>x.k===_sec.range)||SEC_RANGES[SEC_RANGES.length-1];
   const lastDate=all[all.length-1][0];
@@ -3026,7 +3147,7 @@ function renderSecurity(){
       ${stat('Shares',fmtNum(sh),lots.length>1?lots.length+' lots':'')}
       ${stat('Average cost',secFmt(avg,ccy))}
       ${stat('Market value',secFmt(mv,ccy),ccy==='ZiG'&&usd(mv)!=null?'≈ $'+fmtMoney(usd(mv)):'')}
-      ${stat('Total return',`<span style="color:${gain>=0?'var(--green)':'var(--red)'}">${gain>=0?'+':'−'}${secFmt(Math.abs(gain),ccy)}</span>`,(gain>=0?'+':'−')+Math.abs(pct(mv,cost)).toFixed(2)+'%')}
+      ${stat(ccy==='ZiG'?'Price gain in ZiG':'Price gain',`<span style="color:${gain>=0?'var(--green)':'var(--red)'}">${gain>=0?'+':'−'}${secFmt(Math.abs(gain),ccy)}</span>`,(gain>=0?'+':'−')+Math.abs(pct(mv,cost)).toFixed(2)+'%')}
     </div>`;
   }
   const st=(l,v,s)=>`<div><div class="wallet-sum-lbl">${l}</div><div class="wallet-sum-val" style="font-size:18px">${v}</div>${s?`<div class="port-stat-sub">${s}</div>`:''}</div>`;
@@ -3050,6 +3171,7 @@ function renderSecurity(){
       ${st('Prices recorded',all.length.toLocaleString('en-US'))}
     </div>
     ${posHtml}
+    ${secInsightsHTML(symbol,exchange)}
     <div style="font-size:13px;color:var(--muted);max-width:68ch">${exchange==='ZSE'?'ZSE history starts at the ZiG launch on 5 April 2024; earlier prices were in the retired ZWL currency and cannot be compared. ':''}Closing prices from your imported history, your own price logs and Admin prices. Gaps mean no price was recorded those days.</div>`;
   const priceEl=document.getElementById('sec-price'), chgEl=document.getElementById('sec-change'), lblEl=document.getElementById('sec-label');
   const up=last[1]>=first[1];
@@ -3126,6 +3248,906 @@ function searchKey(e){
 document.addEventListener('keydown',e=>{
   if(e.key==='/'&&!/^(INPUT|SELECT|TEXTAREA)$/.test((document.activeElement||{}).tagName||'')&&document.getElementById('app').classList.contains('show')){ e.preventDefault(); openSearch(); }
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// INVESTOR ANALYTICS: returns, risk, income, exposure
+// Everything is in USD. ZiG converts at the rate in force on each date (rateOn), so ZiG moves show up as a real effect.
+// ═══════════════════════════════════════════════════════════════════
+const FX_SYMBOL='ZIG', FX_EXCHANGE='FX';
+const qToday=()=>new Date().toISOString().slice(0,10);
+const exKey=e=>{ const x=String(e||'').toUpperCase(); return x==='VFEX'?'VFSE':x; };
+const dayMs=864e5;
+const addDays=(d,n)=>new Date(new Date(d+'T00:00:00Z').getTime()+n*dayMs).toISOString().slice(0,10);
+const daysBetween=(a,b)=>Math.round((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/dayMs);
+function idxAtOrBefore(arr,d){ let lo=0,hi=arr.length-1,ix=-1; while(lo<=hi){ const m=(lo+hi)>>1; if(arr[m]<=d){ ix=m; lo=m+1; } else hi=m-1; } return ix; }
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+function sampleSd(a){ if(a.length<2) return null; const m=mean(a); return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)); }
+function pearson(x,y){ const n=x.length; if(n<3) return null; const mx=mean(x),my=mean(y); let sxy=0,sxx=0,syy=0; for(let i=0;i<n;i++){ const a=x[i]-mx,b=y[i]-my; sxy+=a*b; sxx+=a*a; syy+=b*b; } return sxx&&syy?sxy/Math.sqrt(sxx*syy):null; }
+
+// ── ZiG per US$1 over time ─────────────────────────────────────────
+// The user's own Rates entries plus the shared rate Admin records daily. On the same date the user's own entry wins.
+let _fxCache={key:'',arr:[]}, _fxRows={ph:null,len:-1,rows:[]};
+function sharedFxRows(){
+  if(_fxRows.ph!==priceHistory||_fxRows.len!==priceHistory.length) _fxRows={ph:priceHistory,len:priceHistory.length,rows:priceHistory.filter(r=>r.exchange===FX_EXCHANGE&&r.symbol===FX_SYMBOL)};
+  return _fxRows.rows;
+}
+// Called for every lot on every day, so the cache key is cheap: rate count and sum, history size, the Admin rate
+function fxSeries(){
+  const mp=marketPrices[FX_SYMBOL+'|'+FX_EXCHANGE];
+  let rs=0; for(const r of rates) if(r.currency==='ZiG') rs+=Number(r.units_per_usd)*1.0001+String(r.effective_date).length;
+  const key=rates.length+':'+rs+'|'+priceHistory.length+'|'+(mp?mp.price_date+':'+mp.price:'');
+  if(_fxCache.key===key) return _fxCache.arr;
+  const shared=sharedFxRows(), own=rates.filter(r=>r.currency==='ZiG'&&Number(r.units_per_usd)>0);
+  const m=new Map();
+  shared.forEach(r=>{ const v=Number(r.price); if(v>0) m.set(r.recorded_date,v); });
+  if(mp&&Number(mp.price)>0) m.set(mp.price_date,Number(mp.price));
+  own.forEach(r=>m.set(String(r.effective_date).slice(0,10),Number(r.units_per_usd)));
+  const arr=[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  _fxCache={key,arr}; return arr;
+}
+// Latest shared rate, used when the user has no ZiG rate of their own (new accounts) or theirs is older
+function sharedZigRate(){
+  const mp=marketPrices[FX_SYMBOL+'|'+FX_EXCHANGE];
+  let best=mp&&Number(mp.price)>0?{units_per_usd:Number(mp.price),effective_date:mp.price_date,inflation_rate:0,shared:true}:null;
+  sharedFxRows().forEach(r=>{ if(Number(r.price)>0&&(!best||r.recorded_date>best.effective_date)) best={units_per_usd:Number(r.price),effective_date:r.recorded_date,inflation_rate:0,shared:true}; });
+  return best;
+}
+// Units of a currency per US$1 on a date. Before the first recorded ZiG rate, the first rate is used.
+function rateOn(ccy,d){
+  if(!ccy||ccy==='USD') return 1;
+  if(ccy!=='ZiG'){ const r=getLatestRate(ccy); return r?Number(r.units_per_usd):null; }
+  const a=fxSeries(); if(!a.length) return null;
+  const i=timelineIndexAt(a,d); return a[i>=0?i:0][1];
+}
+
+// ── Sectors for ZSE / VFEX listings (unknown tickers show as Unclassified) ──
+const SECTORS={
+  'ZSE:AFDS':'Food & beverages','ZSE:DLTA':'Food & beverages','ZSE:DZL':'Food & beverages','ZSE:SACL':'Food & beverages','VFSE:INN':'Food & beverages',
+  'ZSE:ARIS':'Agriculture','ZSE:CFI':'Agriculture','ZSE:HIPO':'Agriculture','ZSE:SEED':'Agriculture','ZSE:TANG':'Agriculture','ZSE:TSL':'Agriculture','VFSE:TSL':'Agriculture','VFSE:PHL':'Agriculture','VFSE:SCIL':'Agriculture',
+  'ZSE:BAT':'Consumer & retail','ZSE:MEIK':'Consumer & retail','ZSE:OKZ':'Consumer & retail','VFSE:AXIA':'Consumer & retail','VFSE:SIM':'Consumer & retail',
+  'ZSE:ARTD':'Industrials','ZSE:CAFCA':'Industrials','ZSE:GBH':'Industrials','ZSE:MSHL':'Industrials','ZSE:NPKZ':'Industrials','ZSE:NTS':'Industrials','ZSE:PROL':'Industrials','ZSE:TURN':'Industrials','ZSE:UNIF':'Industrials','ZSE:WILD':'Industrials','ZSE:ZECO':'Industrials',
+  'ZSE:CBZ':'Financials','ZSE:FBC':'Financials','ZSE:FIDL':'Financials','ZSE:FML':'Financials','ZSE:NMB':'Financials','ZSE:ZBFH':'Financials','ZSE:ZIMR':'Financials','ZSE:ZSEH':'Financials','VFSE:FCA':'Financials','VFSE:NED':'Financials',
+  'ZSE:FMP':'Property','ZSE:MASH':'Property','ZSE:TIG':'Property','ZSE:REV':'Property','VFSE:WPHL':'Property',
+  'ZSE:RIOZ':'Mining','VFSE:CMCL':'Mining','VFSE:KAV':'Mining',
+  'ZSE:ECO':'Telecoms & media','ZSE:ZIMP':'Telecoms & media','ZSE:RTG':'Tourism',
+  'ZSE:MCMS':'Funds & ETFs','ZSE:MIZ':'Funds & ETFs','ZSE:DMCS':'Funds & ETFs'
+};
+function sectorOf(symbol,exchange){ return SECTORS[exKey(exchange)+':'+baseSymbol(symbol)]||'Unclassified'; }
+
+// ── Current price for an open journal trade ────────────────────────
+// Listed stocks are marked to the latest market price; anything else stays at its entry price.
+// A price 30x away from the entry means the units differ (ZiG cents vs whole ZiG), so it is not used.
+function listedTradeKey(t){
+  const ex=exKey(t.exchange), ccy=t.currency||'USD';
+  return (ex==='ZSE'&&ccy==='ZiG')||(ex==='VFSE'&&ccy==='USD')?ex:null;
+}
+function openTradePx(t){
+  if(t._synthetic) return t.exit??t.entry;
+  const ex=t.direction!=='Short'&&listedTradeKey(t);
+  if(ex){
+    const tl=priceTimeline(baseSymbol(t.symbol),ex), l=tl[tl.length-1];
+    if(l&&l[0]>=String(t.entryDate||'').slice(0,10)&&t.entry>0){ const r=l[1]/t.entry; if(r<30&&r>1/30) return l[1]; }
+  }
+  return t.exit??t.entry;
+}
+
+// ── The investment ledger ─────────────────────────────────────────
+// One entry per purchase: ZSE/VFEX holdings plus journal trades (long). Shorts are left out of returns.
+function invLots(){
+  const lots=[], today=qToday();
+  zseHoldingsNotInTrades().forEach(h=>{
+    const ex=h.exchange, sym=baseSymbol(h.symbol), sh=Number(h.shares), bp=Number(h.buyPrice);
+    if(!(sh>0)||!(bp>0)) return;
+    lots.push({key:sym+'|'+ex,symbol:sym,exchange:ex,ccy:ex==='VFSE'?'USD':'ZiG',shares:sh,buyDate:h.buyDate||h.priceDate||today,undated:!h.buyDate,
+      cost:sh*bp,buyPx:bp,sellDate:null,proceeds:null,tl:priceTimeline(h.symbol,ex),nowPx:holdingPrice(h),listed:true});
+  });
+  trades.filter(t=>t.market!=='Forex'&&t.direction!=='Short').forEach(t=>{
+    const sh=Number(t.qty), bp=Number(t.entry); if(!(sh>0)||!(bp>0)) return;
+    const ex=listedTradeKey(t), ccy=t.currency||'USD', sym=baseSymbol(t.symbol), fee=Number(t.fee)||0;
+    const closed=t.status==='closed'&&t.exit!=null;
+    const buyDate=String(t.entryDate||'').slice(0,10)||today;
+    const tl=ex?priceTimeline(sym,ex):null;
+    lots.push({key:ex?sym+'|'+ex:'T|'+sym+'|'+ccy,symbol:sym,exchange:ex||exKey(t.exchange)||'Other',ccy,shares:sh,buyDate,
+      cost:sh*bp+(closed?0:fee),buyPx:bp,sellDate:closed?(closeDate(t)||buyDate):null,proceeds:closed?sh*Number(t.exit)-fee:null,
+      tl:tl&&tl.length?tl:null,nowPx:closed?null:openTradePx(t),listed:!!ex});
+  });
+  return lots;
+}
+// Market price of a lot on a date. Before any market price after the purchase, the purchase price stands.
+function lotPx(l,d,today){
+  if(d===today&&l.nowPx!=null) return l.nowPx;
+  if(l.tl){ const i=timelineIndexAt(l.tl,d); if(i>=0&&l.tl[i][0]>=l.buyDate){ const p=l.tl[i][1], r=p/l.buyPx; if(r<30&&r>1/30) return p; } }
+  return l.buyPx;
+}
+
+// Daily book of the whole portfolio and of each stock: value, money in (purchases), money out (sales, dividends).
+// Each day's return has two steps: holdings already owned move from yesterday's value to today's price (V_pre / V_prev),
+// then purchases enter at cost and sales/dividends leave ((V + out) / (V_pre + in)). Timing of new money never counts as return.
+function perfEngine(){
+  const today=qToday();
+  const skipped=[];
+  const lots=invLots().filter(l=>{ if(l.buyDate>today) return false; if(rateOn(l.ccy,l.buyDate)==null){ skipped.push(l.symbol); return false; } return true; });
+  const divs=dividends.map(d=>({date:String(d.pay_date||'').slice(0,10),sym:baseSymbol(d.symbol),amt:Number(d.amount),ccy:d.currency||'USD'}))
+    .filter(x=>x.amt>0&&x.date&&x.date<=today&&rateOn(x.ccy,x.date)!=null);
+  if(!lots.length&&!divs.length) return null;
+  const firstBuy=lots.length?lots.reduce((m,l)=>l.buyDate<m?l.buyDate:m,lots[0].buyDate):null;
+  const first=[firstBuy,...divs.map(x=>x.date)].filter(Boolean).sort()[0];
+  const ds=new Set([today]);
+  lots.forEach(l=>{ ds.add(l.buyDate); if(l.sellDate) ds.add(l.sellDate); if(l.tl){ const end=l.sellDate||today; l.tl.forEach(([d])=>{ if(d>=l.buyDate&&d<=end) ds.add(d); }); } });
+  fxSeries().forEach(([d])=>{ if(d>=first) ds.add(d); });
+  divs.forEach(x=>ds.add(x.date));
+  const dates=[...ds].filter(d=>d>=first&&d<=today).sort();
+  const n=dates.length;
+  // Dividends belong to the stock they came from; one with no matching purchase gets its own line
+  const keyOfSym={}; lots.forEach(l=>{ if(!keyOfSym[l.symbol]||l.listed) keyOfSym[l.symbol]=l.key; });
+  const keys=[...new Set(lots.map(l=>l.key))];
+  divs.forEach(x=>{ x.key=keyOfSym[x.sym]||('D|'+x.sym); if(!keys.includes(x.key)) keys.push(x.key); });
+  const meta={}; keys.forEach(k=>{ const l=lots.find(z=>z.key===k); meta[k]=l?{symbol:l.symbol,exchange:l.exchange,ccy:l.ccy,listed:l.listed}:{symbol:k.split('|')[1],exchange:'',ccy:'USD',listed:false}; });
+  const Z=()=>new Float64Array(n);
+  const K={}; keys.forEach(k=>K[k]={V:Z(),VP:Z(),IN:Z(),OUT:Z(),DIV:Z()});
+  const V=Z(),VP=Z(),IN=Z(),OUT=Z(),DIV=Z(),PE=Z(),FE=Z();
+  const st=lots.map(()=>({prevL:null,prevR:null}));
+  for(let i=0;i<n;i++){
+    const d=dates[i];
+    lots.forEach((l,j)=>{
+      if(d<l.buyDate) return;
+      const s=st[j]; if(s.done) return;
+      const R=rateOn(l.ccy,d), k=K[l.key];
+      if(d>l.buyDate){ const vp=l.shares*lotPx(l,d,today)/R; k.VP[i]+=vp; VP[i]+=vp; }
+      if(d===l.buyDate){ const inUsd=l.cost/R; k.IN[i]+=inUsd; IN[i]+=inUsd; s.prevL=l.cost; s.prevR=R; }
+      let L;
+      if(l.sellDate&&d>=l.sellDate){ L=l.proceeds; const out=L/R; k.OUT[i]+=out; OUT[i]+=out; s.done=true; }
+      else { L=l.shares*lotPx(l,d,today); const v=L/R; k.V[i]+=v; V[i]+=v; }
+      // Split the day's gain: price move at yesterday's rate, plus the rate move on today's local value (exact, telescopes)
+      PE[i]+=(L-s.prevL)/s.prevR; FE[i]+=L*(1/R-1/s.prevR);
+      s.prevL=L; s.prevR=R;
+    });
+    divs.forEach(x=>{ if(x.date!==d) return; const u=x.amt/rateOn(x.ccy,d); K[x.key].OUT[i]+=u; K[x.key].DIV[i]+=u; OUT[i]+=u; DIV[i]+=u; });
+  }
+  const chain=(v,vp,inn,out)=>{ const I=Z(); let prev=1; for(let i=0;i<n;i++){
+      const vPrev=i?v[i-1]:0;
+      const a=vPrev>0?vp[i]/vPrev:1, den=vp[i]+inn[i], b=den>0?(v[i]+out[i])/den:1;
+      prev*=a*b; I[i]=prev; } return I; };
+  const I=chain(V,VP,IN,OUT);
+  keys.forEach(k=>K[k].I=chain(K[k].V,K[k].VP,K[k].IN,K[k].OUT));
+  return {dates,V,IN,OUT,DIV,PE,FE,I,K,keys,meta,lots,first,today,skipped:[...new Set(skipped)],undated:lots.filter(l=>l.undated).length};
+}
+
+// Results for the window (a, today]. a = null means since the first purchase.
+function engWindow(E,a){
+  const n=E.dates.length, b=n-1;
+  const ia=a?idxAtOrBefore(E.dates,a):-1;
+  const startD=a||addDays(E.dates[0],-1);
+  const T=Math.max(1,daysBetween(startD,E.dates[b]));
+  const Va=ia>=0?E.V[ia]:0, Ia=ia>=0?E.I[ia]:1;
+  let sumIn=0,sumOut=0,wIn=0,wOut=0,pe=0,fe=0,dv=0;
+  for(let i=ia+1;i<=b;i++){
+    const t=daysBetween(startD,E.dates[i]);
+    sumIn+=E.IN[i]; sumOut+=E.OUT[i];
+    wIn+=E.IN[i]*Math.min(1,Math.max(0,(T-t+1)/T)); wOut+=E.OUT[i]*Math.min(1,Math.max(0,(T-t)/T));
+    pe+=E.PE[i]; fe+=E.FE[i]; dv+=E.DIV[i];
+  }
+  // Dividend days: the price/currency split covers holdings only, so the dividend is its own part of the gain
+  const gain=E.V[b]-Va-sumIn+sumOut;
+  const D=Va+wIn-wOut;
+  const twr=E.I[b]/Ia-1;
+  const mwr=D>0?gain/D:null;
+  const ann=r=>r==null||T<365?null:Math.pow(1+r,365/T)-1;
+  const per=E.keys.map(k=>{
+    const c=E.K[k]; let inn=0,out=0,div=0; for(let i=ia+1;i<=b;i++){ inn+=c.IN[i]; out+=c.OUT[i]; div+=c.DIV[i]; }
+    const v0=ia>=0?c.V[ia]:0, g=c.V[b]-v0-inn+out, i0=ia>=0?c.I[ia]:1;
+    return {key:k,...E.meta[k],gain:g,contrib:D>0?g/D:null,div,invested:inn,start:v0,value:c.V[b],twr:(v0>0||inn>0)?c.I[b]/i0-1:null};
+  }).filter(p=>Math.abs(p.gain)>1e-9||p.value>0||p.start>0);
+  // Daily index inside the window, for drawdown
+  let peak=Ia,mdd=0; for(let i=ia+1;i<=b;i++){ if(E.I[i]>peak) peak=E.I[i]; const dd=E.I[i]/peak-1; if(dd<mdd) mdd=dd; }
+  return {a:startD,T,Va,Vb:E.V[b],gain,twr,mwr,twrAnn:ann(twr),mwrAnn:ann(mwr),D,sumIn,sumOut,priceEff:gain-fe-dv,fxEff:fe,divEff:dv,per,mdd,ia};
+}
+
+// ── Weekly series (Sunday week-ends) ──────────────────────────────
+function wkEnd(d){ const t=new Date(d+'T00:00:00Z'), dow=(t.getUTCDay()+6)%7; t.setUTCDate(t.getUTCDate()+6-dow); return t.toISOString().slice(0,10); }
+function weekList(from,to){ const out=[]; for(let w=wkEnd(from);w<=wkEnd(to);w=addDays(w,7)) out.push(w); return out; }
+// Weekly closing value of a price timeline in USD, carried forward up to 8 weeks after the last price
+function weeklyUsd(tl,ccy,weeks){
+  const out=new Array(weeks.length).fill(null); if(!tl||!tl.length) return out;
+  let j=-1;
+  for(let w=0;w<weeks.length;w++){
+    while(j+1<tl.length&&tl[j+1][0]<=weeks[w]) j++;
+    if(j<0) continue;
+    if(daysBetween(tl[j][0],weeks[w])>56) continue;
+    const R=rateOn(ccy,tl[j][0]); if(!R) continue;
+    out[w]=tl[j][1]/R;
+  }
+  return out;
+}
+// Portfolio weekly index (time-weighted), only for weeks it held something
+function portfolioWeekly(E,weeks){
+  return weeks.map(w=>{ const i=idxAtOrBefore(E.dates,w); return i>=0&&E.V[i]>0?E.I[i]:null; });
+}
+const MAX_WEEKLY=Math.log(3); // a stock moving more than 3x in a week is a data error, not a market move
+
+// ── Stand-in market indices (equal-weighted, in USD) ──────────────
+let _benchCache={key:'',val:{}};
+function benchIndex(exchange){
+  const key=priceHistory.length+'|'+zsePriceHistory.length+'|'+Object.keys(marketPrices).length+'|'+fxSeries().length;
+  if(_benchCache.key!==key) _benchCache={key,val:{}};
+  if(_benchCache.val[exchange]) return _benchCache.val[exchange];
+  const syms=[...new Set(priceHistory.filter(r=>r.exchange===exchange).map(r=>baseSymbol(r.symbol)))];
+  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const tls=syms.map(s=>priceTimeline(s,exchange)).filter(t=>t.length>=20);
+  const from=exchange==='ZSE'?ZIG_START:(tls.reduce((m,t)=>t[0][0]<m?t[0][0]:m,qToday()));
+  const weeks=weekList(from,qToday());
+  const series=tls.map(t=>weeklyUsd(t,ccy,weeks));
+  const minN=exchange==='ZSE'?5:2;
+  const level=[100], count=[0];
+  for(let w=1;w<weeks.length;w++){
+    const rs=[]; series.forEach(s=>{ if(s[w]!=null&&s[w-1]!=null&&s[w-1]>0){ const lr=Math.log(s[w]/s[w-1]); if(Math.abs(lr)<=MAX_WEEKLY) rs.push(s[w]/s[w-1]-1); } });
+    level.push(level[w-1]*(1+(rs.length>=minN?mean(rs):0))); count.push(rs.length);
+  }
+  const out={weeks,level,count,n:tls.length,exchange};
+  _benchCache.val[exchange]=out; return out;
+}
+
+// ── Risk and trading activity for one stock ───────────────────────
+function stockRisk(symbol,exchange){
+  const tl=priceTimeline(symbol,exchange); if(tl.length<2) return null;
+  const ccy=exchange==='VFSE'?'USD':'ZiG', today=qToday();
+  const last=tl[tl.length-1], yearAgo=addDays(last[0],-365);
+  const yr=tl.filter(p=>p[0]>=yearAgo);
+  // Volatility: weekly log returns over the past year, annualised (×√52)
+  const weeks=weekList(yearAgo,last[0]);
+  const wk=weeklyUsd(tl.map(p=>[p[0],p[1]]),'USD',weeks); // local currency: risk of the share price itself
+  const lr=[]; for(let i=1;i<wk.length;i++) if(wk[i]!=null&&wk[i-1]>0){ const x=Math.log(wk[i]/wk[i-1]); if(Math.abs(x)<=MAX_WEEKLY) lr.push(x); }
+  const sd=lr.length>=20?sampleSd(lr):null;
+  const ddOf=pts=>{ let pk=pts[0][1],m=0,pkD=pts[0][0],tr=null; pts.forEach(([d,p])=>{ if(p>pk){ pk=p; pkD=d; } const x=p/pk-1; if(x<m){ m=x; tr={from:pkD,to:d}; } }); return {mdd:m,at:tr}; };
+  const all=ddOf(tl), one=ddOf(yr.length>=2?yr:tl);
+  const ath=Math.max(...tl.map(p=>p[1]));
+  const hi52=Math.max(...yr.map(p=>p[1])), lo52=Math.min(...yr.map(p=>p[1]));
+  // Trading activity: how often the price changed over the past 90 days of records
+  const since=addDays(today,-90), firstIdx=tl.findIndex(p=>p[0]>=since);
+  let n=0,changes=0;
+  if(firstIdx>=0) for(let i=firstIdx;i<tl.length;i++){ n++; if(i>0&&tl[i][1]!==tl[i-1][1]) changes++; }
+  let lastChange=tl[0][0]; for(let i=tl.length-1;i>0;i--){ if(tl[i][1]!==tl[i-1][1]){ lastChange=tl[i][0]; break; } }
+  const staleDays=daysBetween(last[0],today), quietDays=daysBetween(lastChange,today);
+  let liq;
+  if(staleDays>30) liq={k:'stale',label:'Stale price',note:`Last price is ${staleDays} days old`};
+  else if(n<8) liq={k:'few',label:'Few prices',note:`Only ${n} price${n===1?'':'s'} in the last 90 days`};
+  else if(changes/n<0.3||quietDays>21) liq={k:'thin',label:'Thinly traded',note:`Price moved on ${changes} of ${n} recorded days (90 days)`};
+  else liq={k:'ok',label:'Active',note:`Price moved on ${changes} of ${n} recorded days (90 days)`};
+  return {ccy,last,vol:sd!=null?sd*Math.sqrt(52):null,volN:lr.length,mddAll:all.mdd,mddAllAt:all.at,mdd1y:one.mdd,ath,fromHigh:last[1]/ath-1,hi52,lo52,liq,changes,n,staleDays};
+}
+
+// ── Current positions (same valuation as the Home total) ──────────
+function currentBook(){
+  const open=allTrades().filter(t=>t.status==='open');
+  const groups={};
+  open.forEach(t=>{
+    const ex=t._synthetic?t.exchange:(listedTradeKey(t)||exKey(t.exchange)||'Other');
+    const listed=ex==='ZSE'||ex==='VFSE';
+    const k=listed?baseSymbol(t.symbol)+'|'+ex:'T|'+t.symbol+'|'+(t.currency||'USD');
+    const px=openTradePx(t), v=toUSD(px*t.qty,t.currency);
+    if(v==null) return;
+    const g=groups[k]=groups[k]||{key:k,symbol:listed?baseSymbol(t.symbol):t.symbol,exchange:ex,listed,ccy:t.currency||'USD',value:0,shares:0,costLocal:0,feeLocal:0,px};
+    g.value+=v; g.shares+=Number(t.qty); g.costLocal+=Number(t.qty)*Number(t.entry); g.feeLocal+=t._synthetic?0:(Number(t.fee)||0); g.px=px;
+  });
+  const items=Object.values(groups).filter(g=>g.value>0).sort((a,b)=>b.value-a.value);
+  const invested=items.reduce((s,g)=>s+g.value,0);
+  items.forEach(g=>g.w=invested?g.value/invested:0);
+  const cash=wallets.map(w=>({ccy:w.currency||'USD',value:walletToUSD(w)||0})).filter(c=>c.value>0);
+  return {items,invested,cash,cashTotal:cash.reduce((s,c)=>s+c.value,0)};
+}
+function sellCostPct(){ const c=zseCharges||{}; return (Number(c.cgt)||0)+(Number(c.admin)||0)+(Number(c.broker)||0); }
+// Price at which selling returns what you paid, after the sell-side charges (CGT, admin, brokerage & levies)
+function breakEven(g){
+  if(!g.shares) return null;
+  const avg=(g.costLocal+g.feeLocal)/g.shares, sp=sellCostPct()/100, wd=(Number((zseCharges||{}).withdraw)||0)/100;
+  return {avg,be:avg/(1-sp),beCash:avg/((1-sp)*(1-wd)),vs:g.px/(avg/(1-sp))-1};
+}
+
+// ── Formatting ────────────────────────────────────────────────────
+const MINUS='−';
+function fPct(x,dp=2,signed=true){ if(x==null||!isFinite(x)) return '—'; const v=x*100; return (signed?(v>=0?'+':MINUS):(v<0?MINUS:''))+Math.abs(v).toFixed(dp)+'%'; }
+function fUsd(x,signed=true){ if(x==null||!isFinite(x)) return '—'; return (signed?(x>=0?'+':MINUS):(x<0?MINUS:''))+'$'+fmtMoney(Math.abs(x)); }
+const tone=x=>x==null||!isFinite(x)||Math.abs(x)<1e-12?'':x>0?'color:var(--green)':'color:var(--red)';
+function fLocal(v,ccy){ return secFmt(v,ccy); }
+
+// ── Analytics: Portfolio tab ──────────────────────────────────────
+let _anTab=(()=>{ try{ return localStorage.getItem('tj_an_tab')||'portfolio'; }catch(e){ return 'portfolio'; } })();
+let _paRange='All';
+const PA_RANGES=[{k:'1M',d:30,l:'Past month'},{k:'3M',d:91,l:'Past 3 months'},{k:'6M',d:182,l:'Past 6 months'},{k:'YTD',ytd:true,l:'Year to date'},{k:'1Y',d:365,l:'Past year'},{k:'All',l:'Since you started'}];
+function paStart(r){ if(r.ytd) return (new Date().getUTCFullYear()-1)+'-12-31'; return r.d?addDays(qToday(),-r.d):null; }
+function setAnTab(t){ _anTab=t; try{ localStorage.setItem('tj_an_tab',t); }catch(e){} renderAnalytics(); }
+function setPaRange(k){ _paRange=k; renderPortfolioAnalytics(); }
+let _paScen={fx:0,zse:0,vfex:0};
+
+function renderAnalytics(){
+  const tabs=document.getElementById('an-tabs'), pf=document.getElementById('an-portfolio'), grid=document.getElementById('analytics-grid');
+  if(tabs) tabs.innerHTML=[['portfolio','Portfolio'],['trading','Trading']].map(([k,l])=>`<button class="seg-btn${_anTab===k?' active':''}" role="tab" aria-selected="${_anTab===k}" onclick="setAnTab('${k}')">${l}</button>`).join('');
+  if(_anTab==='portfolio'){ grid.style.display='none'; pf.style.display=''; renderPortfolioAnalytics(); }
+  else { pf.style.display='none'; pf.innerHTML=''; grid.style.display=''; renderTradingAnalytics(); }
+}
+
+function paStat(label,value,sub,style){ return `<div><div class="wallet-sum-lbl">${label}</div><div class="wallet-sum-val" style="${style||''}">${value}</div>${sub?`<div class="port-stat-sub">${sub}</div>`:''}</div>`; }
+function paHelp(t){ return `<span class="pa-help" tabindex="0" role="note" aria-label="${escapeHtml(t)}" data-tip="${escapeHtml(t)}">?</span>`; }
+
+function renderPortfolioAnalytics(){
+  const el=document.getElementById('an-portfolio'); if(!el) return;
+  let E=null; try{ E=perfEngine(); }catch(e){ console.error('[Tsoro] perfEngine',e); }
+  const book=currentBook();
+  if(!E&&!book.items.length){
+    el.innerHTML=`<div class="empty-state"><h3>Nothing to measure yet</h3><p>Add the shares you own or log a trade, and this page shows your real return, your risk and where your money sits.</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px"><button class="btn btn-primary" onclick="navigate('zse');setTimeout(()=>openZseHoldingModal(),150)">Add holding</button><button class="btn btn-ghost" onclick="openNewTradeForm()">New trade</button></div></div>`;
+    return;
+  }
+  const r=PA_RANGES.find(x=>x.k===_paRange)||PA_RANGES[PA_RANGES.length-1];
+  const W=E?engWindow(E,paStart(r)):null;
+  let html='';
+
+  // 1 · Return headline + benchmark chart
+  if(W){
+    const weeks=weekList(W.a,qToday());
+    const pw=portfolioWeekly(E,weeks);
+    const bz=benchIndex('ZSE'), bv=benchIndex('VFSE');
+    const exW=book.items.reduce((m,g)=>{ m[g.exchange]=(m[g.exchange]||0)+g.w; return m; },{});
+    const wz=exW.ZSE||0, wv=exW.VFSE||0;
+    const bAt=(B,w)=>{ const i=idxAtOrBefore(B.weeks,w); return i>=0?B.level[i]:null; };
+    // Weekly returns for beta and volatility, over weeks the portfolio held something
+    const pr=[],mr=[];
+    for(let i=1;i<weeks.length;i++){
+      if(pw[i]==null||pw[i-1]==null) continue;
+      const z0=bAt(bz,weeks[i-1]),z1=bAt(bz,weeks[i]),v0=bAt(bv,weeks[i-1]),v1=bAt(bv,weeks[i]);
+      const rz=z0&&z1?z1/z0-1:0, rv=v0&&v1?v1/v0-1:0;
+      const wsum=(z0&&z1?wz:0)+(v0&&v1?wv:0);
+      pr.push(pw[i]/pw[i-1]-1);
+      mr.push(wsum>0?((z0&&z1?wz*rz:0)+(v0&&v1?wv*rv:0))/wsum:null);
+    }
+    const pairs=pr.map((p,i)=>[p,mr[i]]).filter(x=>x[1]!=null);
+    let beta=null,corr=null;
+    if(pairs.length>=12){ const x=pairs.map(p=>p[1]),y=pairs.map(p=>p[0]); const mx=mean(x),my=mean(y); let c=0,v=0; x.forEach((xi,i)=>{ c+=(xi-mx)*(y[i]-my); v+=(xi-mx)**2; }); beta=v>0?c/v:null; corr=pearson(x,y); }
+    const logs=pr.filter(p=>p>-1).map(p=>Math.log(1+p));
+    const vol=logs.length>=12?sampleSd(logs)*Math.sqrt(52):null;
+    // Blended market return over the window, weighted like your holdings today
+    const firstW=weeks.findIndex((w,i)=>pw[i]!=null);
+    let mktRet=null;
+    if(firstW>=0&&(wz+wv)>0){
+      const a=weeks[firstW], z=bAt(bz,a), zz=bAt(bz,weeks[weeks.length-1]), v=bAt(bv,a), vv=bAt(bv,weeks[weeks.length-1]);
+      const parts=[]; if(z&&zz&&wz) parts.push([wz,zz/z-1]); if(v&&vv&&wv) parts.push([wv,vv/v-1]);
+      const ws=parts.reduce((s,p)=>s+p[0],0); if(ws>0) mktRet=parts.reduce((s,p)=>s+p[0]*p[1],0)/ws;
+    }
+    const up=W.twr>=0;
+    document.documentElement.setAttribute('data-trend',up?'up':'down');
+    html+=`<section class="hero pa-hero">
+      <div class="hero-label">Your return · ${r.l} ${paHelp('Time-weighted return: how your investments performed, with deposits, new purchases and sales taken out. This is the number to compare against the market.')}</div>
+      <div class="hero-value" style="${tone(W.twr)}">${fPct(W.twr)}</div>
+      <div class="hero-change" style="color:var(--text2)"><span style="${tone(W.gain)}">${fUsd(W.gain)}</span><span class="when">investment gain${W.twrAnn!=null?' · '+fPct(W.twrAnn)+' a year':''}</span></div>
+      <div class="hero-chart" id="pa-chart" style="height:280px"></div>
+      <div class="pa-legend" id="pa-legend"></div>
+      <div class="range-tabs" role="tablist" aria-label="Period">${PA_RANGES.map(x=>`<button class="range-tab${x.k===r.k?' active':''}" role="tab" aria-selected="${x.k===r.k}" onclick="setPaRange('${x.k}')">${x.k}</button>`).join('')}</div>
+    </section>
+    <div class="wallet-summary-grid">
+      ${paStat('Money-weighted return '+paHelp('Your personal return, giving more weight to money that was invested for longer (Modified Dietz). It differs from the headline when you added or took out money at good or bad times.'),fPct(W.mwr),W.mwrAnn!=null?fPct(W.mwrAnn)+' a year':'',tone(W.mwr))}
+      ${paStat('Market '+paHelp('Stand-in market return: an equal-weighted average of every ZSE and VFEX stock with price history, mixed in the same ZSE/VFEX split as your holdings today. Not the official All Share index.'),fPct(mktRet),mktRet!=null&&W.twr!=null?'You '+(W.twr-mktRet>=0?'beat it by ':'trailed it by ')+fPct(Math.abs(W.twr-mktRet),2,false):'',tone(mktRet))}
+      ${paStat('Beta '+paHelp('How much your portfolio moves when the market moves. 1.0 moves with the market; 0.5 moves half as much; above 1 swings harder. Needs 12+ weeks of history.'),beta!=null?beta.toFixed(2):'—',beta!=null?(corr!=null?'Correlation '+corr.toFixed(2):''):'Needs 12 weeks')}
+      ${paStat('Volatility '+paHelp('How much your portfolio value typically swings in a year, from weekly returns. Higher means a bumpier ride.'),vol!=null?fPct(vol,1,false):'—',vol!=null?'a year':'Needs 12 weeks')}
+      ${paStat('Worst drop '+paHelp('Largest fall from a high point to a low point in this period (maximum drawdown), measured on your time-weighted return.'),fPct(W.mdd,1),'from a peak',W.mdd<0?'color:var(--red)':'')}
+    </div>`;
+    setTimeout(()=>drawPaChart(weeks,pw,bz,bv,wz,wv),0);
+
+    // 2 · Attribution
+    const per=W.per.filter(p=>p.contrib!=null).sort((a,b)=>b.gain-a.gain);
+    if(per.length){
+      const mx=Math.max(...per.map(p=>Math.abs(p.gain)))||1;
+      html+=`<h2 class="section-title">What drove your return</h2><div class="section-sub" style="margin:-10px 0 18px">Each holding's share of the ${fPct(W.mwr)} money-weighted return, in percentage points. They add up to the total.</div>
+      <div class="pa-list">${per.map(p=>{
+        const w=Math.abs(p.gain)/mx*50;
+        return `<div class="pa-row" ${p.listed?`role="link" tabindex="0" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}>
+          <div class="pa-name">${p.listed?stockLogo(p.symbol,28):''}<span>${escapeHtml(p.symbol)}</span></div>
+          <div class="pa-div" aria-hidden="true"><span class="${p.gain>=0?'pos':'neg'}" style="width:${w.toFixed(1)}%"></span></div>
+          <div class="pa-num" style="${tone(p.gain)}">${fUsd(p.gain)}</div>
+          <div class="pa-num pa-muted">${p.contrib>=0?'+':MINUS}${Math.abs(p.contrib*100).toFixed(2)} pts</div>
+        </div>`; }).join('')}</div>`;
+    }
+
+    // 3 · Where the gain came from (price vs ZiG vs dividends)
+    const fx=fxSeries(), fxA=rateOn('ZiG',W.a), fxB=rateOn('ZiG',qToday());
+    const fxDistinct=new Set(fx.filter(([d])=>d>=W.a).map(x=>x[1]).concat(fxA!=null?[fxA]:[])).size;
+    const hasZig=E.lots.some(l=>l.ccy==='ZiG');
+    html+=`<h2 class="section-title">Where the gain came from</h2>
+    <div class="wallet-summary-grid">
+      ${paStat('Share prices',fUsd(W.priceEff),'price moves, valued in dollars',tone(W.priceEff))}
+      ${hasZig?paStat('ZiG against the dollar '+paHelp('The part of your gain or loss from the ZiG/USD exchange rate moving while you held ZSE shares. A weaker ZiG lowers the dollar value of the same ZiG price.'),fUsd(W.fxEff),fxA&&fxB?`ZiG ${fmtNum(fxA)} → ${fmtNum(fxB)} per $1`:'',tone(W.fxEff)):''}
+      ${paStat('Dividends',fUsd(W.divEff),'received, net of tax',tone(W.divEff))}
+    </div>
+    ${hasZig&&fxDistinct<2?`<div class="pa-note">Only one ZiG rate is on record for this period, so the currency effect shows as zero. ${isAdmin?'Record the rate daily in Admin → ZiG rate.':'It fills in as the daily rate is recorded.'}</div>`:''}`;
+  }
+
+  // 4 · Income
+  const divRows=dividends.map(d=>({date:String(d.pay_date||'').slice(0,10),sym:baseSymbol(d.symbol),usd:(()=>{ const R=rateOn(d.currency||'USD',String(d.pay_date||'').slice(0,10)); return R?Number(d.amount)/R:null; })()})).filter(x=>x.usd!=null&&x.date);
+  const t12from=addDays(qToday(),-365);
+  const t12=divRows.filter(x=>x.date>t12from).reduce((s,x)=>s+x.usd,0);
+  const allDiv=divRows.reduce((s,x)=>s+x.usd,0);
+  const costNow=E?E.lots.filter(l=>!l.sellDate).reduce((s,l)=>s+l.cost/rateOn(l.ccy,l.buyDate),0):0;
+  const W0=E?engWindow(E,null):null;
+  const perAll=W0?W0.per.filter(p=>p.invested>0).sort((a,b)=>b.gain-a.gain):[];
+  html+=`<h2 class="section-title">Total return and income</h2>
+  <div class="wallet-summary-grid">
+    ${paStat('Dividends, past 12 months',fUsd(t12,false),'net of withholding tax')}
+    ${paStat('Yield on cost '+paHelp('Dividends from the past 12 months divided by what you paid for the shares you hold now.'),costNow>0?fPct(t12/costNow,2,false):'—','on what you paid')}
+    ${paStat('All dividends',fUsd(allDiv,false),divRows.length?divRows.length+' payment'+(divRows.length===1?'':'s'):'none recorded')}
+  </div>
+  ${divRows.length?'<div id="pa-income" style="height:180px;margin:-24px 0 40px"></div>':`<div class="pa-note" style="margin-top:-32px">Record dividends on Goals &amp; Giving (Add Dividend) to track your income.</div>`}
+  ${perAll.length?`<div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Invested</th><th style="text-align:right">Value now</th><th style="text-align:right">Price gain</th><th style="text-align:right">Dividends</th><th style="text-align:right">Total return</th></tr></thead><tbody>
+    ${perAll.map(p=>{ const pg=p.gain-p.div; return `<tr${p.listed?` style="cursor:pointer" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}><td><div class="pa-name">${p.listed?stockLogo(p.symbol,28):''}<span>${escapeHtml(p.symbol)}</span></div></td>
+      <td class="num">$${fmtMoney(p.invested)}</td><td class="num">${p.value>0?'$'+fmtMoney(p.value):'Sold'}</td>
+      <td class="num" style="${tone(pg)}">${fUsd(pg)}</td><td class="num">${p.div>0?'$'+fmtMoney(p.div):'—'}</td>
+      <td class="num" style="${tone(p.gain)}">${fUsd(p.gain)}<div class="pa-sub">${fPct(p.gain/p.invested)}</div></td></tr>`; }).join('')}
+  </tbody></table></div>`:''}`;
+
+  // 5 · Concentration and exposure
+  if(book.items.length){
+    const ws=book.items.map(g=>g.w), hhi=ws.reduce((s,w)=>s+w*w,0), effN=hhi>0?1/hhi:0;
+    const top=book.items[0], top3=ws.slice(0,3).reduce((s,w)=>s+w,0);
+    const concentrated=top.w>0.25||(book.items.length>3&&top3>0.6);
+    const netWorth=book.invested+book.cashTotal;
+    const byCcy={}; book.items.forEach(g=>{ const c=g.exchange==='ZSE'?'ZiG':g.ccy; byCcy[c]=(byCcy[c]||0)+g.value; }); book.cash.forEach(c=>{ byCcy[c.ccy]=(byCcy[c.ccy]||0)+c.value; });
+    const byEx={}; book.items.forEach(g=>{ const k=g.exchange==='VFSE'?'VFEX':g.exchange==='ZSE'?'ZSE':'Other'; byEx[k]=(byEx[k]||0)+g.value; });
+    const bySec={}; book.items.forEach(g=>{ const k=g.listed?sectorOf(g.symbol,g.exchange):'Other investments'; bySec[k]=(bySec[k]||0)+g.value; });
+    const splitRows=(obj,total)=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="pa-bar-row"><span>${escapeHtml(k)}</span><div class="pa-track"><i style="width:${(v/total*100).toFixed(1)}%"></i></div><b>${(v/total*100).toFixed(1)}%</b></div>`).join('');
+    html+=`<h2 class="section-title">Concentration and exposure</h2>
+    <div class="wallet-summary-grid">
+      ${paStat('Largest holding',(top.w*100).toFixed(1)+'%',escapeHtml(top.symbol))}
+      ${paStat('Top 3',(top3*100).toFixed(1)+'%','of what you have invested')}
+      ${paStat('Effective holdings '+paHelp('How many equally sized holdings your portfolio behaves like (1 ÷ sum of squared weights). Ten holdings with one huge position may behave like two.'),effN.toFixed(1),'of '+book.items.length+' held')}
+    </div>
+    <div class="pa-callout ${concentrated?'warn':''}">${concentrated?`<b>Concentrated.</b> ${escapeHtml(top.symbol)} is ${(top.w*100).toFixed(0)}% of your investments, so a move in that one stock swings your whole portfolio.`:'<b>Reasonably spread.</b> No single holding dominates your portfolio.'}</div>
+    <div class="pa-cols">
+      <div><h3 class="pa-h3">By holding</h3>${book.items.slice(0,10).map(g=>`<div class="pa-bar-row"><span>${escapeHtml(g.symbol)}</span><div class="pa-track"><i style="width:${(g.w*100).toFixed(1)}%"></i></div><b>${(g.w*100).toFixed(1)}%</b></div>`).join('')}${book.items.length>10?`<div class="pa-sub" style="margin-top:6px">+ ${book.items.length-10} more</div>`:''}</div>
+      <div><h3 class="pa-h3">By sector</h3>${splitRows(bySec,book.invested)}</div>
+      <div><h3 class="pa-h3">By exchange</h3>${splitRows(byEx,book.invested)}<h3 class="pa-h3" style="margin-top:28px">By currency, including cash</h3>${splitRows(byCcy,netWorth)}</div>
+    </div>`;
+
+    // 6 · Holdings risk
+    const listed=book.items.filter(g=>g.listed);
+    if(listed.length){
+      html+=`<h2 class="section-title">Holdings risk</h2><div class="section-sub" style="margin:-10px 0 18px">From each stock's price history in its own currency. Break-even includes the selling charges in ZSE / VFEX → Charges (${sellCostPct().toFixed(2)}%).</div>
+      <div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Weight</th><th style="text-align:right">Volatility</th><th style="text-align:right">Worst drop</th><th style="text-align:right">From high</th><th>Trading</th><th style="text-align:right">Break-even</th><th style="text-align:right">Price vs break-even</th></tr></thead><tbody>
+      ${listed.map(g=>{ const rk=stockRisk(g.symbol,g.exchange), be=breakEven(g), ccy=g.exchange==='VFSE'?'USD':'ZiG';
+        return `<tr style="cursor:pointer" onclick="openSecurity('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')"><td><div class="pa-name">${stockLogo(g.symbol,28)}<span>${escapeHtml(g.symbol)}</span></div></td>
+        <td class="num">${(g.w*100).toFixed(1)}%</td>
+        <td class="num">${rk&&rk.vol!=null?fPct(rk.vol,0,false):'—'}</td>
+        <td class="num">${rk?fPct(rk.mddAll,0):'—'}</td>
+        <td class="num">${rk?fPct(rk.fromHigh,0):'—'}</td>
+        <td>${rk?`<span class="liq liq-${rk.liq.k}" title="${escapeHtml(rk.liq.note)}">${rk.liq.label}</span>`:'—'}</td>
+        <td class="num">${be?fLocal(be.be,ccy):'—'}</td>
+        <td class="num" style="${be?tone(be.vs):''}">${be?fPct(be.vs,1):'—'}</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+
+      // 7 · Correlation
+      const corrSet=listed.slice(0,10);
+      if(corrSet.length>=2){
+        const weeks=weekList(addDays(qToday(),-365),qToday());
+        const ser=corrSet.map(g=>{ const tl=priceTimeline(g.symbol,g.exchange); const w=weeklyUsd(tl,g.exchange==='VFSE'?'USD':'ZiG',weeks); const r=[]; for(let i=1;i<w.length;i++) r.push(w[i]!=null&&w[i-1]>0&&Math.abs(Math.log(w[i]/w[i-1]))<=MAX_WEEKLY?Math.log(w[i]/w[i-1]):null); return r; });
+        const M=corrSet.map((_,i)=>corrSet.map((_,j)=>{ if(i===j) return 1; const x=[],y=[]; ser[i].forEach((v,t)=>{ if(v!=null&&ser[j][t]!=null){ x.push(v); y.push(ser[j][t]); } }); return x.length>=12?pearson(x,y):null; }));
+        const off=[]; M.forEach((row,i)=>row.forEach((v,j)=>{ if(j>i&&v!=null) off.push(v); }));
+        const avg=off.length?mean(off):null;
+        const cell=v=>{ if(v==null) return `<td class="cc" title="Not enough overlapping weeks">·</td>`; const a=Math.min(1,Math.abs(v)); return `<td class="cc" style="background:color-mix(in srgb,var(${v>=0?'--s3':'--s2'}) ${(a*70).toFixed(0)}%,transparent)" title="${v.toFixed(2)}">${v.toFixed(2)}</td>`; };
+        html+=`<h2 class="section-title">Do your holdings move together?</h2>
+        <div class="section-sub" style="margin:-10px 0 18px">Correlation of weekly price moves over the past year in dollars: 1 moves in lockstep, 0 unrelated, below 0 opposite. ${avg!=null?`Average across pairs: <b style="color:var(--text)">${avg.toFixed(2)}</b>, ${avg>0.5?'so your holdings tend to rise and fall together and diversify each other less.':avg>0.2?'a moderate link.':'so they mostly move independently, which spreads your risk.'}`:''}</div>
+        <div class="table-wrap" style="margin-bottom:12px"><table class="corr"><thead><tr><th></th>${corrSet.map(g=>`<th>${escapeHtml(g.symbol)}</th>`).join('')}</tr></thead><tbody>${corrSet.map((g,i)=>`<tr><th scope="row">${escapeHtml(g.symbol)}</th>${M[i].map((v,j)=>i===j?'<td class="cc self">1</td>':cell(v)).join('')}</tr>`).join('')}</tbody></table></div>
+        <div class="pa-legend" style="margin-bottom:56px"><span><i style="background:var(--s2)"></i>Move opposite</span><span><i style="background:var(--surface3)"></i>Unrelated</span><span><i style="background:var(--s3)"></i>Move together</span><span>· Thin trading pulls numbers toward 0</span></div>`;
+      }
+    }
+
+    // 8 · What if
+    html+=`<h2 class="section-title">What if</h2><div class="section-sub" style="margin:-10px 0 18px">See what a market or currency move would do to your total in dollars. Covers your wallets and open positions, the same as your Home total.</div>
+    <div class="pa-presets">${[['ZiG −20%',{fx:-20,zse:0,vfex:0}],['ZSE −15%',{fx:0,zse:-15,vfex:0}],['VFEX −15%',{fx:0,zse:0,vfex:-15}],['ZiG −30%, ZSE +20%',{fx:-30,zse:20,vfex:0}],['Reset',{fx:0,zse:0,vfex:0}]].map(([l,v])=>`<button class="sim-quick-btn" onclick='_paScen=${JSON.stringify(v)};paScenario(true)'>${l}</button>`).join('')}</div>
+    <div class="pa-scen-inputs">
+      <label>ZiG against the dollar<span><input class="form-input" type="number" id="ps-fx" step="1" min="-95" max="500" inputmode="decimal" oninput="paScenario()" value="${_paScen.fx}">%</span></label>
+      <label>ZSE share prices<span><input class="form-input" type="number" id="ps-zse" step="1" min="-100" max="1000" inputmode="decimal" oninput="paScenario()" value="${_paScen.zse}">%</span></label>
+      <label>VFEX share prices<span><input class="form-input" type="number" id="ps-vfex" step="1" min="-100" max="1000" inputmode="decimal" oninput="paScenario()" value="${_paScen.vfex}">%</span></label>
+    </div>
+    <div id="pa-scen-out" aria-live="polite"></div>`;
+  }
+
+  // Method notes
+  const notes=[];
+  if(E&&E.skipped.length) notes.push(`Left out because there is no exchange rate for their currency: ${E.skipped.map(escapeHtml).join(', ')}.`);
+  if(E&&E.undated) notes.push(`${E.undated} holding${E.undated===1?' has':'s have'} no buy date, so ${E.undated===1?'it counts':'they count'} from the date of ${E.undated===1?'its':'their'} last price update. Add buy dates on ZSE / VFEX for accurate returns.`);
+  html+=`${notes.length?`<div class="pa-note">${notes.join(' ')}</div>`:''}
+  <details class="pa-method"><summary>How these numbers are calculated</summary><div>
+    <p><b>Your return</b> is time-weighted: each day's change is (value + money out) ÷ (yesterday's value + money in) − 1, linked together. Purchases count at the start of the day; sales and dividends at the end. Deposits and new purchases never show up as gains.</p>
+    <p><b>Money-weighted return</b> uses the Modified Dietz method: gain ÷ (starting value + money added, weighted by how long it was invested). Periods longer than a year are also shown per year.</p>
+    <p><b>Dollars.</b> ZiG values convert at the ZiG/USD rate in force on each date, using your own Rates entries and the shared daily rate. Before the first recorded rate, the first rate is used. Holdings are valued at the latest market price; open journal trades in ZSE or VFEX stocks are valued at the market price, other trades at their entry price.</p>
+    <p><b>What drove your return</b> splits the money-weighted gain by holding; the points add up to the total. <b>Where the gain came from</b> splits each day's dollar change into the price move (at the previous day's rate) and the exchange-rate move.</p>
+    <p><b>Market</b> is a stand-in: an equal-weighted average of every ZSE stock (from April 2024, the ZiG launch) and every VFEX stock with enough history, in dollars. Weekly moves over 3× in either direction are treated as data errors and skipped. Beta and volatility use weekly returns and need at least 12 weeks.</p>
+    <p><b>Volatility</b> is the standard deviation of weekly log returns × √52. <b>Worst drop</b> is the maximum drawdown. <b>Trading</b> looks at how often the recorded price changed over the past 90 days. <b>Break-even</b> is your average cost ÷ (1 − selling charges).</p>
+  </div></details>`;
+  el.innerHTML=html;
+  if(document.getElementById('pa-scen-out')) paScenario();
+  if(document.getElementById('pa-income')) setTimeout(()=>drawPaIncome(divRows),0);
+}
+
+function paScenario(fromPreset){
+  if(fromPreset){ ['fx','zse','vfex'].forEach(k=>{ const i=document.getElementById('ps-'+k); if(i) i.value=_paScen[k]; }); }
+  const val=id=>{ const v=parseFloat(document.getElementById(id)?.value); return isFinite(v)?v:0; };
+  _paScen={fx:Math.max(-95,val('ps-fx')),zse:Math.max(-100,val('ps-zse')),vfex:Math.max(-100,val('ps-vfex'))};
+  const fx=_paScen.fx/100, z=_paScen.zse/100, v=_paScen.vfex/100;
+  const book=currentBook();
+  const parts={zse:0,zigOther:0,vfex:0,usd:0};
+  book.items.forEach(g=>{ if(g.exchange==='ZSE') parts.zse+=g.value; else if(g.exchange==='VFSE') parts.vfex+=g.value; else if(g.ccy==='ZiG') parts.zigOther+=g.value; else parts.usd+=g.value; });
+  let zigCash=0; book.cash.forEach(c=>{ if(c.ccy==='ZiG') zigCash+=c.value; else parts.usd+=c.value; });
+  const rows=[
+    ['ZSE shares',parts.zse,parts.zse*(1+z)*(1+fx)],
+    ['ZiG cash and other ZiG',zigCash+parts.zigOther,(zigCash+parts.zigOther)*(1+fx)],
+    ['VFEX shares',parts.vfex,parts.vfex*(1+v)],
+    ['US dollars and other',parts.usd,parts.usd]
+  ].filter(r=>r[1]>0);
+  const before=rows.reduce((s,r)=>s+r[1],0), after=rows.reduce((s,r)=>s+r[2],0), d=after-before;
+  const out=document.getElementById('pa-scen-out'); if(!out) return;
+  out.innerHTML=`<div class="wallet-summary-grid" style="margin-bottom:20px">
+    ${paStat('Total now','$'+fmtMoney(before))}
+    ${paStat('Total after','$'+fmtMoney(after))}
+    ${paStat('Change',fUsd(d),before?fPct(d/before):'',tone(d))}
+  </div>
+  <div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Part</th><th style="text-align:right">Now</th><th style="text-align:right">After</th><th style="text-align:right">Change</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${r[0]}</td><td class="num">$${fmtMoney(r[1])}</td><td class="num">$${fmtMoney(r[2])}</td><td class="num" style="${tone(r[2]-r[1])}">${fUsd(r[2]-r[1])}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+const SERIES_VARS=['--s1','--s2','--s3'];
+function drawPaChart(weeks,pw,bz,bv,wz,wv){
+  const box=document.getElementById('pa-chart'); if(!box) return;
+  const start=pw.findIndex(v=>v!=null);
+  if(start<0||weeks.length-start<2){ box.style.display='none'; const lg=document.getElementById('pa-legend'); if(lg) lg.innerHTML='<span class="pa-sub">The chart starts after your first full week of holdings.</span>'; return; }
+  const ws=weeks.slice(start);
+  const rebase=arr=>{ const b=arr.find(v=>v!=null); return arr.map(v=>v==null||b==null?null:+((v/b-1)*100).toFixed(2)); };
+  const at=B=>ws.map(w=>{ const i=idxAtOrBefore(B.weeks,w); return i>=0?B.level[i]:null; });
+  const series=[{name:'You',data:rebase(pw.slice(start)),c:'--s1',w:2.5}];
+  if(wz>0&&bz.n) series.push({name:'ZSE market',data:rebase(at(bz)),c:'--s2',w:1.75});
+  if(wv>0&&bv.n) series.push({name:'VFEX market',data:rebase(at(bv)),c:'--s3',w:1.75});
+  const lg=document.getElementById('pa-legend');
+  if(lg) lg.innerHTML=series.map(s=>`<span><i style="background:var(${s.c})"></i>${s.name}</span>`).join('')+(series.length>1?'<span class="pa-sub">Equal-weighted stand-ins, in dollars</span>':'');
+  const muted=cssVar('--muted'), text2=cssVar('--text2');
+  let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+  chart.setOption({
+    animationDuration:450,animationEasing:'cubicOut',
+    grid:{left:2,right:series.length>1?92:8,top:12,bottom:8,containLabel:true},
+    xAxis:{type:'category',data:ws,show:false,boundaryGap:false},
+    yAxis:{type:'value',scale:true,position:'left',axisLabel:{color:muted,fontSize:11,formatter:v=>(v>0?'+':v<0?MINUS:'')+Math.abs(v)+'%'},splitLine:{lineStyle:{color:cssVar('--surface3'),type:[2,4]}},axisLine:{show:false},axisTick:{show:false},splitNumber:3},
+    tooltip:{trigger:'axis',backgroundColor:cssVar('--elev'),borderWidth:0,textStyle:{color:cssVar('--text'),fontSize:12},extraCssText:'box-shadow:var(--pop-shadow);border-radius:12px;padding:10px 12px',
+      axisPointer:{type:'line',lineStyle:{color:muted,width:1}},
+      formatter:ps=>`<div style="color:${muted};margin-bottom:4px">Week to ${fmtHeroDate(ws[ps[0].dataIndex])}</div>`+ps.map(p=>p.value==null?'':`<div style="display:flex;gap:10px;justify-content:space-between"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color};margin-right:6px"></span>${p.seriesName}</span><b>${p.value>=0?'+':MINUS}${Math.abs(p.value).toFixed(2)}%</b></div>`).join('')},
+    series:series.map((s,i)=>({name:s.name,type:'line',data:s.data,showSymbol:false,symbol:'circle',symbolSize:8,connectNulls:true,z:10-i,
+      lineStyle:{width:s.w,color:cssVar(s.c)},itemStyle:{color:cssVar(s.c),borderColor:cssVar('--bg'),borderWidth:2},emphasis:{scale:false,lineStyle:{width:s.w}},
+      endLabel:{show:series.length>1,formatter:()=>s.name,color:text2,fontSize:11,fontWeight:600,distance:8},labelLayout:{moveOverlap:'shiftY'},
+      markLine:i===0?{silent:true,symbol:'none',animation:false,lineStyle:{type:[2,5],color:muted,width:1},label:{show:false},data:[{yAxis:0}]}:undefined}))
+  },true);
+  chart.resize();
+}
+function drawPaIncome(rows){
+  const box=document.getElementById('pa-income'); if(!box) return;
+  const months=[]; const d=new Date(); d.setUTCDate(1);
+  for(let i=11;i>=0;i--){ const m=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()-i,1)); months.push(m.toISOString().slice(0,7)); }
+  const vals=months.map(m=>+rows.filter(x=>x.date.slice(0,7)===m).reduce((s,x)=>s+x.usd,0).toFixed(2));
+  const muted=cssVar('--muted');
+  let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+  chart.setOption({
+    animationDuration:400,grid:{left:2,right:2,top:10,bottom:2,containLabel:true},
+    xAxis:{type:'category',data:months,axisLabel:{color:muted,fontSize:11,formatter:m=>new Date(m+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',show:false},
+    tooltip:{trigger:'item',backgroundColor:cssVar('--elev'),borderWidth:0,textStyle:{color:cssVar('--text'),fontSize:12},extraCssText:'box-shadow:var(--pop-shadow);border-radius:12px',formatter:p=>`${new Date(p.name+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'})}<br><b>$${fmtMoney(p.value)}</b> in dividends`},
+    series:[{type:'bar',data:vals,barMaxWidth:22,itemStyle:{color:cssVar('--s1'),borderRadius:[4,4,0,0]},emphasis:{itemStyle:{color:cssVar('--s1')}}}]
+  },true);
+  chart.resize();
+}
+
+// ── Stock page: risk, trading activity, your returns ─────────────
+function secInsightsHTML(symbol,exchange){
+  const rk=stockRisk(symbol,exchange); if(!rk) return '';
+  const ccy=rk.ccy, st=(l,v,s,sty)=>`<div><div class="wallet-sum-lbl">${l}</div><div class="wallet-sum-val" style="font-size:18px;${sty||''}">${v}</div>${s?`<div class="port-stat-sub">${s}</div>`:''}</div>`;
+  const span=rk.hi52-rk.lo52, pos=span>0?(rk.last[1]-rk.lo52)/span*100:50;
+  let h=`<h2 class="section-title">Risk</h2>
+  <div class="pa-range52" aria-label="52-week range"><div class="pa-sub" style="display:flex;justify-content:space-between"><span>52-week low ${secFmt(rk.lo52,ccy)}</span><span>52-week high ${secFmt(rk.hi52,ccy)}</span></div><div class="pa-track52"><i style="left:${Math.min(100,Math.max(0,pos)).toFixed(1)}%"></i></div></div>
+  <div class="wallet-summary-grid">
+    ${st('Volatility '+paHelp('How much the share price typically swings in a year, from weekly moves over the past year. Needs 20+ weeks.'),rk.vol!=null?fPct(rk.vol,1,false):'—',rk.vol!=null?'a year':'Needs 20 weeks')}
+    ${st('Worst drop, all time',fPct(rk.mddAll,1),rk.mddAllAt?fmtHeroDate(rk.mddAllAt.from)+' → '+fmtHeroDate(rk.mddAllAt.to):'',rk.mddAll<0?'color:var(--red)':'')}
+    ${st('Worst drop, past year',fPct(rk.mdd1y,1),'',rk.mdd1y<0?'color:var(--red)':'')}
+    ${st('From all-time high',fPct(rk.fromHigh,1),'high '+secFmt(rk.ath,ccy),rk.fromHigh<0?'color:var(--red)':'')}
+    ${st('Trading',`<span class="liq liq-${rk.liq.k}">${rk.liq.label}</span>`,rk.liq.note)}
+  </div>`;
+  if(rk.liq.k==='thin'||rk.liq.k==='stale') h+=`<div class="pa-callout warn"><b>${rk.liq.k==='stale'?'Stale price.':'Thinly traded.'}</b> ${rk.liq.k==='stale'?'No new price for a while, so the value shown may be out of date.':'The price rarely changes, which usually means few shares trade. Selling a large amount quickly may mean accepting a lower price.'}</div>`;
+  // Your returns on this stock (all lots, including sold ones and dividends)
+  let E=null; try{ E=perfEngine(); }catch(e){}
+  const key=symbol+'|'+exchange;
+  const g=currentBook().items.find(x=>x.key===key);
+  const W=E&&E.K[key]?engWindow(E,null).per.find(p=>p.key===key):null;
+  const be=g?breakEven(g):null;
+  if(W||be){
+    h+=`<h2 class="section-title">Your return on ${escapeHtml(symbol)}, in dollars</h2><div class="section-sub" style="margin:-10px 0 18px">Includes dividends${ccy==='ZiG'?', the ZiG rate on each date,':''} and any shares you have sold.</div><div class="wallet-summary-grid">
+      ${W?st('Total return',fUsd(W.gain),W.invested?fPct(W.gain/W.invested)+' on $'+fmtMoney(W.invested)+' invested':'',tone(W.gain)):''}
+      ${W&&W.twr!=null?st('Time-weighted '+paHelp('Your return on this stock with the timing of your purchases taken out.'),fPct(W.twr),'',tone(W.twr)):''}
+      ${W?st('Dividends',W.div>0?'$'+fmtMoney(W.div):'—','net, in dollars'):''}
+      ${be?st('Break-even price '+paHelp('Your average cost divided by (1 − selling charges). Selling above this returns more than you paid.'),secFmt(be.be,ccy),'after '+sellCostPct().toFixed(2)+'% selling charges'):''}
+      ${be?st('Price vs break-even',fPct(be.vs,1),'cash in bank at '+secFmt(be.beCash,ccy),tone(be.vs)):''}
+    </div>`;
+  }
+  return h;
+}
+
+// ── Watchlist with price targets ─────────────────────────────────
+let watchlist=[], _wlRemote=false;
+const wlKey=()=>'tj_watchlist_'+(currentUser?currentUser.id:'guest');
+const wlLocal=()=>{ try{ return JSON.parse(localStorage.getItem(wlKey())||'[]'); }catch(e){ return []; } };
+const wlSaveLocal=()=>{ try{ localStorage.setItem(wlKey(),JSON.stringify(watchlist)); }catch(e){} };
+const fromWl=r=>({id:r.id,symbol:baseSymbol(r.symbol),exchange:exKey(r.exchange),target:r.target_price!=null?Number(r.target_price):null,direction:r.direction||'above',note:r.note||''});
+async function loadWatchlist(){
+  try{
+    const{data,error}=await sb.from('watchlist').select('*').order('created_at',{ascending:true});
+    if(error) throw error;
+    watchlist=(data||[]).map(fromWl); _wlRemote=true;
+    // Move anything saved on this device before the table existed
+    const local=wlLocal().filter(l=>!watchlist.some(w=>w.symbol===l.symbol&&w.exchange===l.exchange));
+    for(const l of local){ const r=await sb.from('watchlist').insert([{user_id:currentUser.id,symbol:l.symbol,exchange:l.exchange,target_price:l.target,direction:l.direction,note:l.note||null}]).select().single(); if(!r.error&&r.data) watchlist.push(fromWl(r.data)); }
+    if(local.length) try{ localStorage.removeItem(wlKey()); }catch(e){}
+  }catch(e){ _wlRemote=false; watchlist=wlLocal(); }
+}
+function wlLast(w){ const tl=priceTimeline(w.symbol,w.exchange); return tl.length?tl[tl.length-1]:null; }
+function wlHit(w,last){ if(w.target==null||!last) return false; return w.direction==='below'?last[1]<=w.target:last[1]>=w.target; }
+function isWatched(symbol,exchange){ return watchlist.some(w=>w.symbol===baseSymbol(symbol)&&w.exchange===exKey(exchange)); }
+async function wlUpsert(item){
+  const i=watchlist.findIndex(w=>w.symbol===item.symbol&&w.exchange===item.exchange);
+  if(_wlRemote){
+    const row={user_id:currentUser.id,symbol:item.symbol,exchange:item.exchange,target_price:item.target,direction:item.direction,note:item.note||null};
+    const q=i>=0&&watchlist[i].id?sb.from('watchlist').update(row).eq('id',watchlist[i].id).select().single():sb.from('watchlist').insert([row]).select().single();
+    const{data,error}=await q; if(error){ showToast('Could not save to your watchlist: '+error.message,'error'); return false; }
+    item=fromWl(data);
+  }
+  if(i>=0) watchlist[i]=item; else watchlist.push(item);
+  if(!_wlRemote) wlSaveLocal();
+  return true;
+}
+async function wlRemove(symbol,exchange){
+  const w=watchlist.find(x=>x.symbol===symbol&&x.exchange===exchange); if(!w) return;
+  if(_wlRemote&&w.id){ const{error}=await sb.from('watchlist').delete().eq('id',w.id); if(error){ showToast('Could not remove: '+error.message,'error'); return; } }
+  watchlist=watchlist.filter(x=>x!==w); if(!_wlRemote) wlSaveLocal();
+  renderWatchlist(); if(document.body.dataset.page==='security') renderSecurity();
+  showToast(symbol+' removed from your watchlist','success');
+}
+function openWatchModal(symbol,exchange){
+  const w=symbol?watchlist.find(x=>x.symbol===baseSymbol(symbol)&&x.exchange===exKey(exchange)):null;
+  document.getElementById('wl-symbol').value=symbol?baseSymbol(symbol):'';
+  document.getElementById('wl-exchange').value=exchange?exKey(exchange):'ZSE';
+  document.getElementById('wl-target').value=w&&w.target!=null?w.target:'';
+  document.getElementById('wl-direction').value=w?w.direction:'above';
+  document.getElementById('wl-note').value=w?w.note:'';
+  document.getElementById('wl-err').style.display='none';
+  const dl=document.getElementById('wl-sym-list'); if(dl) dl.innerHTML=allSecurities().map(x=>`<option value="${escapeHtml(x.symbol)}">${x.exchange==='VFSE'?'VFEX':'ZSE'}</option>`).join('');
+  document.getElementById('wl-title').textContent=w?'Edit watch':'Watch a stock';
+  wlHint();
+  document.getElementById('watch-modal').classList.add('open');
+  setTimeout(()=>document.getElementById(symbol?'wl-target':'wl-symbol').focus(),60);
+}
+function closeWatchModal(){ document.getElementById('watch-modal').classList.remove('open'); }
+function wlHint(){
+  const sym=baseSymbol(document.getElementById('wl-symbol').value), exEl=document.getElementById('wl-exchange');
+  const opts=allSecurities().filter(x=>x.symbol===sym);
+  if(opts.length===1) exEl.value=opts[0].exchange;
+  const ex=exEl.value, last=sym?wlLast({symbol:sym,exchange:ex}):null;
+  document.getElementById('wl-hint').textContent=last?`Last price ${secFmt(last[1],ex==='VFSE'?'USD':'ZiG')} on ${fmtHeroDate(last[0])}. Targets use the same units${ex==='ZSE'?' (whole ZiG, not cents)':''}.`:(sym?'No price on record for this stock yet.':'');
+}
+async function saveWatch(){
+  const err=document.getElementById('wl-err'); err.style.display='none';
+  const symbol=baseSymbol(document.getElementById('wl-symbol').value.trim());
+  const exchange=document.getElementById('wl-exchange').value;
+  const tRaw=document.getElementById('wl-target').value.trim();
+  const target=tRaw===''?null:parseFloat(tRaw);
+  if(!symbol){ err.textContent='Enter a stock symbol.'; err.style.display='block'; return; }
+  if(target!=null&&!(target>0)){ err.textContent='The target price must be a number above 0, or left empty.'; err.style.display='block'; return; }
+  const btn=document.getElementById('wl-save'); btn.disabled=true;
+  const ok=await wlUpsert({symbol,exchange,target,direction:document.getElementById('wl-direction').value,note:document.getElementById('wl-note').value.trim()});
+  btn.disabled=false; if(!ok) return;
+  closeWatchModal(); renderWatchlist(); if(document.body.dataset.page==='security') renderSecurity();
+  showToast(symbol+' is on your watchlist','success');
+}
+function renderWatchlist(){
+  const el=document.getElementById('zse-watchlist'); if(!el) return;
+  const rows=watchlist.map(w=>{ const tl=priceTimeline(w.symbol,w.exchange), l=tl[tl.length-1], p=tl[tl.length-2]; return {...w,last:l,chg:l&&p&&p[1]?l[1]/p[1]-1:null,hit:wlHit(w,l)}; });
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px">
+      <div><div class="section-title" style="margin:0">Watchlist</div><div class="section-sub">Stocks you're watching, with an optional target price${_wlRemote?'':'. For now it is saved on this device only'}.</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="openWatchModal()">Watch a stock</button>
+    </div>
+    ${rows.length?`<div class="pa-list">${rows.map(w=>{ const ccy=w.exchange==='VFSE'?'USD':'ZiG'; const dist=w.target&&w.last?w.target/w.last[1]-1:null;
+      return `<div class="pa-row wl-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')">
+        <div class="pa-name">${stockLogo(w.symbol,32)}<div><div>${escapeHtml(w.symbol)}</div><div class="pa-sub">${w.exchange==='VFSE'?'VFEX':'ZSE'}${w.note?' · '+escapeHtml(w.note):''}</div></div></div>
+        <div class="pa-num">${w.last?secFmt(w.last[1],ccy):'—'}<div class="pa-sub" style="${tone(w.chg)}">${w.chg!=null?fPct(w.chg):''}</div></div>
+        <div class="pa-num">${w.target!=null?`${w.direction==='below'?'At or below':'At or above'} ${secFmt(w.target,ccy)}<div class="pa-sub">${w.hit?'<span class="sr-held">Target reached</span>':dist!=null?fPct(dist,1)+' away':''}</div>`:'<span class="pa-sub">No target</span>'}</div>
+        <div class="wl-actions"><button class="icon-btn" title="Edit" aria-label="Edit ${escapeHtml(w.symbol)} watch" onclick="event.stopPropagation();openWatchModal('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button class="icon-btn" title="Remove" aria-label="Remove ${escapeHtml(w.symbol)} from watchlist" onclick="event.stopPropagation();wlRemove('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+      </div>`; }).join('')}</div>`:'<div class="pa-note" style="margin:0">Nothing on your watchlist yet. Open any stock and tap Watch, or use the button above.</div>'}`;
+}
+// Tell the user once per new price when a watched stock reaches its target
+function checkWatchAlerts(){
+  if(!currentUser) return;
+  watchlist.forEach(w=>{
+    const l=wlLast(w); if(!wlHit(w,l)) return;
+    const k='tj_wl_alert_'+currentUser.id+'_'+w.symbol+'|'+w.exchange;
+    let seen=null; try{ seen=localStorage.getItem(k); }catch(e){}
+    if(seen===l[0]) return;
+    try{ localStorage.setItem(k,l[0]); }catch(e){}
+    const ccy=w.exchange==='VFSE'?'USD':'ZiG';
+    showToast(`${w.symbol} is at ${secFmt(l[1],ccy)}, ${w.direction==='below'?'at or below':'at or above'} your ${secFmt(w.target,ccy)} target`,'info');
+  });
+}
+
+// ── Admin: shared ZiG/USD rate ────────────────────────────────────
+function adminFxHTML(){
+  const s=sharedZigRate();
+  const hist=sharedFxRows().slice().sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date)).slice(0,6);
+  return `<div class="card" style="margin-bottom:40px">
+    <div class="section-title" style="margin-bottom:4px">ZiG rate</div>
+    <div class="section-sub" style="margin-bottom:16px">ZiG per US$1, shared with every user. New accounts use it to value ZSE shares, and a daily record lets Analytics show how much of each return came from the currency.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500">ZiG per $1<input class="form-input" id="fx-rate" type="number" step="any" min="0" inputmode="decimal" placeholder="${s?s.units_per_usd:'26.50'}" style="width:160px"></label>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500">Date<input class="form-input" id="fx-date" type="date" value="${qToday()}" style="width:170px"></label>
+      <button class="btn btn-primary" onclick="saveAdminFx()">Save rate</button>
+    </div>
+    <div class="pa-sub" style="margin-top:12px">${s?`Current shared rate: <b style="color:var(--text)">ZiG ${fmtNum(s.units_per_usd)}</b> per $1 since ${fmtHeroDate(s.effective_date)}.`:'No shared rate yet. Until one is saved, new users see ZSE values only after adding their own rate on Portfolio.'}${hist.length>1?' Recent: '+hist.map(r=>`${r.recorded_date.slice(5)} ${fmtNum(r.price)}`).join(' · '):''}</div>
+  </div>`;
+}
+async function saveAdminFx(){
+  const rate=parseFloat(document.getElementById('fx-rate').value), date=document.getElementById('fx-date').value;
+  if(!(rate>0)||!date){ showToast('Enter the rate (ZiG per US$1) and a date.','warn'); return; }
+  if(rate<1||rate>10000){ if(!confirm(`ZiG ${rate} per US$1 looks unusual. Save it anyway?`)) return; }
+  try{
+    const mp=marketPrices[FX_SYMBOL+'|'+FX_EXCHANGE];
+    if(!mp||date>=mp.price_date){
+      const{error}=await sb.from('market_prices').upsert({symbol:FX_SYMBOL,exchange:FX_EXCHANGE,price:rate,currency:'ZiG',price_date:date,updated_by:currentUser.id,updated_at:new Date().toISOString()},{onConflict:'symbol,exchange'});
+      if(error) throw error;
+      marketPrices[FX_SYMBOL+'|'+FX_EXCHANGE]={symbol:FX_SYMBOL,exchange:FX_EXCHANGE,price:rate,price_raw:rate,currency:'ZiG',price_date:date};
+    }
+    const{error:e2}=await sb.from('price_history').upsert({symbol:FX_SYMBOL,exchange:FX_EXCHANGE,price:rate,currency:'ZiG',recorded_date:date,recorded_by:currentUser.id},{onConflict:'symbol,exchange,recorded_date'});
+    if(e2) throw e2;
+    priceHistory=priceHistory.filter(r=>!(r.exchange===FX_EXCHANGE&&r.symbol===FX_SYMBOL&&r.recorded_date===date));
+    priceHistory.push({symbol:FX_SYMBOL,exchange:FX_EXCHANGE,price:rate,currency:'ZiG',recorded_date:date});
+    showToast(`ZiG rate saved: ${fmtNum(rate)} per $1 on ${fmtHeroDate(date)}`,'success');
+    renderAdmin();
+  }catch(e){ showToast('Save failed: '+e.message,'error'); }
+}
+
+// ── Tutorials: short guided walk-throughs that point at the real controls ──
+// sel lists desktop then mobile targets; the first visible one is used. No target = a centred card.
+const TOURS={
+  welcome:{title:'Getting around',desc:'Where everything is, in about a minute.',steps:[
+    {page:'dashboard',title:'Welcome to Tsoro',body:'Tsoro tracks your ZSE and VFEX shares, cash and trades in one place, all in US dollars. Here is a quick look around. You can skip at any time.'},
+    {sel:['.topnav-links','.mobile-nav'],title:'Your main pages',body:'<b>Home</b> shows your total. <b>Trades</b> is your journal. <b>Portfolio</b> holds your cash wallets. <b>ZSE / VFEX</b> holds your shares. <b>Analytics</b> shows your real return and risk. <b>News</b> has market updates.'},
+    {sel:['#nav-more-btn','#mnav-more'],title:'More',body:'Goals &amp; Giving and the Simulator (what if I had bought earlier?) live here.'},
+    {sel:['#ticker-bar'],opt:true,title:'Live prices',body:'Every ZSE and VFEX stock, with yours first. Tap one to open its full price history.'},
+    {sel:['.topbar-right .icon-btn[aria-label="Search stocks"]'],title:'Search',body:'Find any listed stock. On a computer, press <b>/</b> from anywhere.'},
+    {sel:['#open-trade-btn'],title:'New trade',body:'Log a buy or sell in a few seconds. Only the stock, quantity, price and date are needed.'},
+    {sel:['#db-onboard .onb'],opt:true,page:'dashboard',title:'Start here',body:'Three steps get your numbers in: add your cash, add the shares you own, and (optionally) log a trade. Each ticks itself off as you go.'},
+    {sel:['#user-avatar'],title:'Help is always here',body:'Open your account menu and choose <b>Tutorials</b> to replay this tour or learn any part of Tsoro step by step.'}
+  ]},
+  cash:{title:'Add your cash',desc:'Wallets for bank, broker and mobile money balances.',steps:[
+    {page:'wallet',title:'Portfolio',body:'Your cash lives in wallets: one per bank account, broker account or mobile money line, in USD or ZiG.'},
+    {page:'wallet',sel:['#wallet-quickstart .btn-primary','[onclick="openWalletModal()"]'],title:'Add a wallet',body:'Give it a name, pick the currency and enter today\'s balance. Use Deposit, Withdraw and Transfer afterwards to keep it current.'},
+    {page:'wallet',title:'How it adds up',body:'ZiG balances convert to dollars at the latest ZiG rate, so your Home total is always in USD.'}
+  ]},
+  holdings:{title:'Add the shares you own',desc:'Your ZSE and VFEX holdings, valued at market prices.',steps:[
+    {page:'zse',sel:['[onclick="openZseHoldingModal()"]'],title:'Add a holding',body:'Enter the stock, number of shares, what you paid per share and the buy date. ZSE prices are in whole ZiG (1.45, not 145 cents); VFEX prices are in US dollars.'},
+    {page:'zse',sel:['#zse-holdings-table'],title:'Your holdings',body:'Each stock shows its value and gain at the latest market price. Bought more than once? Each purchase is a lot under the same stock.'},
+    {page:'zse',sel:['#zse-watchlist'],title:'Watchlist',body:'Watch stocks you don\'t own yet and set a target price. Tsoro tells you when a new price reaches it.'},
+    {page:'zse',title:'Buy dates matter',body:'Analytics uses buy dates to work out your true return. Add them for every holding.'}
+  ]},
+  trade:{title:'Log a trade',desc:'Record buys and sells as you make them.',steps:[
+    {sel:['#open-trade-btn'],title:'New trade',body:'Pick the stock, Buy or Sell, quantity, price, currency and date. Notes are optional.'},
+    {page:'journal',title:'Closing a trade',body:'When you sell, open the trade and add the close price and date under <b>More details</b>. The profit or loss flows into Analytics.'}
+  ]},
+  analytics:{title:'Read your analytics',desc:'Return, risk and income in plain terms.',steps:[
+    {page:'analytics',before:()=>{ if(_anTab!=='portfolio') setAnTab('portfolio'); },sel:['#an-tabs'],title:'Portfolio and Trading',body:'<b>Portfolio</b> measures you as an investor. <b>Trading</b> measures your closed trades: win rate, profit factor and more.'},
+    {page:'analytics',sel:['.pa-hero .hero-value','#an-portfolio'],title:'Your real return',body:'This is your time-weighted return: deposits and new purchases are taken out, so it shows how well your investments did. Compare it with the market lines on the chart.'},
+    {page:'analytics',sel:['.pa-hero .range-tabs'],title:'Pick a period',body:'Switch between the past month, year to date, the past year or since you started.'},
+    {page:'analytics',sel:['.pa-list','#an-portfolio'],title:'What drove it',body:'Which holdings added to or took away from your return, in dollars and percentage points.'},
+    {page:'analytics',sel:['.pa-callout','#an-portfolio'],title:'Risk at a glance',body:'Concentration, how bumpy each stock is, whether it trades often, the price you need to break even after charges, and what a ZiG or market move would do to your total. Tap <b>?</b> next to any number for an explanation.'}
+  ]},
+  stocks:{title:'Stock pages',desc:'Price history, risk and your return on each stock.',steps:[
+    {sel:['#ticker-bar','.topbar-right .icon-btn[aria-label="Search stocks"]'],title:'Open a stock',body:'Tap any stock in the price bar, in search or in your holdings to open its page.'},
+    {title:'What you\'ll see',body:'The full price history since April 2024 (ZiG launch) for ZSE, longer for VFEX. Drag across the chart to read any date. Below it: risk, trading activity and, for your own stocks, your total return and break-even price.'},
+    {title:'Watch and simulate',body:'Use <b>Watch</b> to add a target price, and <b>Simulate</b> to see what an earlier purchase would be worth today.'}
+  ]},
+  news:{title:'News and the Simulator',desc:'Market updates, and testing ideas against history.',steps:[
+    {page:'pulse',sel:['.topnav-links [data-page="pulse"]','#mnav-pulse'],title:'News',body:'Daily market updates from the Tsoro community. Filter by tag; post your own with New Post.'},
+    {page:'simulator',title:'Simulator',body:'Pick a stock, a past date and an amount to see what it would be worth today, using real recorded prices.'}
+  ]}
+};
+let _tour=null;
+function tourTarget(st){
+  for(const s of (st.sel||[])){ const el=[...document.querySelectorAll(s)].find(e=>{ const r=e.getBoundingClientRect(); return r.width>0&&r.height>0&&getComputedStyle(e).visibility!=='hidden'; }); if(el) return el; }
+  return null;
+}
+function startTour(id,opts){
+  const t=TOURS[id]; if(!t) return;
+  if(typeof closeMenus==="function") closeMenus(); closeTutorials(); if(typeof closeMoreSheet==='function') closeMoreSheet();
+  if(t.steps[0].page&&document.body.dataset.page!==t.steps[0].page) navigate(t.steps[0].page);
+  const steps=t.steps.filter(st=>!st.opt||(st.page&&st.page!==document.body.dataset.page)||tourTarget(st));
+  _tour={id,i:0,steps,first:!!(opts&&opts.first),prevFocus:document.activeElement};
+  let ov=document.getElementById('tour');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='tour'; ov.className='tour';
+    ov.innerHTML=`<div class="tour-spot" id="tour-spot"></div><div class="tour-card" id="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title" tabindex="-1">
+      <div class="tour-step" id="tour-step"></div><h3 id="tour-title"></h3><div class="tour-body" id="tour-body"></div>
+      <div class="tour-actions"><button class="link-btn tour-skip" id="tour-skip" onclick="endTour(true)">Skip tour</button><span style="flex:1"></span><button class="btn btn-ghost btn-sm" id="tour-back" onclick="tourGo(-1)">Back</button><button class="btn btn-primary btn-sm" id="tour-next" onclick="tourGo(1)">Next</button></div></div>`;
+    document.body.appendChild(ov);
+    window.addEventListener('resize',()=>{ if(_tour) tourPlace(); });
+    document.addEventListener('keydown',e=>{ if(!_tour) return; if(e.key==='Escape'){ e.preventDefault(); endTour(true); } else if(e.key==='ArrowRight'){ tourGo(1); } else if(e.key==='ArrowLeft'){ tourGo(-1); } },true);
+  }
+  ov.classList.add('open');
+  tourShow();
+}
+function tourShow(){
+  const t=TOURS[_tour.id], st=_tour.steps[_tour.i];
+  if(st.page&&document.body.dataset.page!==st.page) navigate(st.page);
+  if(st.before) try{ st.before(); }catch(e){}
+  document.getElementById('tour-step').textContent=`${t.title} · ${_tour.i+1} of ${_tour.steps.length}`;
+  document.getElementById('tour-title').textContent=st.title;
+  document.getElementById('tour-body').innerHTML=st.body;
+  document.getElementById('tour-back').style.visibility=_tour.i?'visible':'hidden';
+  const last=_tour.i===_tour.steps.length-1;
+  document.getElementById('tour-next').textContent=last?(_tour.first?'Get started':'Done'):'Next';
+  document.getElementById('tour-skip').textContent=_tour.first?'Skip tour':'Close';
+  document.getElementById('tour-skip').style.visibility=last?'hidden':'visible';
+  const el=tourTarget(st);
+  if(el){ const r=el.getBoundingClientRect(); if(r.top<64||r.bottom>window.innerHeight-90) el.scrollIntoView({block:'center',behavior:'instant'}); }
+  requestAnimationFrame(()=>{ tourPlace(); document.getElementById('tour-card').focus({preventScroll:true}); });
+}
+function tourPlace(){
+  if(!_tour) return;
+  const st=_tour.steps[_tour.i], el=tourTarget(st);
+  const spot=document.getElementById('tour-spot'), card=document.getElementById('tour-card');
+  const vw=window.innerWidth, vh=window.innerHeight, pad=8, cw=Math.min(360,vw-32);
+  card.style.width=cw+'px';
+  if(!el){ spot.className='tour-spot none'; card.style.left=((vw-cw)/2)+'px'; card.style.top=Math.max(16,(vh-card.offsetHeight)/2)+'px'; return; }
+  const r=el.getBoundingClientRect();
+  const x=Math.max(4,r.left-pad), y=Math.max(4,r.top-pad), w=Math.min(vw-8,r.width+pad*2), h=Math.min(vh-8,r.height+pad*2);
+  spot.className='tour-spot'; Object.assign(spot.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});
+  const ch=card.offsetHeight, below=y+h+12, above=y-12-ch;
+  const top=below+ch<=vh-16?below:above>=16?above:Math.max(16,vh-ch-16);
+  card.style.top=top+'px'; card.style.left=Math.min(vw-cw-16,Math.max(16,r.left+r.width/2-cw/2))+'px';
+}
+function tourGo(d){
+  if(!_tour) return;
+  const n=_tour.steps.length, j=_tour.i+d;
+  if(j<0) return; if(j>=n){ endTour(false); return; }
+  _tour.i=j; tourShow();
+}
+function endTour(skipped){
+  if(!_tour) return;
+  const wasFirst=_tour.first, pf=_tour.prevFocus; _tour=null;
+  const ov=document.getElementById('tour'); if(ov) ov.classList.remove('open');
+  if(wasFirst){ markTourDone(); if(skipped) showToast('You can replay the tour any time from your account menu → Tutorials.','info'); else navigate('dashboard'); }
+  if(pf&&pf.focus) try{ pf.focus({preventScroll:true}); }catch(e){}
+}
+function tourDoneKey(){ return 'tj_tour_done_'+(currentUser?currentUser.id:''); }
+function markTourDone(){
+  try{ localStorage.setItem(tourDoneKey(),'1'); }catch(e){}
+  if(currentUser&&!(currentUser.user_metadata||{}).tour_done) sb.auth.updateUser({data:{tour_done:true}}).then(r=>{ if(r&&r.data&&r.data.user) currentUser=r.data.user; }).catch(()=>{});
+}
+// The welcome tour runs once, on a new account's first visit. Existing accounts are never interrupted.
+const TOUR_LAUNCH='2026-11-22';
+function maybeStartFirstTour(){
+  if(!currentUser||_tour) return;
+  const md=currentUser.user_metadata||{};
+  let done=false; try{ done=localStorage.getItem(tourDoneKey())==='1'; }catch(e){}
+  if(md.tour_done||done) return;
+  const fresh=String(currentUser.created_at||'').slice(0,10)>=TOUR_LAUNCH||(!trades.length&&!wallets.length&&!zseHoldings.length);
+  if(!fresh){ try{ localStorage.setItem(tourDoneKey(),'1'); }catch(e){} return; }
+  setTimeout(()=>{ if(!_tour&&document.getElementById('app').classList.contains('show')) startTour('welcome',{first:true}); },700);
+}
+function openTutorials(){
+  if(typeof closeMenus==="function") closeMenus(); if(typeof closeMoreSheet==='function') closeMoreSheet();
+  const el=document.getElementById('tutorials-list');
+  el.innerHTML=Object.entries(TOURS).map(([k,t])=>`<button class="search-row" onclick="startTour('${k}')"><span class="sr-sym" style="flex-direction:column;align-items:flex-start;gap:0">${t.title}<span class="sr-ex">${t.desc}</span></span><span class="sr-ex">${t.steps.length} steps</span></button>`).join('');
+  document.getElementById('tutorials-overlay').classList.add('open');
+  setTimeout(()=>{ const b=el.querySelector('button'); if(b) b.focus(); },50);
+}
+function closeTutorials(){ const o=document.getElementById('tutorials-overlay'); if(o) o.classList.remove('open'); }
 
 function themeVal(darkVal, lightVal){ return document.documentElement.getAttribute('data-theme')==='light' ? lightVal : darkVal; }
 // Trace a smooth curve through points [{x,y}] using quadratic midpoints
@@ -3631,7 +4653,7 @@ function openExposureCard(){
     `<div class="perf-row"><span class="perf-key" style="font-weight:600">Wallet Cash (USD)</span><span class="perf-val pnl-pos">$${fmtMoney(walletCashUSD)}</span></div>`+
     `<div class="perf-row"><span class="perf-key" style="font-weight:600">Total Account (USD)</span><span class="perf-val" style="color:var(--accent2)">$${fmtMoney(deployedUSD+walletCashUSD)}</span></div></div>`;
 }
-function renderAnalytics(){
+function renderTradingAnalytics(){
   const closed=trades.filter(t=>t.status==='closed'&&t.market!=='Forex');
   const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
@@ -3680,7 +4702,7 @@ function renderAnalytics(){
   const avgR=rMultiples.length?rMultiples.reduce((s,v)=>s+v,0)/rMultiples.length:null;
 
   // Kelly Criterion: optimal fraction f* = W/L - (1-W)/W (simplified)
-  const kelly=avgWin>0&&avgLoss>0?(wr/100)/avgLoss-(1-wr/100)/avgWin:null;
+  const kelly=avgWin>0&&avgLoss>0?(wr/100)-(1-wr/100)/(avgWin/avgLoss):null;
   const kellyPct=kelly!=null?Math.max(0,Math.min(kelly*100,50)):null; // cap at 50%
 
   // Consecutive streak
@@ -4030,7 +5052,7 @@ function renderAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse')renderZse(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse')renderPulse(); else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -5801,7 +6823,10 @@ async function deleteRate(id){
 function getLatestRate(currency){
   if(!currency||currency==='USD') return {units_per_usd:1, inflation_rate:0};
   const r=[...rates].filter(x=>x.currency===currency).sort((a,b)=>new Date(b.effective_date)-new Date(a.effective_date));
-  return r[0]||null;
+  let best=r[0]||null;
+  // Accounts without their own ZiG rate (or with an older one) use the shared rate Admin records
+  if(currency==='ZiG'&&typeof sharedZigRate==='function'){ const sh=sharedZigRate(); if(sh&&(!best||sh.effective_date>String(best.effective_date).slice(0,10))) best=sh; }
+  return best;
 }
 
 // Convert amount in given currency to USD
@@ -5953,7 +6978,7 @@ window.addEventListener('resize',()=>{
     const el=document.getElementById(id); if(!el)return;
     const inst=echarts.getInstanceByDom(el); if(inst)inst.resize();
   });
-  ['sec-chart'].forEach(id=>{ const el=document.getElementById(id); const i=el&&echarts.getInstanceByDom(el); if(i) i.resize(); });
+  ['sec-chart','pa-chart','pa-income'].forEach(id=>{ const el=document.getElementById(id); const i=el&&echarts.getInstanceByDom(el); if(i) i.resize(); });
   document.querySelectorAll('.ph-chart').forEach(el=>{ const inst=echarts.getInstanceByDom(el); if(inst) inst.resize(); });
 });
 
@@ -6527,8 +7552,8 @@ async function renderAdmin(){
   const el=document.getElementById('admin-content'); if(!el) return;
   let usersCount='—';
   try{ const{count}=await sb.from('profiles').select('*',{count:'exact',head:true}); usersCount=count??'—'; }catch(_){}
-  const prices=Object.values(marketPrices).sort((a,b)=>a.exchange.localeCompare(b.exchange)||a.symbol.localeCompare(b.symbol));
-  el.innerHTML=`
+  const prices=Object.values(marketPrices).filter(r=>r.exchange!==FX_EXCHANGE).sort((a,b)=>a.exchange.localeCompare(b.exchange)||a.symbol.localeCompare(b.symbol));
+  el.innerHTML=adminFxHTML()+`
     <div class="card" style="padding:20px 24px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">Market Prices</div>
       <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Update ZSE, VFEX and ZEEX prices daily. These override each user's stored price when calculating portfolio value.</div>
@@ -6807,7 +7832,7 @@ function findHistoricalPrice(symbol,exchange,targetDate){
 
 // All unique symbol|exchange keys that have history data
 function symbolsWithHistory(){
-  return [...new Set(priceHistory.map(r=>baseSymbol(r.symbol)+'|'+r.exchange))];
+  return [...new Set(priceHistory.filter(r=>r.exchange!==FX_EXCHANGE).map(r=>baseSymbol(r.symbol)+'|'+r.exchange))];
 }
 
 function simFmtPx(v,ccy){ return (ccy==='USD'?'$':'ZiG ')+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4}); }

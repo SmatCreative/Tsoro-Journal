@@ -8008,6 +8008,8 @@ function getMarketPrice(symbol,exchange){
   return null;
 }
 
+// Keep the chosen exchange and date between saves, for entering a day's prices quickly
+const _apLast={exchange:'ZSE',date:null};
 async function renderAdmin(){
   if(!isAdmin){ navigate('dashboard'); return; }
   const el=document.getElementById('admin-content'); if(!el) return;
@@ -8021,12 +8023,12 @@ async function renderAdmin(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px">
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Symbol</div><input class="form-input" id="ap-symbol" placeholder="AXIA" style="text-transform:uppercase"></div>
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Exchange</div>
-          <select class="form-select" id="ap-exchange" onchange="const h=document.getElementById('ap-price-hint');if(h)h.style.display=this.value==='ZSE'?'':'none'">
-            <option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="ZEEX">ZEEX</option>
+          <select class="form-select" id="ap-exchange" onchange="_apLast.exchange=this.value;const h=document.getElementById('ap-price-hint');if(h)h.style.display=this.value==='ZSE'?'':'none'">
+            ${['ZSE','VFSE','ZEEX'].map(x=>`<option value="${x}"${_apLast.exchange===x?' selected':''}>${x==='VFSE'?'VFEX':x}</option>`).join('')}
           </select>
         </div>
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price <span id="ap-price-hint" style="font-size:10px;color:var(--accent);font-weight:500">(ZiG cents, as quoted by ZSE)</span></div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00"></div>
-        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Price <span id="ap-price-hint" style="font-size:10px;color:var(--accent);font-weight:500;${_apLast.exchange==='ZSE'?'':'display:none'}">(ZiG cents, as quoted by ZSE)</span></div><input class="form-input" id="ap-price" type="number" step="any" min="0" placeholder="0.00" onkeydown="if(event.key==='Enter')saveAdminPrice()"></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${_apLast.date||new Date().toISOString().slice(0,10)}" onchange="_apLast.date=this.value"></div>
         <button class="btn btn-primary" onclick="saveAdminPrice()" style="height:40px;white-space:nowrap">+ Add / Update</button>
       </div>
       ${prices.length?`
@@ -8108,9 +8110,11 @@ async function saveAdminPrice(){
     document.getElementById('ap-price').value='';
     const displayPrice=exchange==='ZSE'?`ZiG ${fmtNum(price)} (${fmtNum(rawPrice)} ZiG¢)`:`${currency==='USD'?'$':'ZiG '}${fmtNum(price)}`;
     showToast(`${symbol} price updated to ${displayPrice}`,'success');
-    renderAdmin();
+    _apLast.exchange=exchange; _apLast.date=date;
+    await renderAdmin();
     renderTicker();
     try{ renderZsePriceCharts(); }catch(_){}
+    const symEl=document.getElementById('ap-symbol'); if(symEl) symEl.focus();
   }catch(e){ showToast('Save failed: '+e.message,'error'); }
 }
 

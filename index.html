@@ -5411,6 +5411,17 @@ function openTransferFrom(walletId){
   if(other) toSel.value=other.value;
 }
 
+// Wallet history rows carry an optional note. Until the notes column exists, save without it rather than losing the row.
+async function insertWalletHistory(rows){
+  let{error}=await sb.from('wallet_history').insert(rows);
+  if(error&&/notes/i.test(error.message||'')){ ({error}=await sb.from('wallet_history').insert(rows.map(({notes,...r})=>r))); }
+  if(error) throw error;
+}
+async function updateWalletHistory(id,patch){
+  let{error}=await sb.from('wallet_history').update(patch).eq('id',id);
+  if(error&&/notes/i.test(error.message||'')&&'notes' in patch){ const{notes,...rest}=patch; ({error}=await sb.from('wallet_history').update(rest).eq('id',id)); }
+  if(error) throw error;
+}
 // --- Deposit / Withdraw modal ---
 let _flowWalletId=null, _flowType='in';
 function openFlowModal(walletId, type='in'){
@@ -5450,7 +5461,7 @@ async function saveFlow(){
   try {
     const{error}=await sb.from('wallets').update({balance:newBal,updated_at:new Date().toISOString()}).eq('id',_flowWalletId);
     if(error) throw error;
-    await sb.from('wallet_history').insert([{user_id:currentUser.id,wallet_id:_flowWalletId,balance:newBal,currency:w.currency||'USD',recorded_at:date+'T12:00:00',notes:autoNote,amount,tx_type:_flowType==='in'?'deposit':'withdrawal'}]);
+    await insertWalletHistory([{user_id:currentUser.id,wallet_id:_flowWalletId,balance:newBal,currency:w.currency||'USD',recorded_at:date+'T12:00:00',notes:autoNote,amount,tx_type:_flowType==='in'?'deposit':'withdrawal'}]);
     const idx=wallets.findIndex(x=>x.id===_flowWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
     await loadWalletHistory();
     closeFlowModal();
@@ -5553,8 +5564,7 @@ async function saveWalletTxEdit(){
   const balDiff=(amount-oldAmt)*sign;
   const newBal=Math.max(0,(w?.balance||0)+balDiff);
   try {
-    const{error}=await sb.from('wallet_history').update({amount,recorded_at:date+'T12:00:00',notes:newNote,balance:h.balance+balDiff}).eq('id',_wtxEditId);
-    if(error) throw error;
+    await updateWalletHistory(_wtxEditId,{amount,recorded_at:date+'T12:00:00',notes:newNote,balance:h.balance+balDiff});
     if(balDiff!==0){
       await sb.from('wallets').update({balance:newBal}).eq('id',_wtxWalletId);
       const idx=wallets.findIndex(x=>x.id===_wtxWalletId); if(idx>=0) wallets[idx]={...wallets[idx],balance:newBal};
@@ -5725,7 +5735,7 @@ async function saveTransfer(){
     const{error:e2}=await sb.from('wallets').update({balance:newToBal,updated_at:date,notes:(toW.notes?toW.notes+' | ':'')+noteTo}).eq('id',toId);
     if(e2) throw e2;
     // Record history snapshots for both
-    await sb.from('wallet_history').insert([
+    await insertWalletHistory([
       {user_id:currentUser.id,wallet_id:fromId,balance:newFromBal,currency:fromW.currency||'USD',recorded_at:date+'T12:00:00',amount:sent,tx_type:'transfer_out',notes:noteFrom},
       {user_id:currentUser.id,wallet_id:toId,balance:newToBal,currency:toW.currency||'USD',recorded_at:date+'T12:00:01',amount:received,tx_type:'transfer_in',notes:noteTo},
     ]);

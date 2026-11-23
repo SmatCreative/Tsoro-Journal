@@ -2579,7 +2579,8 @@ function toggleMoreSheet(){const s=document.getElementById('more-sheet');if(s)s.
 function openMoreSheet(){const s=document.getElementById('more-sheet'),o=document.getElementById('more-overlay');if(s)s.classList.add('open');if(o)o.classList.add('open');}
 function closeMoreSheet(){const s=document.getElementById('more-sheet'),o=document.getElementById('more-overlay');if(s)s.classList.remove('open');if(o)o.classList.remove('open');}
 document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
-document.querySelectorAll('[data-page]:not(.nav-item)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
+// Page links (not <body>, which carries data-page only to record the current page for styling)
+document.querySelectorAll('[data-page]:not(.nav-item):not(body)').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
 
 // ── Trade Modal ────────────────────────────────────────────────────
 function nowLocal(){ const d=new Date(); d.setSeconds(0,0); return d.toISOString().slice(0,16); }

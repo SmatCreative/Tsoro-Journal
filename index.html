@@ -6376,7 +6376,7 @@ function _renderWallet(){
           const p=calcPnL(t)||0;
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px">'
             +'<span style="color:var(--muted2)">'+t.symbol+'</span>'
-            +'<span class="'+(p>=0?'pnl-pos':'pnl-neg')+'" style="font-weight:600">'+(p>=0?'+':'')+ccySym(w.currency)+Math.abs(p).toFixed(2)+'</span>'
+            +'<span class="'+(p>=0?'pnl-pos':'pnl-neg')+'" style="font-weight:600">'+(p>=0?'+':'−')+ccySym(t.currency||'USD')+Math.abs(p).toFixed(2)+'</span>'
             +'</div>';
         }).join(''):'<div style="font-size:12px;color:var(--muted);padding:6px 0">No closed trades linked yet</div>';
       } else {

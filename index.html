@@ -4209,8 +4209,8 @@ function divTtm(sym,ex){
 }
 function divPrevTtm(sym,ex){
   const today=qToday(), a=addDays(today,-730), b=addDays(today,-365);
-  let usd=0; marketDivs.filter(d=>d.sym===sym&&d.ex===ex&&divDate(d)>a&&divDate(d)<=b).forEach(d=>{ const u=divPartsUsd(d.parts,today); if(u!=null) usd+=u; });
-  return usd;
+  let usd=0, n=0; marketDivs.filter(d=>d.sym===sym&&d.ex===ex&&divDate(d)>a&&divDate(d)<=b).forEach(d=>{ const u=divPartsUsd(d.parts,today); if(u!=null){ usd+=u; n++; } });
+  return {usd,n};
 }
 function divPriceUsd(sym,ex){ const mp=getMarketPrice(sym,ex); if(!mp) return null; return toUSD(Number(mp.price),ex==='ZSE'?'ZiG':'USD'); }
 // Shares you hold now, with today's value and what you paid, in dollars
@@ -4280,14 +4280,14 @@ function renderDividends(){
   // Market history
   const groups={}; marketDivs.forEach(d=>{ const k=d.sym+'|'+d.ex; (groups[k]=groups[k]||{sym:d.sym,ex:d.ex,list:[]}).list.push(d); });
   let rows=Object.values(groups).map(g=>{ const t=divTtm(g.sym,g.ex), prev=divPrevTtm(g.sym,g.ex), p=divPriceUsd(g.sym,g.ex);
-    return {...g,ttm:t.usd,yield:p&&t.usd?t.usd/p:null,growth:prev>0&&t.usd>0?t.usd/prev-1:null,last:g.list[0],held:hold.some(x=>x.sym===g.sym)}; });
+    return {...g,ttm:t.usd,yield:p&&t.usd?t.usd/p:null,growth:prev.usd>0&&t.usd>0&&prev.n===t.n?t.usd/prev.usd-1:null,last:g.list[0],held:hold.some(x=>x.sym===g.sym)}; });
   rows.sort((a,b)=>(b.held-a.held)||((b.yield||0)-(a.yield||0))||divDate(b.last).localeCompare(divDate(a.last)));
   const q=_divQ.trim().toUpperCase();
   const shown=rows.filter(r=>(_divEx==='all'||r.ex===_divEx)&&(!q||r.sym.includes(q)||(COMPANY[r.sym]||'').toUpperCase().includes(q)));
   h+=`<div class="dv-head" style="margin-top:56px"><div><h2 class="section-title" style="margin:0">Dividend history</h2><div class="section-sub" style="margin:4px 0 0">${rows.length} companies, ${marketDivs.length} payouts since ${fmtHeroDate(marketDivs[marketDivs.length-1]?divDate(marketDivs[marketDivs.length-1]):today)}. Yield = past 12 months' payouts ÷ today's price.</div></div>
     <div class="dv-filters"><input class="form-input" id="dv-q" type="search" placeholder="Search" value="${escapeHtml(_divQ)}" oninput="_divQ=this.value;renderDividendsKeepFocus()" style="width:160px">
     <div class="range-tabs" role="tablist" aria-label="Exchange" style="margin:0">${[['all','All'],['ZSE','ZSE'],['VFSE','VFEX']].map(([k,l])=>`<button class="range-tab${_divEx===k?' active':''}" role="tab" aria-selected="${_divEx===k}" onclick="_divEx='${k}';renderDividends()">${l}</button>`).join('')}</div></div></div>
-  <div class="table-wrap" style="margin-bottom:56px"><table class="dv-table"><thead><tr><th>Stock</th><th>Last payout</th><th style="text-align:right">Past 12 months</th><th style="text-align:right">Yield</th><th style="text-align:right">vs year before</th><th style="text-align:right">Payouts</th></tr></thead><tbody>
+  <div class="table-wrap" style="margin-bottom:56px"><table class="dv-table"><thead><tr><th>Stock</th><th>Last payout</th><th style="text-align:right">Past 12 months</th><th style="text-align:right">Yield</th><th style="text-align:right">vs year before ${paHelp('Past 12 months against the 12 months before, per share. Shown only when both years have the same number of payouts, so a dividend not yet announced does not look like a cut.')}</th><th style="text-align:right">Payouts</th></tr></thead><tbody>
   ${shown.map(r=>{ const k=r.sym+'|'+r.ex, open=_divOpen===k;
     return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${r.ex==='VFSE'?'VFEX':'ZSE'}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
       <td>${fmtHeroDate(divDate(r.last))}<div class="pa-sub">${divPerShare(r.last.parts)}</div></td>

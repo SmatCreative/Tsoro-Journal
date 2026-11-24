@@ -365,6 +365,9 @@ html[data-theme="light"]{--s1:#008A3E;--s2:#0B63CE;--s3:#B86E00}
 .dv-hero .hero-value{font-variant-numeric:tabular-nums}
 .pa-legend i.dv-hatch{background:var(--s1);opacity:.38}
 .dv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+body.no-giving #db-tithe,body.no-giving #giving-section{display:none}
+body:not(.no-giving) #giving-off-note{display:none}
+.menu-state{font-size:12px;color:var(--muted);font-weight:600}
 .dv-note{font-size:13px;color:var(--muted);max-width:72ch;line-height:1.55;margin:0 0 48px}
 .dv-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .dv-pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--text2);white-space:nowrap;vertical-align:middle}
@@ -729,7 +732,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <button class="nav-more-btn" id="nav-more-btn" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu('nav-more',event)">More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
         <div class="popover" role="menu" style="left:0">
           <button class="nav-item" data-page="dividends"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A2.9 2.9 0 0 0 12 8c-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2a3 3 0 0 1-2.8-1.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="17" x2="12" y2="18.5"/></svg> Dividends</button>
-          <button class="nav-item" data-page="goals-giving"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
+          <button class="nav-item" data-page="goals-giving"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> <span class="gg-label">Goals &amp; Giving</span></button>
           <button class="nav-item" data-page="simulator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
           <div id="nav-admin-section" style="display:none"></div>
           <button class="nav-item" id="nav-admin" data-page="admin" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
@@ -754,6 +757,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
           <button class="menu-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
           <button class="menu-item" onclick="showOnboarding()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Getting started</button>
           <div class="menu-sep"></div>
+          <button class="menu-item" id="menu-giving" role="menuitemcheckbox" aria-checked="false" onclick="setGiving(!givingOn())"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg> <span style="flex:1">Giving &amp; tithe</span> <span class="menu-state" id="menu-giving-state">Off</span></button>
           <button class="menu-item" onclick="signOut()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</button>
         </div>
       </div>
@@ -1115,7 +1119,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <!-- Tithe summary (moved from Dashboard) -->
         <div id="db-tithe" style="margin-bottom:28px"></div>
 
-        <!-- Giving section -->
+        <!-- Giving section (optional: Account menu → Giving & tithe) -->
+        <div id="giving-section">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div>
             <div class="section-title" style="margin:0">Giving</div>
@@ -1135,6 +1140,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <div id="giving-summary"></div>
         <div id="giving-goal-card" style="margin-bottom:20px"></div>
         <div id="giving-list"></div>
+        </div>
+        <div id="giving-off-note" class="dv-note" style="margin-top:8px">Giving and tithe tracking is off. <button class="btn btn-ghost btn-sm" onclick="setGiving(true)">Turn it on</button></div>
       </div>
 
     </div>
@@ -1159,7 +1166,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div class="mobile-more-grid">
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> Analytics</button>
       <button class="mobile-more-item" id="mmore-dividends" onclick="navigate('dividends')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A2.9 2.9 0 0 0 12 8c-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2a3 3 0 0 1-2.8-1.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="17" x2="12" y2="18.5"/></svg> Dividends</button>
-      <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
+      <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> <span class="gg-label">Goals &amp; Giving</span></button>
       <button class="mobile-more-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
       <button class="mobile-more-item" id="mmore-admin" onclick="navigate('admin')" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Admin</button>
@@ -2341,6 +2348,24 @@ function givingGoalPeriod(g){
   const y=g.year||now.getFullYear();
   return{start:`${y}-01-01`,end:`${y}-12-31`,label:g.label||String(y)};
 }
+// Giving and tithe tracking is a personal choice. Off unless the user turns it on (or already logs giving).
+function givingOn(){ const md=(currentUser&&currentUser.user_metadata)||{}; return typeof md.giving==='boolean'?md.giving:givingEntries.length>0; }
+function applyGivingPref(){
+  const on=givingOn();
+  document.body.classList.toggle('no-giving',!on);
+  document.querySelectorAll('.gg-label').forEach(el=>el.textContent=on?'Goals & Giving':'Goals');
+  PAGE_TITLES['goals-giving']=on?'Goals & Giving':'Goals';
+  if(document.body.dataset.page==='goals-giving') document.getElementById('topbar-title').textContent=PAGE_TITLES['goals-giving'];
+  const st=document.getElementById('menu-giving-state'); if(st) st.textContent=on?'On':'Off';
+  const mi=document.getElementById('menu-giving'); if(mi) mi.setAttribute('aria-checked',on);
+}
+async function setGiving(on){
+  try{ const{data,error}=await sb.auth.updateUser({data:{giving:on}}); if(error) throw error; if(data&&data.user) currentUser=data.user; }
+  catch(e){ showToast('Could not save the setting: '+e.message,'error'); return; }
+  applyGivingPref(); closeMenus&&closeMenus();
+  if(document.body.dataset.page==='dividends') renderDividends();
+  showToast(on?'Giving and tithe tracking is on (Goals & Giving).':'Giving and tithe tracking is off.','success');
+}
 async function loadGiving(){
   try{
     const[{data:ed,error:ee},{data:gd,error:ge}]=await Promise.all([
@@ -2495,6 +2520,7 @@ async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
     await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadWatchlist(),loadMarketDividends()]);
+    applyGivingPref();
     renderAll();
     renderTicker();
     maybeStartFirstTour();
@@ -3972,7 +3998,7 @@ function renderPortfolioAnalytics(){
     ${paStat('Yield on cost '+paHelp('Dividends from the past 12 months divided by what you paid for the shares you hold now.'),costNow>0?fPct(t12/costNow,2,false):'—','on what you paid')}
     ${paStat('All dividends',fUsd(allDiv,false),divRows.length?divRows.length+' payment'+(divRows.length===1?'':'s'):'none recorded')}
   </div>
-  ${divRows.length?'<div id="pa-income" style="height:180px;margin:-24px 0 40px"></div>':`<div class="pa-note" style="margin-top:-32px">Record dividends on Goals &amp; Giving (Add Dividend) to track your income.</div>`}
+  ${divRows.length?'<div id="pa-income" style="height:180px;margin:-24px 0 40px"></div>':`<div class="pa-note" style="margin-top:-32px">Record dividends on the Dividends page (More → Dividends) to track your income.</div>`}
   ${perAll.length?`<div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Invested</th><th style="text-align:right">Value now</th><th style="text-align:right">Price gain</th><th style="text-align:right">Dividends</th><th style="text-align:right">Total return</th></tr></thead><tbody>
     ${perAll.map(p=>{ const pg=p.gain-p.div; return `<tr${p.listed?` style="cursor:pointer" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}><td><div class="pa-name">${p.listed?stockLogo(p.symbol,28):''}<span>${escapeHtml(p.symbol)}</span></div></td>
       <td class="num">$${fmtMoney(p.invested)}</td><td class="num">${p.value>0?'$'+fmtMoney(p.value):'Sold'}</td>
@@ -4254,8 +4280,8 @@ function renderDividends(){
   </div>`;
 
   // Payouts you qualified for
-  h+=`<div class="dv-head" style="margin-top:48px"><div><h2 class="section-title" style="margin:0">Your payouts</h2><div class="section-sub" style="margin:4px 0 0">Net of withholding tax (ZSE ${divWhtPct('ZSE')}%, VFEX ${DIV_WHT.VFSE}%). Record a payout to count it in your returns and giving.</div></div>
-    ${unrec.length?`<button class="btn btn-primary btn-sm" onclick="recordAllDividends()">Record ${unrec.length} payout${unrec.length===1?'':'s'}</button>`:''}</div>`;
+  h+=`<div class="dv-head" style="margin-top:48px"><div><h2 class="section-title" style="margin:0">Your payouts</h2><div class="section-sub" style="margin:4px 0 0">Net of withholding tax (ZSE ${divWhtPct('ZSE')}%, VFEX ${DIV_WHT.VFSE}%). Record a payout to count it in your returns${givingOn()?' and giving':''}.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="openDividendModal()">Add dividend</button>${unrec.length?`<button class="btn btn-primary btn-sm" onclick="recordAllDividends()">Record ${unrec.length} payout${unrec.length===1?'':'s'}</button>`:''}</div></div>`;
   if(!ent.length) h+=`<div class="dv-note">None of the shares you have owned paid a dividend in this history yet. Payouts appear here automatically for stocks you hold.</div>`;
   else h+=`<div class="table-wrap"><table class="dv-table"><thead><tr><th>Stock</th><th>Paid</th><th style="text-align:right">Shares</th><th style="text-align:right">Per share</th><th style="text-align:right">You got</th><th style="text-align:right">In dollars</th><th></th></tr></thead><tbody>
     ${ent.map((e,i)=>`<tr><td><div class="pa-name" role="link" tabindex="0" style="cursor:pointer" onclick="openSecurity('${escapeHtml(e.d.sym)}','${e.d.ex}')">${stockLogo(e.d.sym,28)}<span>${escapeHtml(e.d.sym)}<div class="pa-sub">${escapeHtml(e.d.type||'Dividend')}</div></span></div></td>
@@ -4346,7 +4372,7 @@ async function recordDividend(i,silent){
 async function recordAllDividends(){
   const ent=window._divEnt||[], idx=ent.map((e,i)=>e.paid&&!e.recorded&&e.parts.some(p=>p.ccy!=='ZWL')?i:-1).filter(i=>i>=0);
   if(!idx.length) return;
-  if(!confirm(`Record ${idx.length} dividend payout${idx.length===1?'':'s'} in your income? They will count in Analytics and in Giving.`)) return;
+  if(!confirm(`Record ${idx.length} dividend payout${idx.length===1?'':'s'} in your income? They will count in Analytics${givingOn()?' and in Giving':''}.`)) return;
   let n=0; for(const i of idx) n+=await recordDividend(i,true);
   showToast(`${n} dividend${n===1?'':'s'} recorded`,'success'); renderDividends();
 }
@@ -4563,7 +4589,7 @@ const TOURS={
   welcome:{title:'Getting around',desc:'Where everything is, in about a minute.',steps:[
     {page:'dashboard',title:'Welcome to Tsoro',body:'Tsoro tracks your ZSE and VFEX shares, cash and trades in one place, all in US dollars. Here is a quick look around. You can skip at any time.'},
     {sel:['.topnav-links','.mobile-nav'],title:'Your main pages',body:'<b>Home</b> shows your total. <b>Trades</b> is your journal. <b>Portfolio</b> holds your cash wallets. <b>ZSE / VFEX</b> holds your shares. <b>Analytics</b> shows your real return and risk. <b>News</b> has market updates.'},
-    {sel:['#nav-more-btn','#mnav-more'],title:'More',body:'Goals &amp; Giving and the Simulator (what if I had bought earlier?) live here.'},
+    {sel:['#nav-more-btn','#mnav-more'],title:'More',body:'Dividends, Goals and the Simulator (what if I had bought earlier?) live here. Giving and tithe tracking is optional: turn it on from your account menu.'},
     {sel:['#ticker-bar'],opt:true,title:'Live prices',body:'Every ZSE and VFEX stock, with yours first. Tap one to open its full price history.'},
     {sel:['.topbar-right .icon-btn[aria-label="Search stocks"]'],title:'Search',body:'Find any listed stock. On a computer, press <b>/</b> from anywhere.'},
     {sel:['#open-trade-btn'],title:'New trade',body:'Log a buy or sell in a few seconds. Only the stock, quantity, price and date are needed.'},
@@ -9260,7 +9286,7 @@ async function saveDividend(){
     const{data,error}=await sb.from('dividends').insert([{...row,user_id:currentUser.id}]).select().single();
     if(error) throw error;
     dividends.unshift(data);
-    closeDividendModal(); renderTithe();
+    closeDividendModal(); renderTithe(); if(document.body.dataset.page==='dividends') renderDividends();
     showToast('Dividend recorded: '+ccySym(row.currency)+fmtMoney(amount)+' from '+symbol,'info');
   } catch(e){ err.textContent='Save failed: '+(e.message||'Unknown error'); err.style.display='block'; }
   finally { btn.disabled=false; btn.textContent='Save Dividend'; }

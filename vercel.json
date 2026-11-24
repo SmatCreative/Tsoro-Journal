@@ -7,6 +7,7 @@
     { "src": "/icon-512.png", "dest": "/icon-512.png" },
     { "src": "/manifest.json", "dest": "/manifest.json" },
     { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/market-dividends.json", "dest": "/market-dividends.json" },
     { "src": "/logos/(.*)", "dest": "/logos/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

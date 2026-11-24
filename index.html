@@ -362,6 +362,21 @@ html[data-theme="light"]{--s1:#008A3E;--s2:#0B63CE;--s3:#B86E00}
 .pa-hero .hero-label{display:flex;align-items:center;gap:6px}
 .pa-help{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;cursor:help;position:relative;vertical-align:1px;margin-left:2px;text-transform:none;letter-spacing:0;flex-shrink:0}
 .pa-help:hover::after,.pa-help:focus::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(280px,80vw);background:var(--elev);color:var(--text);font-size:12px;font-weight:500;line-height:1.45;padding:10px 12px;border-radius:12px;box-shadow:var(--pop-shadow);z-index:50;white-space:normal;text-align:left;pointer-events:none}
+.dv-hero .hero-value{font-variant-numeric:tabular-nums}
+.pa-legend i.dv-hatch{background:var(--s1);opacity:.38}
+.dv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.dv-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dv-pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--text2);white-space:nowrap;vertical-align:middle}
+.dv-pill.dv-soon{background:rgba(0,200,83,.12);color:var(--accent)}
+.dv-pill.dv-muted{color:var(--muted)}
+.dv-table td{vertical-align:middle}
+.dv-click{cursor:pointer}
+.dv-detail td{padding-top:0}
+.dv-hist{display:grid;gap:2px}
+.dv-hist>div{display:grid;grid-template-columns:120px 90px 1fr auto 56px;gap:12px;padding:8px 4px;font-size:13px;align-items:center;font-variant-numeric:tabular-nums}
+.dv-hist>div:not(:last-child){box-shadow:inset 0 -1px 0 var(--line,rgba(128,128,128,.12))}
+.dv-hist a{color:var(--accent);font-weight:600;text-align:right;text-decoration:none}
+@media (max-width:700px){.dv-row .dv-dates{display:none}.dv-hist>div{grid-template-columns:1fr auto 48px}.dv-hist>div>span:nth-child(2),.dv-hist>div>span:nth-child(3){display:none}}
 .pa-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted2);margin:-6px 0 14px}
 .pa-legend span{display:inline-flex;align-items:center;gap:6px}
 .pa-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -712,6 +727,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <div class="nav-more-wrap" id="nav-more">
         <button class="nav-more-btn" id="nav-more-btn" aria-haspopup="true" aria-expanded="false" onclick="toggleMenu('nav-more',event)">More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button>
         <div class="popover" role="menu" style="left:0">
+          <button class="nav-item" data-page="dividends"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A2.9 2.9 0 0 0 12 8c-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2a3 3 0 0 1-2.8-1.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="17" x2="12" y2="18.5"/></svg> Dividends</button>
           <button class="nav-item" data-page="goals-giving"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
           <button class="nav-item" data-page="simulator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
           <div id="nav-admin-section" style="display:none"></div>
@@ -1073,6 +1089,12 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <div id="admin-content"></div>
       </div>
 
+      <!-- Dividends: market payout history and what your shares earned -->
+      <div class="page" id="page-dividends">
+        <div class="page-sub" style="margin:-22px 0 24px">Every ZSE and VFEX dividend from the past three years, and what your shares earned.</div>
+        <div id="dividends-body"></div>
+      </div>
+
       <!-- Goals & Giving (merged) -->
       <div class="page" id="page-goals-giving">
         <!-- Goals section -->
@@ -1135,6 +1157,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div class="mobile-more-handle"></div>
     <div class="mobile-more-grid">
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> Analytics</button>
+      <button class="mobile-more-item" id="mmore-dividends" onclick="navigate('dividends')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A2.9 2.9 0 0 0 12 8c-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2a3 3 0 0 1-2.8-1.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="17" x2="12" y2="18.5"/></svg> Dividends</button>
       <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Goals &amp; Giving</button>
       <button class="mobile-more-item" onclick="openTutorials()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Tutorials</button>
       <button class="mobile-more-item" id="mmore-simulator" onclick="navigate('simulator')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg> Simulator</button>
@@ -2470,7 +2493,7 @@ let _loadingData=false;
 async function loadAllData(){
   if(_loadingData) return; _loadingData=true;
   try {
-    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadWatchlist()]);
+    await Promise.all([loadTrades(),loadRates(),loadCapital(),loadWallets(),loadWalletHistory(),loadGoals(),loadDividends(),loadPrivInvest(),loadLoans(),loadZsePriceHistory(),loadZseHoldings(),loadZseCharges(),loadGiving(),loadPulsePosts(),loadMarketPrices(),loadProfile(),loadWatchlist(),loadMarketDividends()]);
     renderAll();
     renderTicker();
     maybeStartFirstTour();
@@ -2557,9 +2580,9 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',pulse:'News',simulator:'Simulator',admin:'Admin'};
-const MOBILE_MORE_PAGES=new Set(['analytics','goals-giving','simulator','admin']);
-const MORE_PAGES=new Set(['goals-giving','simulator','admin']);
+const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',dividends:'Dividends',pulse:'News',simulator:'Simulator',admin:'Admin'};
+const MOBILE_MORE_PAGES=new Set(['analytics','dividends','goals-giving','simulator','admin']);
+const MORE_PAGES=new Set(['dividends','goals-giving','simulator','admin']);
 function closeMenus(){
   document.querySelectorAll('.nav-more-wrap.open,.account-wrap.open').forEach(m=>{ m.classList.remove('open'); const b=m.querySelector('[aria-haspopup]'); if(b) b.setAttribute('aria-expanded','false'); });
 }
@@ -2942,7 +2965,7 @@ function populateFilters(){
 // Skip any holding whose symbol already exists in the real Supabase trades array
 // (avoids duplicates when a position is tracked in both systems).
 function zseHoldingsNotInTrades(){
-  const realSymbols=new Set(trades.map(t=>t.symbol.toUpperCase()));
+  const realSymbols=new Set(trades.filter(t=>t.status!=='closed').map(t=>t.symbol.toUpperCase()));
   return zseHoldings.filter(h=>!realSymbols.has(h.symbol.toUpperCase()));
 }
 function zseHoldingsAsTrades(){
@@ -3437,6 +3460,7 @@ function renderSecurity(){
     </div>
     ${posHtml}
     ${secInsightsHTML(symbol,exchange)}
+    ${divSecHTML(symbol,exchange)}
     <div style="font-size:13px;color:var(--muted);max-width:68ch">${exchange==='ZSE'?'ZSE history starts at the ZiG launch on 5 April 2024; earlier prices were in the retired ZWL currency and cannot be compared. ':''}Closing prices from your imported history, your own price logs and Admin prices. Gaps mean no price was recorded those days.</div>`;
   const priceEl=document.getElementById('sec-price'), chgEl=document.getElementById('sec-change'), lblEl=document.getElementById('sec-label');
   const up=last[1]>=first[1];
@@ -4115,6 +4139,246 @@ function drawPaIncome(rows){
     series:[{type:'bar',data:vals,barMaxWidth:22,itemStyle:{color:cssVar('--s1'),borderRadius:[4,4,0,0]},emphasis:{itemStyle:{color:cssVar('--s1')}}}]
   },true);
   chart.resize();
+}
+
+// ── Dividends: every ZSE/VFEX payout, and what your shares earned ─────────────
+// market-dividends.json holds payouts read from the exchanges' published notices; Admin adds new ones (market_dividends table).
+// Amounts are per share in whole units (US dollars, ZiG, ZWL). One payout can mix currencies (part USD, part ZiG).
+let marketDivs=[];
+const DIV_WHT={ZSE:10,VFSE:5};
+let _divYear=null, _divQ='', _divEx='all', _divOpen=null;
+function divNorm(d){
+  return {sym:String(d.s||d.symbol||'').toUpperCase().replace(/\.(VX|ZW)$/i,''),ex:exKey(d.x||d.exchange),type:d.t||d.div_type||'',
+    exDate:d.ex||d.ex_date||null,recDate:d.rd||d.record_date||null,payDate:d.pd||d.pay_date||null,
+    parts:(d.p||d.parts||[]).map(p=>Array.isArray(p)?{amt:+p[0],ccy:p[1]}:{amt:+p.amt,ccy:p.ccy}).filter(p=>p.amt>0&&p.ccy),
+    wht:d.w??d.wht??null,src:d.src||d.source_url||(d.d?'https://ds88jcmqc11je.cloudfront.net/api/issuer-documents/'+d.d+'/download':''),note:d.n||d.note||'',id:d.id||null};
+}
+function divDate(d){ return d.payDate||d.recDate||d.exDate||''; }
+async function loadMarketDividends(){
+  let base=[],extra=[];
+  try{ const r=await fetch('/market-dividends.json',{cache:'no-cache'}); if(r.ok) base=(await r.json()).map(divNorm); }catch(e){ console.warn('[Tsoro] market dividends file:',e.message); }
+  try{ const{data,error}=await sb.from('market_dividends').select('*'); if(!error&&data) extra=data.map(divNorm); }catch(e){}
+  const key=d=>d.sym+'|'+d.ex+'|'+divDate(d)+'|'+d.type;
+  const m=new Map(); [...base,...extra].forEach(d=>{ if(d.sym&&d.parts.length&&divDate(d)) m.set(key(d),d); });
+  marketDivs=[...m.values()].sort((a,b)=>divDate(b).localeCompare(divDate(a)));
+}
+// The last day you had to own the shares: the day before ex-dividend, or 3 business days before the record date
+function divCumDate(d){
+  if(d.exDate) return addDays(d.exDate,-1);
+  if(d.recDate){ let x=d.recDate,n=0; while(n<3){ x=addDays(x,-1); const w=new Date(x+'T00:00:00Z').getUTCDay(); if(w!==0&&w!==6) n++; } return x; }
+  return null;
+}
+function divToUsd(amt,ccy,date){ if(ccy==='USD') return amt; if(ccy==='ZWL') return null; const R=rateOn(ccy,date); return R?amt/R:null; }
+function divPartsUsd(parts,date){ let s=0; for(const p of parts){ const u=divToUsd(p.amt,p.ccy,date); if(u==null) return null; s+=u; } return s; }
+function divWhtPct(ex,wht){ return wht!=null?wht:(ex==='ZSE'?(zseCharges.divtax??DIV_WHT.ZSE):DIV_WHT.VFSE); }
+function divPerShare(parts){ return parts.map(p=>p.ccy==='USD'?'$'+fmtDps(p.amt):p.ccy+' '+fmtDps(p.amt)).join(' + '); }
+function fmtDps(v){ return Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v<1?4:2}); }
+function fmtLocal(v,ccy){ return ccy==='USD'?'$'+fmtMoney(v):ccy+' '+fmtMoney(v); }
+// Every lot of listed shares you have owned: current holdings, plus open and closed ZSE/VFEX trades
+function divLots(){
+  const L=[];
+  zseHoldingsNotInTrades().forEach(h=>{ if(h.buyDate) L.push({sym:baseSymbol(h.symbol),shares:+h.shares,from:h.buyDate,to:null}); });
+  trades.forEach(t=>{ if(t.market==='Forex'||t.direction==='Short') return; const ex=exKey(t.exchange); if(ex!=='ZSE'&&ex!=='VFSE') return;
+    L.push({sym:baseSymbol(t.symbol),shares:+t.qty,from:String(t.entryDate||'').slice(0,10),to:t.status==='closed'?closeDate(t):null}); });
+  return L.filter(l=>l.shares>0&&l.from);
+}
+// Shares held at the close of `day` (bought on or before it, not yet sold)
+function sharesOnDate(lots,sym,day){ return lots.filter(l=>l.sym===sym&&l.from<=day&&(!l.to||l.to>day)).reduce((s,l)=>s+l.shares,0); }
+// Each payout you qualified for, net of withholding tax, and whether it is already in your recorded dividends
+function divEntitlements(){
+  const lots=divLots(), today=qToday(), out=[];
+  if(!lots.length) return out;
+  marketDivs.forEach(d=>{
+    const cum=divCumDate(d); if(!cum) return;
+    const sh=sharesOnDate(lots,d.sym,cum); if(!(sh>0)) return;
+    const pay=divDate(d), w=divWhtPct(d.ex,d.wht)/100;
+    const parts=d.parts.map(p=>({ccy:p.ccy,gross:p.amt*sh,net:p.amt*sh*(1-w)}));
+    const u=divPartsUsd(d.parts,pay);
+    const recorded=dividends.some(x=>baseSymbol(x.symbol)===d.sym&&Math.abs(daysBetween(String(x.pay_date).slice(0,10),pay))<=21);
+    out.push({d,sh,pay,parts,netUsd:u==null?null:u*sh*(1-w),w,paid:pay<=today,recorded});
+  });
+  return out.sort((a,b)=>b.pay.localeCompare(a.pay));
+}
+// Payouts per share over the past 12 months, valued in dollars today
+function divTtm(sym,ex){
+  const today=qToday(), from=addDays(today,-365);
+  const list=marketDivs.filter(d=>d.sym===sym&&(!ex||d.ex===ex)&&divDate(d)>from&&divDate(d)<=today);
+  let usd=0, n=0; list.forEach(d=>{ const u=divPartsUsd(d.parts,today); if(u!=null){ usd+=u; n++; } });
+  return {usd,n};
+}
+function divPrevTtm(sym,ex){
+  const today=qToday(), a=addDays(today,-730), b=addDays(today,-365);
+  let usd=0; marketDivs.filter(d=>d.sym===sym&&d.ex===ex&&divDate(d)>a&&divDate(d)<=b).forEach(d=>{ const u=divPartsUsd(d.parts,today); if(u!=null) usd+=u; });
+  return usd;
+}
+function divPriceUsd(sym,ex){ const mp=getMarketPrice(sym,ex); if(!mp) return null; return toUSD(Number(mp.price),ex==='ZSE'?'ZiG':'USD'); }
+// Shares you hold now, with today's value and what you paid, in dollars
+function divHoldingsNow(){
+  const m={};
+  const add=(sym,ex,sh,val,cost)=>{ const g=m[sym]=m[sym]||{sym,ex,shares:0,value:0,cost:0}; g.shares+=sh; g.value+=val||0; g.cost+=cost||0; };
+  zseHoldingsNotInTrades().forEach(h=>{ const ccy=h.exchange==='VFSE'?'USD':'ZiG', px=holdingPrice(h)||0, R=rateOn(ccy,h.buyDate||qToday())||1;
+    add(baseSymbol(h.symbol),exKey(h.exchange),+h.shares,toUSD(px*h.shares,ccy)||0,(+h.buyPrice*h.shares)/R); });
+  trades.filter(t=>t.status==='open'&&listedTradeKey(t)).forEach(t=>{ const R=rateOn(t.currency,String(t.entryDate||'').slice(0,10))||1;
+    add(baseSymbol(t.symbol),listedTradeKey(t),+t.qty,toUSD(openTradePx(t)*t.qty,t.currency)||0,(t.entry*t.qty)/R); });
+  return Object.values(m);
+}
+
+function renderDividends(){
+  const el=document.getElementById('dividends-body'); if(!el) return;
+  if(!marketDivs.length){ el.innerHTML='<div class="empty-state"><h3>No dividend history yet</h3>The dividend list could not be loaded. Check your connection and reopen this page.</div>'; return; }
+  const today=qToday(), ent=divEntitlements();
+  const paid=ent.filter(e=>e.paid), upcomingMine=ent.filter(e=>!e.paid);
+  const received=paid.reduce((s,e)=>s+(e.netUsd||0),0);
+  const last12=paid.filter(e=>e.pay>addDays(today,-365)).reduce((s,e)=>s+(e.netUsd||0),0);
+  const hold=divHoldingsNow();
+  let fc=0,val=0,cost=0;
+  hold.forEach(h=>{ const t=divTtm(h.sym); h.fc=t.usd*h.shares*(1-divWhtPct(h.ex)/100); fc+=h.fc; val+=h.value; cost+=h.cost; });
+  const announced=upcomingMine.reduce((s,e)=>s+(e.netUsd||0),0);
+  const unrec=paid.filter(e=>!e.recorded&&e.parts.some(p=>p.ccy!=='ZWL'));
+
+  let h=`<section class="hero dv-hero">
+    <div class="hero-label">Dividends you have earned ${paHelp('Every ZSE and VFEX payout you qualified for, worked out from your holdings and trades: shares you owned the day before the stock went ex-dividend, times the amount per share, less withholding tax. Valued in dollars on the payment date.')}</div>
+    <div class="hero-value">${fUsd(received,false)}</div>
+    <div class="hero-change" style="color:var(--text2)"><span>${fUsd(last12,false)}</span><span class="when">in the past 12 months · ${paid.length} payout${paid.length===1?'':'s'}</span></div>
+    <div class="hero-chart" id="dv-chart" style="height:220px"></div>
+    <div class="pa-legend"><span><i style="background:var(--s1)"></i>Paid</span><span><i class="dv-hatch"></i>Announced</span></div>
+    <div class="range-tabs" role="tablist" aria-label="Year" id="dv-years"></div>
+  </section>
+  <div class="wallet-summary-grid">
+    ${paStat('Next 12 months '+paHelp('An estimate: what each stock you hold paid per share over the past 12 months, times the shares you hold now, less withholding tax. Companies can change or skip dividends.'),fUsd(fc,false),'estimate, at today\'s holdings')}
+    ${paStat('Dividend yield '+paHelp('The estimate above divided by what your shares are worth today.'),val>0?fPct(fc/val,2,false):'—','on today\'s value')}
+    ${paStat('Yield on cost '+paHelp('The estimate above divided by what you paid for the shares you hold.'),cost>0?fPct(fc/cost,2,false):'—','on what you paid')}
+    ${paStat('Announced',fUsd(announced,false),upcomingMine.length?upcomingMine.length+' payout'+(upcomingMine.length===1?'':'s')+' coming to you':'nothing announced yet')}
+  </div>`;
+
+  // Payouts you qualified for
+  h+=`<div class="dv-head"><div><h2 class="section-title" style="margin:0">Your payouts</h2><div class="section-sub" style="margin:4px 0 0">Net of withholding tax (ZSE ${divWhtPct('ZSE')}%, VFEX ${DIV_WHT.VFSE}%). Record a payout to count it in your returns and giving.</div></div>
+    ${unrec.length?`<button class="btn btn-primary btn-sm" onclick="recordAllDividends()">Record ${unrec.length} payout${unrec.length===1?'':'s'}</button>`:''}</div>`;
+  if(!ent.length) h+=`<div class="pa-note">None of the shares you have owned paid a dividend in this history yet. Payouts appear here automatically for stocks you hold.</div>`;
+  else h+=`<div class="table-wrap"><table class="dv-table"><thead><tr><th>Stock</th><th>Paid</th><th style="text-align:right">Shares</th><th style="text-align:right">Per share</th><th style="text-align:right">You got</th><th style="text-align:right">In dollars</th><th></th></tr></thead><tbody>
+    ${ent.map((e,i)=>`<tr><td><div class="pa-name" role="link" tabindex="0" style="cursor:pointer" onclick="openSecurity('${escapeHtml(e.d.sym)}','${e.d.ex}')">${stockLogo(e.d.sym,28)}<span>${escapeHtml(e.d.sym)}<div class="pa-sub">${escapeHtml(e.d.type||'Dividend')}</div></span></div></td>
+      <td>${fmtHeroDate(e.pay)}${e.d.exDate?`<div class="pa-sub">ex ${fmtHeroDate(e.d.exDate)}</div>`:''}</td>
+      <td class="num">${fmtNum(e.sh)}</td><td class="num">${divPerShare(e.d.parts)}</td>
+      <td class="num">${e.parts.map(p=>fmtLocal(p.net,p.ccy)).join('<br>')}</td>
+      <td class="num">${e.netUsd!=null?'$'+fmtMoney(e.netUsd):'—'}</td>
+      <td class="num">${!e.paid?'<span class="dv-pill dv-soon">Coming</span>':e.recorded?'<span class="dv-pill">Recorded</span>':e.parts.every(p=>p.ccy==='ZWL')?'<span class="dv-pill dv-muted" title="ZWL payouts have no dollar rate to record against">ZWL</span>':`<button class="btn btn-ghost btn-sm" onclick="recordDividend(${i})">Record</button>`}</td></tr>`).join('')}
+  </tbody></table></div>`;
+
+  // Announced across the market
+  const coming=marketDivs.filter(d=>divDate(d)>=today).sort((a,b)=>divDate(a).localeCompare(divDate(b)));
+  h+=`<h2 class="section-title">Coming up</h2><div class="section-sub" style="margin:-10px 0 18px">Dividends declared and not yet paid, across ZSE and VFEX. To qualify you must own the shares before the ex-dividend date.</div>`;
+  h+=coming.length?`<div class="pa-list">${coming.map(d=>{ const mine=upcomingMine.find(e=>e.d===d), p=divPriceUsd(d.sym,d.ex), u=divPartsUsd(d.parts,today);
+    return `<div class="pa-row dv-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(d.sym)}','${d.ex}')">
+      <div class="pa-name">${stockLogo(d.sym,28)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${d.ex==='VFSE'?'VFEX':'ZSE'} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
+      <div class="pa-sub dv-dates">${d.exDate?'Ex '+fmtHeroDate(d.exDate)+' · ':''}Pays ${fmtHeroDate(divDate(d))}</div>
+      <div class="pa-num">${divPerShare(d.parts)}<div class="pa-sub">${u!=null&&p?fPct(u/p,2,false)+' of price':''}</div></div>
+      <div class="pa-num">${mine?'<b>'+(mine.netUsd!=null?'$'+fmtMoney(mine.netUsd):mine.parts.map(x=>fmtLocal(x.net,x.ccy)).join(' + '))+'</b><div class="pa-sub">to you</div>':''}</div>
+    </div>`; }).join('')}</div>`:`<div class="pa-note">No dividends are waiting to be paid right now.</div>`;
+
+  // Market history
+  const groups={}; marketDivs.forEach(d=>{ const k=d.sym+'|'+d.ex; (groups[k]=groups[k]||{sym:d.sym,ex:d.ex,list:[]}).list.push(d); });
+  let rows=Object.values(groups).map(g=>{ const t=divTtm(g.sym,g.ex), prev=divPrevTtm(g.sym,g.ex), p=divPriceUsd(g.sym,g.ex);
+    return {...g,ttm:t.usd,yield:p&&t.usd?t.usd/p:null,growth:prev>0&&t.usd>0?t.usd/prev-1:null,last:g.list[0],held:hold.some(x=>x.sym===g.sym)}; });
+  rows.sort((a,b)=>(b.held-a.held)||((b.yield||0)-(a.yield||0))||divDate(b.last).localeCompare(divDate(a.last)));
+  const q=_divQ.trim().toUpperCase();
+  const shown=rows.filter(r=>(_divEx==='all'||r.ex===_divEx)&&(!q||r.sym.includes(q)||(COMPANY[r.sym]||'').toUpperCase().includes(q)));
+  h+=`<div class="dv-head" style="margin-top:56px"><div><h2 class="section-title" style="margin:0">Dividend history</h2><div class="section-sub" style="margin:4px 0 0">${rows.length} companies, ${marketDivs.length} payouts since ${fmtHeroDate(marketDivs[marketDivs.length-1]?divDate(marketDivs[marketDivs.length-1]):today)}. Yield = past 12 months' payouts ÷ today's price.</div></div>
+    <div class="dv-filters"><input class="form-input" id="dv-q" type="search" placeholder="Search" value="${escapeHtml(_divQ)}" oninput="_divQ=this.value;renderDividendsKeepFocus()" style="width:160px">
+    <div class="range-tabs" role="tablist" aria-label="Exchange" style="margin:0">${[['all','All'],['ZSE','ZSE'],['VFSE','VFEX']].map(([k,l])=>`<button class="range-tab${_divEx===k?' active':''}" role="tab" aria-selected="${_divEx===k}" onclick="_divEx='${k}';renderDividends()">${l}</button>`).join('')}</div></div></div>
+  <div class="table-wrap" style="margin-bottom:56px"><table class="dv-table"><thead><tr><th>Stock</th><th>Last payout</th><th style="text-align:right">Past 12 months</th><th style="text-align:right">Yield</th><th style="text-align:right">vs year before</th><th style="text-align:right">Payouts</th></tr></thead><tbody>
+  ${shown.map(r=>{ const k=r.sym+'|'+r.ex, open=_divOpen===k;
+    return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${r.ex==='VFSE'?'VFEX':'ZSE'}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
+      <td>${fmtHeroDate(divDate(r.last))}<div class="pa-sub">${divPerShare(r.last.parts)}</div></td>
+      <td class="num">${r.ttm>0?'$'+fmtDps(r.ttm):'—'}<div class="pa-sub">per share</div></td>
+      <td class="num">${r.yield!=null?fPct(r.yield,2,false):'—'}</td>
+      <td class="num" style="${tone(r.growth)}">${r.growth!=null?fPct(r.growth,0):'—'}</td>
+      <td class="num">${r.list.length}</td></tr>
+      ${open?`<tr class="dv-detail"><td colspan="6"><div class="dv-hist">${r.list.map(d=>`<div><span>${fmtHeroDate(divDate(d))}</span><span>${escapeHtml(d.type||'Dividend')}</span><span>${d.exDate?'ex '+fmtHeroDate(d.exDate):d.recDate?'record '+fmtHeroDate(d.recDate):''}</span><span class="num">${divPerShare(d.parts)}</span>${d.src?`<a href="${escapeHtml(d.src)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Notice</a>`:'<span></span>'}</div>`).join('')}</div></td></tr>`:''}`; }).join('')}
+  </tbody></table></div>
+  <div class="pa-note" style="margin-top:-40px;margin-bottom:56px">Amounts come from the dividend notices and results each company published on the ZSE and VFEX. Dollar values use the ZiG rate on record; payouts in the old ZWL currency have no dollar value. Not investment advice.</div>`;
+
+  el.innerHTML=h;
+  // Year tabs for the chart
+  const years=[...new Set(ent.map(e=>e.pay.slice(0,4)).concat([today.slice(0,4)]))].sort();
+  if(!_divYear||!years.includes(_divYear)) _divYear=today.slice(0,4);
+  document.getElementById('dv-years').innerHTML=years.map(y=>`<button class="range-tab${y===_divYear?' active':''}" role="tab" aria-selected="${y===_divYear}" onclick="_divYear='${y}';drawDivChart()">${y}</button>`).join('');
+  window._divEnt=ent;
+  setTimeout(drawDivChart,0);
+}
+function renderDividendsKeepFocus(){ const pos=document.getElementById('dv-q')?.selectionStart; renderDividends(); const i=document.getElementById('dv-q'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(e){} } }
+function drawDivChart(){
+  const box=document.getElementById('dv-chart'); if(!box) return;
+  document.querySelectorAll('#dv-years .range-tab').forEach(b=>{ const a=b.textContent===_divYear; b.classList.toggle('active',a); b.setAttribute('aria-selected',a); });
+  const ent=window._divEnt||[], months=[...Array(12)].map((_,i)=>_divYear+'-'+String(i+1).padStart(2,'0'));
+  const sum=(m,paid)=>+ent.filter(e=>e.pay.slice(0,7)===m&&e.paid===paid).reduce((s,e)=>s+(e.netUsd||0),0).toFixed(2);
+  const detail=m=>ent.filter(e=>e.pay.slice(0,7)===m&&e.netUsd).map(e=>`${escapeHtml(e.d.sym)} $${fmtMoney(e.netUsd)}${e.paid?'':' (announced)'}`).join('<br>');
+  const muted=cssVar('--muted'), s1=cssVar('--s1');
+  let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+  chart.setOption({
+    animationDuration:400,grid:{left:2,right:2,top:10,bottom:2,containLabel:true},
+    xAxis:{type:'category',data:months,axisLabel:{color:muted,fontSize:11,formatter:m=>new Date(m+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'short',timeZone:'UTC'})},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',show:false},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow',shadowStyle:{color:'rgba(128,128,128,.08)'}},backgroundColor:cssVar('--elev'),borderWidth:0,textStyle:{color:cssVar('--text'),fontSize:12},extraCssText:'box-shadow:var(--pop-shadow);border-radius:12px',
+      formatter:ps=>{ const m=ps[0].name, tot=ps.reduce((s,p)=>s+(p.value||0),0); if(!tot) return `${new Date(m+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'})}<br>No dividends`; return `${new Date(m+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'})}<br><b>$${fmtMoney(tot)}</b><br><span style="color:${muted}">${detail(m)}</span>`; }},
+    series:[
+      {name:'Paid',type:'bar',stack:'d',data:months.map(m=>sum(m,true)),barMaxWidth:22,itemStyle:{color:s1,borderRadius:[4,4,0,0]}},
+      {name:'Announced',type:'bar',stack:'d',data:months.map(m=>sum(m,false)),barMaxWidth:22,itemStyle:{color:s1,opacity:.38,borderRadius:[4,4,0,0],decal:{symbol:'rect',dashArrayX:[1,0],dashArrayY:[3,4],rotation:-Math.PI/4,color:'rgba(255,255,255,.35)'}}}
+    ]
+  },true);
+  chart.resize();
+}
+// Save a payout you qualified for into your recorded dividends (one row per currency)
+async function recordDividend(i,silent){
+  const e=(window._divEnt||[])[i]; if(!e||e.recorded) return 0;
+  const rows=e.parts.filter(p=>p.ccy!=='ZWL'&&p.net>0).map(p=>({user_id:currentUser.id,symbol:e.d.sym,amount:+p.net.toFixed(4),currency:p.ccy,pay_date:e.pay,
+    notes:`${e.d.type||'Dividend'} · ${fmtNum(e.sh)} shares × ${p.ccy==='USD'?'$':p.ccy+' '}${fmtDps(p.gross/e.sh)} less ${Math.round(e.w*100)}% tax`}));
+  if(!rows.length) return 0;
+  const{data,error}=await sb.from('dividends').insert(rows).select();
+  if(error){ showToast('Could not record: '+error.message,'error'); return 0; }
+  dividends.unshift(...(data||[])); e.recorded=true;
+  if(!silent){ showToast(`${e.d.sym} dividend recorded`,'success'); renderDividends(); }
+  return rows.length;
+}
+async function recordAllDividends(){
+  const ent=window._divEnt||[], idx=ent.map((e,i)=>e.paid&&!e.recorded&&e.parts.some(p=>p.ccy!=='ZWL')?i:-1).filter(i=>i>=0);
+  if(!idx.length) return;
+  if(!confirm(`Record ${idx.length} dividend payout${idx.length===1?'':'s'} in your income? They will count in Analytics and in Giving.`)) return;
+  let n=0; for(const i of idx) n+=await recordDividend(i,true);
+  showToast(`${n} dividend${n===1?'':'s'} recorded`,'success'); renderDividends();
+}
+// Stock page: this company's payouts
+function divSecHTML(symbol,exchange){
+  const sym=baseSymbol(symbol), list=marketDivs.filter(d=>d.sym===sym);
+  if(!list.length) return '';
+  const t=divTtm(sym,exKey(exchange)), p=divPriceUsd(sym,exKey(exchange));
+  return `<h2 class="section-title">Dividends</h2>
+  <div class="wallet-summary-grid">
+    ${paStat('Past 12 months',t.usd>0?'$'+fmtDps(t.usd):'—','per share, in dollars')}
+    ${paStat('Yield',p&&t.usd?fPct(t.usd/p,2,false):'—','on today\'s price')}
+    ${paStat('Last payout',fmtHeroDate(divDate(list[0])),divPerShare(list[0].parts))}
+  </div>
+  <div class="dv-hist" style="margin-bottom:48px">${list.slice(0,12).map(d=>`<div><span>${fmtHeroDate(divDate(d))}</span><span>${escapeHtml(d.type||'Dividend')}</span><span>${d.exDate?'ex '+fmtHeroDate(d.exDate):''}</span><span class="num">${divPerShare(d.parts)}</span>${d.src?`<a href="${escapeHtml(d.src)}" target="_blank" rel="noopener">Notice</a>`:'<span></span>'}</div>`).join('')}</div>`;
+}
+// Admin: add a dividend announcement for everyone
+function adminDivHTML(){
+  return `<div class="card" style="margin-bottom:40px">
+    <div class="section-title" style="margin-bottom:4px">Dividend announcement</div>
+    <div class="section-sub" style="margin-bottom:16px">Add a declared dividend so every user's Dividends page and payouts update. Amount per share in whole units (e.g. US$0.0165, not cents).</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      ${[['ad-sym','Symbol','text','DLTA',110],['ad-type','Type','text','Final',110],['ad-ex','Ex-dividend','date','',160],['ad-pay','Payment date','date','',160],['ad-amt','Per share','number','0.0165',120]].map(([id,l,t,ph,w])=>`<label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500">${l}<input class="form-input" id="${id}" type="${t}" ${t==='number'?'step="any" min="0" inputmode="decimal"':''} placeholder="${ph}" style="width:${w}px"></label>`).join('')}
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500">Currency<select class="form-select" id="ad-ccy" style="width:100px"><option>USD</option><option>ZiG</option></select></label>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500">Exchange<select class="form-select" id="ad-xch" style="width:100px"><option value="ZSE">ZSE</option><option value="VFSE">VFEX</option></select></label>
+      <button class="btn btn-primary" onclick="saveAdminDividend()">Add dividend</button>
+    </div>
+  </div>`;
+}
+async function saveAdminDividend(){
+  const v=id=>document.getElementById(id).value.trim();
+  const row={symbol:v('ad-sym').toUpperCase().replace(/\.(VX|ZW)$/i,''),exchange:v('ad-xch'),div_type:v('ad-type')||null,ex_date:v('ad-ex')||null,pay_date:v('ad-pay')||null,parts:[{amt:+v('ad-amt'),ccy:v('ad-ccy')}],created_by:currentUser.id};
+  if(!row.symbol||!(row.parts[0].amt>0)||!row.pay_date){ showToast('Enter the symbol, amount per share and payment date.','warn'); return; }
+  const{error}=await sb.from('market_dividends').insert(row);
+  if(error){ showToast(/market_dividends/.test(error.message)?'Run supabase-market-dividends.sql in Supabase first.':'Save failed: '+error.message,'error'); return; }
+  await loadMarketDividends(); showToast(`${row.symbol} dividend added`,'success'); renderAdmin();
 }
 
 // ── Stock page: risk, trading activity, your returns ─────────────
@@ -5330,7 +5594,7 @@ function renderTradingAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse'){renderPulse();renderNewsRail();} else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='dividends')renderDividends(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse'){renderPulse();renderNewsRail();} else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -8026,7 +8290,7 @@ async function renderAdmin(){
   let usersCount='—';
   try{ const{count}=await sb.from('profiles').select('*',{count:'exact',head:true}); usersCount=count??'—'; }catch(_){}
   const prices=Object.values(marketPrices).filter(r=>r.exchange!==FX_EXCHANGE).sort((a,b)=>a.exchange.localeCompare(b.exchange)||a.symbol.localeCompare(b.symbol));
-  el.innerHTML=adminFxHTML()+`
+  el.innerHTML=adminFxHTML()+adminDivHTML()+`
     <div class="card" style="padding:20px 24px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">Market Prices</div>
       <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Update ZSE, VFEX and ZEEX prices daily. These override each user's stored price when calculating portfolio value.</div>

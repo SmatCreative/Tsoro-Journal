@@ -371,6 +371,25 @@ body:not(.no-giving) #giving-off-note{display:none}
 .menu-state{font-size:12px;color:var(--muted);font-weight:600}
 .dv-note{font-size:13px;color:var(--muted);max-width:72ch;line-height:1.55;margin:0 0 48px}
 .dv-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mk-seg{margin-bottom:20px}
+.mk-count{margin-left:6px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.mk-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.mk-tools-right{display:flex;gap:8px;align-items:center}
+.mk-tools-right .form-input{width:200px}
+.mk-tools-right .form-select{width:auto}
+.mk-sum{font-size:13px;color:var(--muted);margin:16px 0 8px}
+.mk-list{margin:0 -12px 32px}
+.mk-btn{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;width:100%;padding:10px 12px;border:0;border-radius:12px;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .12s}
+.mk-btn:hover{background:var(--surface2)}
+.mk-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mk-id{display:flex;align-items:center;gap:12px;min-width:0}
+.mk-txt{display:flex;flex-direction:column;min-width:0}
+.mk-sym{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mk-name{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mk-px{display:flex;flex-direction:column;align-items:flex-end;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mk-chg{font-size:13px;font-weight:600;display:flex;flex-direction:column;align-items:flex-end}
+.mk-date{font-size:12px;color:var(--muted);font-weight:500}
+@media (max-width:700px){.mk-tools-right{width:100%;min-width:0}.mk-tools-right .form-input{flex:1;width:auto;min-width:0}.mk-tools-right .form-select{flex:0 0 auto;max-width:44%}.mk-seg{display:flex}.mk-seg .seg-btn{flex:1;padding:0 8px}}
 .dv-pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--text2);white-space:nowrap;vertical-align:middle}
 .dv-pill.dv-soon{background:rgba(0,200,83,.12);color:var(--accent)}
 .dv-pill.dv-muted{color:var(--muted)}
@@ -726,7 +745,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <button class="nav-item active" data-page="dashboard">Home</button>
       <button class="nav-item" data-page="journal">Trades</button>
       <button class="nav-item" data-page="wallet">Portfolio</button>
-      <button class="nav-item" data-page="zse">ZSE / VFEX</button>
+      <button class="nav-item" data-page="markets">Markets</button>
+      <button class="nav-item" data-page="zse">Shares</button>
       <button class="nav-item" data-page="analytics">Analytics</button>
       <button class="nav-item" data-page="pulse">News</button>
       <div class="nav-more-wrap" id="nav-more">
@@ -811,6 +831,11 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
 
       <!-- Security detail -->
       <div class="page" id="page-security"><div id="sec-content"></div></div>
+      <!-- Markets: every listing on ZSE, VFEX and JSE -->
+      <div class="page" id="page-markets">
+        <div class="page-sub" style="margin:-22px 0 24px">Every stock, ETF and REIT on the ZSE, VFEX and JSE. Pick one to see its full price history.</div>
+        <div id="markets-body"></div>
+      </div>
 
       <!-- Journal -->
       <div class="page" id="page-journal">
@@ -1023,7 +1048,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <!-- Holdings section -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div>
-            <div class="section-title" style="margin:0">My ZSE / VFEX Holdings</div>
+            <div class="section-title" style="margin:0">Your shares</div>
             <div class="section-sub">Add your shares — update prices daily to see current value</div>
           </div>
           <div style="display:flex;gap:8px">
@@ -1157,14 +1182,15 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <button class="mobile-nav-item active" id="mnav-dashboard" onclick="navigate('dashboard')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></button>
     <button class="mobile-nav-item" id="mnav-journal" onclick="navigate('journal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>Trades</span></button>
     <button class="mobile-nav-item" id="mnav-wallet" onclick="navigate('wallet')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg><span>Portfolio</span></button>
-    <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>ZSE</span></button>
-    <button class="mobile-nav-item" id="mnav-pulse" onclick="navigate('pulse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg><span>News</span></button>
+    <button class="mobile-nav-item" id="mnav-zse" onclick="navigate('zse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>Shares</span></button>
+    <button class="mobile-nav-item" id="mnav-markets" onclick="navigate('markets')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M8 17v-5"/><path d="M12 17V8"/><path d="M16 17v-7"/><path d="M20 17V5"/></svg><span>Markets</span></button>
     <button class="mobile-nav-item" id="mnav-more" onclick="toggleMoreSheet()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span>More</span></button>
   </nav>
   <div class="mobile-more-overlay" id="more-overlay" onclick="closeMoreSheet()"></div>
   <div class="mobile-more-sheet" id="more-sheet" role="dialog" aria-label="More pages">
     <div class="mobile-more-handle"></div>
     <div class="mobile-more-grid">
+      <button class="mobile-more-item" id="mmore-pulse" onclick="navigate('pulse')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg> News</button>
       <button class="mobile-more-item" id="mmore-analytics" onclick="navigate('analytics')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg> Analytics</button>
       <button class="mobile-more-item" id="mmore-dividends" onclick="navigate('dividends')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.2A2.9 2.9 0 0 0 12 8c-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.6 0 1.3-1.3 2.2-3 2.2a3 3 0 0 1-2.8-1.2"/><line x1="12" y1="6" x2="12" y2="8"/><line x1="12" y1="17" x2="12" y2="18.5"/></svg> Dividends</button>
       <button class="mobile-more-item" id="mmore-goals-giving" onclick="navigate('goals-giving')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> <span class="gg-label">Goals &amp; Giving</span></button>
@@ -1184,7 +1210,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div id="wl-err" class="form-error" style="display:none;margin-bottom:10px"></div>
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group"><label class="form-label" for="wl-symbol">Stock</label><input class="form-input" id="wl-symbol" list="wl-sym-list" placeholder="e.g. DLTA" autocomplete="off" style="text-transform:uppercase" oninput="wlHint()"><datalist id="wl-sym-list"></datalist></div>
-      <div class="form-group"><label class="form-label" for="wl-exchange">Exchange</label><select class="form-select" id="wl-exchange" onchange="wlHint()"><option value="ZSE">ZSE</option><option value="VFSE">VFEX</option></select></div>
+      <div class="form-group"><label class="form-label" for="wl-exchange">Exchange</label><select class="form-select" id="wl-exchange" onchange="wlHint()"><option value="ZSE">ZSE</option><option value="VFSE">VFEX</option><option value="JSE">JSE</option></select></div>
       <div class="form-group"><label class="form-label" for="wl-direction">Tell me when the price is</label><select class="form-select" id="wl-direction"><option value="above">At or above</option><option value="below">At or below</option></select></div>
       <div class="form-group"><label class="form-label" for="wl-target">Target price <span class="opt">(optional)</span></label><input class="form-input" id="wl-target" type="number" step="any" min="0" inputmode="decimal" placeholder="0.00"></div>
       <div class="form-group full"><div class="pa-sub" id="wl-hint"></div></div>
@@ -1429,7 +1455,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
           <div class="form-group"><label class="form-label" for="f-exit-date">Close date</label><input class="form-input" id="f-exit-date" type="datetime-local"></div>
           <div class="form-group"><label class="form-label" for="f-fee">Fees</label><input class="form-input" id="f-fee" type="number" step="any" min="0" placeholder="0.00" value="0" inputmode="decimal"></div>
           <div class="form-group"><label class="form-label" for="f-market">Market</label><select class="form-select" id="f-market"><option value="Stock">Stock</option><option value="ETF">ETF</option><option value="Crypto">Crypto</option><option value="Futures">Futures</option><option value="Commodities">Commodities</option><option value="Indices">Indices</option><option value="Options">Options</option><option value="Bonds">Bonds</option></select></div>
-          <div class="form-group"><label class="form-label" for="f-exchange">Exchange</label><input class="form-input" id="f-exchange" placeholder="ZSE, VFEX…" list="exch-list" autocomplete="off" style="text-transform:uppercase"><datalist id="exch-list"><option value="ZSE"><option value="VFEX"></datalist></div>
+          <div class="form-group"><label class="form-label" for="f-exchange">Exchange</label><input class="form-input" id="f-exchange" placeholder="ZSE, VFEX…" list="exch-list" autocomplete="off" style="text-transform:uppercase"><datalist id="exch-list"><option value="ZSE"><option value="VFEX"><option value="JSE"></datalist></div>
         </div>
       </details>
       <div class="form-row">
@@ -1497,7 +1523,7 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
     <div class="form-grid" style="grid-template-columns:1fr 1fr">
       <div class="form-group">
         <label class="form-label">Symbol</label>
-        <input class="form-input" id="zh-symbol" placeholder="e.g. DELTA, OK, FMWG.VX" autocomplete="off" style="text-transform:uppercase">
+        <input class="form-input" id="zh-symbol" placeholder="e.g. DLTA, FMWG, NPN" autocomplete="off" style="text-transform:uppercase">
       </div>
       <div class="form-group">
         <label class="form-label">Instrument Type</label>
@@ -1515,7 +1541,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
         <label class="form-label">Exchange</label>
         <select class="form-select" id="zh-exchange">
           <option value="ZSE">ZSE — Zimbabwe Stock Exchange (ZiG)</option>
-          <option value="VFSE">VFSE — Victoria Falls Stock Exchange (USD)</option>
+          <option value="VFSE">VFEX — Victoria Falls Stock Exchange (USD)</option>
+          <option value="JSE">JSE — Johannesburg Stock Exchange (rand)</option>
           <option value="ZEEX">ZEEX — Zimbabwe Electronic Exchange (ZiG)</option>
         </select>
       </div>
@@ -1563,7 +1590,8 @@ html:not([data-theme="light"]) .search-overlay{background:rgba(0,0,0,.65)}
       <div class="modal-title">Charges &amp; Withdrawal Settings</div>
       <button class="modal-close" onclick="closeZseChargesModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <p style="font-size:13px;color:var(--muted2);margin-bottom:16px">Edit the fee percentages if the structure changes. They drive the Sell &amp; Withdraw calculator below.</p>
+    <div class="seg" role="tablist" aria-label="Which broker's fees" style="margin-bottom:14px"><button class="seg-btn active" id="zc-tab-zw" role="tab" onclick="setZcSet('zw')">ZSE &amp; VFEX</button><button class="seg-btn" id="zc-tab-jse" role="tab" onclick="setZcSet('jse')">JSE</button></div>
+    <p style="font-size:13px;color:var(--muted2);margin-bottom:16px" id="zc-intro">Edit the fee percentages if the structure changes. They drive the Sell &amp; Withdraw calculator below.</p>
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">1 · Selling shares (% of gross sale)</div>
     <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
       <div class="form-group">
@@ -2403,6 +2431,19 @@ const CURRENCY_SYM={
 };
 const CURRENCIES=['USD','ZiG','ZAR','GBP','EUR','INR','NGN','KES','AUD','CAD','HKD','CNY','SGD','JPY','USDT','PKR','GHS','BRL','EGP','MXN','BTC','ETH'];
 function ccySym(c){ return CURRENCY_SYM[c]||c+' '; }
+// ── Listed exchanges Tsoro tracks prices for ──────────────────────
+// VFSE is the internal key for VFEX. JSE prices come from /api/jse (whole rand).
+const LISTED_EX={
+  ZSE:{label:'ZSE',name:'Zimbabwe Stock Exchange',ccy:'ZiG'},
+  VFSE:{label:'VFEX',name:'Victoria Falls Stock Exchange',ccy:'USD'},
+  JSE:{label:'JSE',name:'Johannesburg Stock Exchange',ccy:'ZAR'}
+};
+const LISTED_KEYS=Object.keys(LISTED_EX);
+function isListedEx(e){ return !!LISTED_EX[exKey(e)]; }
+function exCcy(e){ const x=LISTED_EX[exKey(e)]; return x?x.ccy:(EXCHANGE_CURRENCY[e]||'USD'); }
+function exLabel(e){ const x=LISTED_EX[exKey(e)]; return x?x.label:String(e||''); }
+// Price prefix for a currency: $1.20, ZiG 1.20, R 1.20
+function ccyPrefix(c){ return c==='USD'?'$':c==='ZAR'?'R ':c==='ZiG'?'ZiG ':ccySym(c); }
 function fmtPnL(n,ccy){
   if(n==null)return '—';
   const sym=ccySym(ccy||'USD');
@@ -2546,6 +2587,7 @@ async function loadAllData(){
     renderTicker();
     maybeStartFirstTour();
     startLivePrices();
+    loadJseData();
     // Bulk market history is large; paint first, then fill charts and the ticker when it lands
     loadPriceHistory().then(()=>{
       renderTicker();
@@ -2628,8 +2670,8 @@ async function updateTrade(id,t){ const{data,error}=await sb.from('trades').upda
 async function deleteTrade(id){ if(!confirm('Delete this trade? This cannot be undone.'))return; const{error}=await sb.from('trades').delete().eq('id',id); if(error){showToast('Delete failed: '+error.message,'error');return;} trades=trades.filter(x=>x.id!==id); renderAll(); }
 
 // ── Navigation ─────────────────────────────────────────────────────
-const PAGE_TITLES={security:'Stock',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'ZSE / VFEX','goals-giving':'Goals & Giving',dividends:'Dividends',pulse:'News',simulator:'Simulator',admin:'Admin'};
-const MOBILE_MORE_PAGES=new Set(['analytics','dividends','goals-giving','simulator','admin']);
+const PAGE_TITLES={security:'Stock',markets:'Markets',dashboard:'Home',journal:'Trades',analytics:'Analytics',wallet:'Portfolio',zse:'Shares','goals-giving':'Goals & Giving',dividends:'Dividends',pulse:'News',simulator:'Simulator',admin:'Admin'};
+const MOBILE_MORE_PAGES=new Set(['analytics','pulse','dividends','goals-giving','simulator','admin']);
 const MORE_PAGES=new Set(['dividends','goals-giving','simulator','admin']);
 function closeMenus(){
   document.querySelectorAll('.nav-more-wrap.open,.account-wrap.open').forEach(m=>{ m.classList.remove('open'); const b=m.querySelector('[aria-haspopup]'); if(b) b.setAttribute('aria-expanded','false'); });
@@ -2799,7 +2841,7 @@ function impSetKind(k){ _imp={kind:k,rows:[],file:''}; const f=document.getEleme
 function impRender(){
   document.getElementById('imp-kind').innerHTML=[['holdings','Shares I own'],['trades','Trades']].map(([k,l])=>`<button class="seg-btn${_imp.kind===k?' active':''}" role="tab" aria-selected="${_imp.kind===k}" onclick="impSetKind('${k}')">${l}</button>`).join('');
   document.getElementById('imp-help').innerHTML=_imp.kind==='holdings'
-    ?'Adds your ZSE and VFEX shares to <b>ZSE / VFEX</b>. One row per purchase: <b>symbol, shares, buy price, buy date</b>, and optionally exchange, currency and notes. ZSE prices are whole ZiG (1.45, not 145 cents); cent prices are spotted and converted. Exchange is filled in for listed stocks if left out.'
+    ?'Adds your ZSE, VFEX and JSE shares to <b>Shares</b>. One row per purchase: <b>symbol, shares, buy price, buy date</b>, and optionally exchange, currency and notes. ZSE prices are whole ZiG (1.45, not 145 cents); cent prices are spotted and converted. Exchange is filled in for listed stocks if left out.'
     :'Adds buys and sells to your <b>Trades</b> journal: <b>symbol, quantity, price, date</b>, and optionally direction (buy/sell), close price and date, fees, currency, exchange and notes.';
   document.getElementById('imp-file').textContent=_imp.file?_imp.file:'';
   impPreview();
@@ -2861,12 +2903,12 @@ function impValidate(grid){
     if(!sym){ o.err='No symbol'; return o; }
     o.symbol=sym;
     let ex=exKey(get(r,'exchange').toUpperCase().replace('VFSE','VFEX'));
-    if(ex&&!['ZSE','VFSE'].includes(ex)&&kind==='holdings'){ o.err='Exchange must be ZSE or VFEX'; return o; }
-    if(!ex){ const m=secs.filter(x=>x.symbol===sym); if(m.length===1){ ex=m[0].exchange; o.warn.push((ex==='VFSE'?'VFEX':'ZSE')+' filled in'); } else if(kind==='holdings'){ o.err=m.length?'Listed on both exchanges: add an exchange column':'Unknown stock: add an exchange column (ZSE or VFEX)'; return o; } }
+    if(ex&&!isListedEx(ex)&&kind==='holdings'){ o.err='Exchange must be ZSE, VFEX or JSE'; return o; }
+    if(!ex){ const m=secs.filter(x=>x.symbol===sym); if(m.length===1){ ex=m[0].exchange; o.warn.push((exLabel(ex))+' filled in'); } else if(kind==='holdings'){ o.err=m.length?'Listed on more than one exchanges: add an exchange column':'Unknown stock: add an exchange column (ZSE or VFEX)'; return o; } }
     o.symbol=sym; o.exchange=ex;
     const ccyRaw=get(r,'currency').toUpperCase();
-    const ccy=ccyRaw==='ZWG'||ccyRaw==='ZIG'?'ZiG':ccyRaw==='USD'||ccyRaw==='US$'?'USD':(ex==='ZSE'?'ZiG':ex==='VFSE'?'USD':(ccyRaw||'USD'));
-    if(kind==='holdings'&&((ex==='ZSE'&&ccy!=='ZiG')||(ex==='VFSE'&&ccy!=='USD'))){ o.err=`${ex==='VFSE'?'VFEX':'ZSE'} shares are priced in ${ex==='VFSE'?'USD':'ZiG'}, not ${ccy}`; return o; }
+    const ccy=ccyRaw==='ZWG'||ccyRaw==='ZIG'?'ZiG':ccyRaw==='USD'||ccyRaw==='US$'?'USD':ccyRaw==='ZAR'||ccyRaw==='R'?'ZAR':(isListedEx(ex)?exCcy(ex):(ccyRaw||'USD'));
+    if(kind==='holdings'&&isListedEx(ex)&&ccy!==exCcy(ex)){ o.err=`${exLabel(ex)} shares are priced in ${exCcy(ex)}, not ${ccy}`; return o; }
     o.ccy=ccy;
     const d=impDate(get(r,'date'));
     if(d==='bad'){ o.err='Date not understood: "'+get(r,'date')+'"'; return o; }
@@ -2989,7 +3031,7 @@ function renderTable(containerId,list){
       <td style="color:var(--muted2);font-size:12px">${rr}</td>
       <td><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}">${t.status}</span></td>
       <td><div style="display:flex;gap:5px;align-items:center">
-        ${t._synthetic?`<button class="btn btn-sm btn-ghost" onclick="navigate('zse')" style="font-size:11px;white-space:nowrap">View in ZSE/VFEX</button>`:`
+        ${t._synthetic?`<button class="btn btn-sm btn-ghost" onclick="navigate('zse')" style="font-size:11px;white-space:nowrap">View in Shares</button>`:`
         ${t.imageUrl?`<button class="btn btn-sm btn-ghost" onclick="viewImage('${t.imageUrl}')" title="View screenshot" style="padding:4px 6px;font-size:14px">📷</button>`:''}
         ${t.status==='open'?`<button class="btn btn-sm btn-primary" onclick="openCloseModal('${t.id}')">Close</button>`:''}
         <button class="btn btn-sm btn-ghost" onclick="editTrade('${t.id}')">Edit</button>
@@ -3023,7 +3065,7 @@ function zseHoldingsAsTrades(){
         id:'_zse_'+h.id, symbol:h.symbol, exchange:h.exchange,
         market:h.instrumentType||'Stock', direction:'Long', type:'long', status:'open',
         entry:h.buyPrice, qty:h.shares,
-        currency:h.exchange==='VFSE'?'USD':'ZiG',
+        currency:exCcy(h.exchange),
         entryDate:h.buyDate||h.priceDate||new Date().toISOString().slice(0,10),
         exit:holdingPrice(h), exitDate:null,
         notes:h.notes||'', strategy:'', sl:null, tp:null, imageUrl:null,
@@ -3070,7 +3112,7 @@ function renderDashboard(){
   const bkItems=[
     {label:'Cash',val:plainCashUSD,icon:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',show:plainCashUSD>0,inTotal:true,page:'wallet'},
     {label:'Business',val:bizCashUSD,icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',show:bizCashUSD>0,inTotal:true,page:'wallet'},
-    {label:'ZSE / VFEX shares',val:listedUSD,icon:'',show:listedUSD>0,inTotal:true,page:'zse'},
+    {label:'Listed shares',val:listedUSD,icon:'',show:listedUSD>0,inTotal:true,page:'zse'},
     {label:'Other open trades',val:deployedUSD-listedUSD,icon:'',show:deployedUSD-listedUSD>0.005,inTotal:true,page:'journal'},
     {label:'Private',val:privUSD,icon:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',show:privUSD>0,inTotal:false,page:'wallet'},
   ];
@@ -3213,7 +3255,7 @@ function zseMoverData(){
     if(!sparkPts.length) sparkPts.push(cp,cp);
     else if(sparkPts.length===1) sparkPts.push(sparkPts[0]);
 
-    const valueUSD=isVFEX?totalShares*cp:toUSD(totalShares*cp,'ZiG');
+    const valueUSD=toUSD(totalShares*cp,exCcy(g.exchange));
     return {symbol:g.symbol,exchange:g.exchange,isVFEX,cp,chgAmt,chgPct,sparkPts,usingCost,shares:totalShares,valueUSD};
   });
   return movers;
@@ -3245,10 +3287,8 @@ function zseMoversCard(){
     const clr=up?'var(--green)':'var(--red)';
     const sign=up?'+':'';
     const fmt=v=>Math.abs(v)>=1?Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4}):Number(v).toLocaleString('en',{minimumFractionDigits:4,maximumFractionDigits:4});
-    const ccy=m.isVFEX?'$':'ZiG ';
-    const xBadge=m.isVFEX
-      ?'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(16,185,129,.18);color:var(--green);font-weight:600">VFEX</span>'
-      :'<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent);font-weight:600">ZSE</span>';
+    const ccy=ccyPrefix(exCcy(m.exchange));
+    const xBadge=`<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent);font-weight:600">${exLabel(m.exchange)}</span>`;
     return `<div style="display:grid;grid-template-columns:auto 1fr 88px auto;align-items:center;gap:10px;padding:11px 18px;transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
       ${stockLogo(m.symbol,34)}
       <div>
@@ -3285,7 +3325,7 @@ function renderOnboarding(){
   const el=document.getElementById('db-onboard'); if(!el) return;
   const steps=[
     {t:'Add your cash',d:'Your bank, broker and mobile money balances.',done:wallets.length>0,cta:'Add wallet',go:"navigate('wallet');setTimeout(()=>openWalletModal(),150)"},
-    {t:'Add the shares you own',d:'Each ZSE or VFEX stock, how many shares and what you paid.',done:zseHoldings.length>0,cta:'Add holding',go:"navigate('zse');setTimeout(()=>openZseHoldingModal(),150)"},
+    {t:'Add the shares you own',d:'Each ZSE, VFEX or JSE stock, how many shares and what you paid.',done:zseHoldings.length>0,cta:'Add holding',go:"navigate('zse');setTimeout(()=>openZseHoldingModal(),150)"},
     {t:'Log a trade',d:'Optional. Record buys and sells as you make them.',done:trades.length>0,cta:'New trade',go:"openNewTradeForm()"}
   ];
   const n=steps.filter(x=>x.done).length;
@@ -3325,7 +3365,7 @@ function setHeroRange(k){
 function portfolioModel(){
   const today=new Date().toISOString().slice(0,10);
   const pos=[];
-  zseHoldingsNotInTrades().forEach(h=>pos.push({from:h.buyDate||'',shares:h.shares,buy:h.buyPrice,ccy:h.exchange==='VFSE'?'USD':'ZiG',tl:priceTimeline(h.symbol,h.exchange)}));
+  zseHoldingsNotInTrades().forEach(h=>pos.push({from:h.buyDate||'',shares:h.shares,buy:h.buyPrice,ccy:exCcy(h.exchange),tl:priceTimeline(h.symbol,h.exchange)}));
   trades.filter(t=>t.status==='open'&&t.market!=='Forex').forEach(t=>{ const px=openTradePx(t), lk=listedTradeKey(t), marked=lk&&px!==(t.exit??t.entry); pos.push(marked?{from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',tl:priceTimeline(baseSymbol(t.symbol),lk)}:{from:String(t.entryDate||'').slice(0,10),shares:t.qty,buy:t.entry,ccy:t.currency||'USD',fixed:t.exit??t.entry}); });
   const usd=(v,ccy)=>{ const u=toUSD(v,ccy); return u==null?0:u; };
   const held=(p,d)=>d!=null&&(!p.from||p.from<=d);
@@ -3429,15 +3469,15 @@ function railSpark(pts,up){
 function renderHomeRail(){
   const el=document.getElementById('db-rail'); if(!el) return;
   const rows=zseHoldings.length?zseMoverData().sort((a,b)=>(b.valueUSD||0)-(a.valueUSD||0)):[];
-  const fmtP=(v,usd)=>(usd?'$':'ZiG ')+Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
+  const fmtP=(v,ex)=>ccyPrefix(exCcy(ex))+Number(v).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:4});
   el.innerHTML=`<div class="rail-title">Holdings<button onclick="navigate('zse')">See all</button></div>`+(rows.length?rows.map(m=>{
     const up=m.chgPct>=0, c=m.usingCost?'var(--muted)':up?'var(--green)':'var(--red)';
     return `<div class="rail-row" data-k="${escapeHtml(baseSymbol(m.symbol))}|${m.exchange}" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(m.symbol)}','${m.exchange}')">
       <div style="min-width:0"><div class="rail-sym">${escapeHtml(m.symbol)}</div><div class="rail-meta">${fmtNum(m.shares)} shares${m.valueUSD!=null?' · <span class="zen-value">$'+fmtMoney(m.valueUSD)+'</span>':''}</div></div>
       <div>${railSpark(m.sparkPts,up)}</div>
-      <div><div class="rail-price">${fmtP(m.cp,m.isVFEX)}</div><div class="rail-chg" style="color:${c}"${m.usingCost?' title="Change vs your average cost (no previous price logged)"':''}>${up?'+':'−'}${Math.abs(m.chgPct).toFixed(2)}%</div></div>
+      <div><div class="rail-price">${fmtP(m.cp,m.exchange)}</div><div class="rail-chg" style="color:${c}"${m.usingCost?' title="Change vs your average cost (no previous price logged)"':''}>${up?'+':'−'}${Math.abs(m.chgPct).toFixed(2)}%</div></div>
     </div>`;
-  }).join(''):'<div class="rail-empty">No ZSE or VFEX holdings yet.</div>');
+  }).join(''):'<div class="rail-empty">No shares yet.</div>');
 }
 
 // ── Security page: full price history for one stock ───────────────────
@@ -3451,17 +3491,23 @@ function openSecurity(symbol,exchange){
 }
 function secBack(){ navigate(_sec.from||'dashboard'); }
 function setSecRange(k){ _sec.range=k; renderSecurity(); }
-function secFmt(v,ccy){ return (ccy==='USD'?'$':'ZiG ')+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4}); }
+function secFmt(v,ccy){ return ccyPrefix(ccy||'ZiG')+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v>=100?2:4}); }
 function renderSecurity(){
   const el=document.getElementById('sec-content'); if(!el) return;
   const {symbol,exchange}=_sec;
   if(!symbol){ el.innerHTML='<div class="empty-state"><h3>Pick a stock</h3>Search or tap any stock to see its price history.</div>'; return; }
-  const ccy=exchange==='VFSE'?'USD':'ZiG';
-  const exName=exchange==='VFSE'?'VFEX':'ZSE';
+  const ccy=exCcy(exchange);
+  const exName=exLabel(exchange);
+  // JSE history loads the first time a stock is opened
+  if(exchange==='JSE'&&!_jseHistRows.has(symbol)){
+    el.innerHTML='<div class="empty-state"><h3>Loading '+escapeHtml(symbol)+'</h3>Fetching its full JSE price history.</div>';
+    Promise.all([loadJseListings(),loadJseHistory(symbol)]).then(([,ok])=>{ if(_sec.symbol!==symbol||document.body.dataset.page!=='security') return; if(ok) renderSecurity(); else el.innerHTML='<div class="empty-state"><h3>JSE prices are unavailable right now</h3>Try again in a few minutes. <div style="margin-top:14px"><button class="btn btn-ghost btn-sm" onclick="secBack()">Back</button></div></div>'; });
+    return;
+  }
   const all=priceTimeline(symbol,exchange);
   const back=`<button class="btn btn-ghost btn-sm" onclick="secBack()" style="margin-bottom:20px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg> Back</button>`;
   const watched=isWatched(symbol,exchange);
-  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${exName} · prices in ${ccy} · ${escapeHtml(sectorOf(symbol,exchange))}</div></div><div class="sec-head-actions"><button class="btn ${watched?'btn-ghost':'btn-primary'} btn-sm" onclick="openWatchModal('${escapeHtml(symbol)}','${exchange}')">${watched?'Watching · Edit':'Watch'}</button></div></div>`;
+  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${escapeHtml(companyName(symbol,exchange)!==exName?companyName(symbol,exchange)+' · ':'')}${exName} · prices in ${ccy}${secType(symbol,exchange)!=='Stock'?' · '+secType(symbol,exchange):sectorOf(symbol,exchange)!=='Unclassified'?' · '+escapeHtml(sectorOf(symbol,exchange)):''}</div></div><div class="sec-head-actions"><button class="btn ${watched?'btn-ghost':'btn-primary'} btn-sm" onclick="openWatchModal('${escapeHtml(symbol)}','${exchange}')">${watched?'Watching · Edit':'Watch'}</button></div></div>`;
   if(all.length<2){ el.innerHTML=back+head+`<div class="empty-state"><h3>Not enough price history</h3>${all.length?'Only one price is recorded so far.':'No prices are recorded for this stock yet.'}</div>`; return; }
   const r=SEC_RANGES.find(x=>x.k===_sec.range)||SEC_RANGES[SEC_RANGES.length-1];
   const lastDate=all[all.length-1][0];
@@ -3509,7 +3555,7 @@ function renderSecurity(){
     ${posHtml}
     ${secInsightsHTML(symbol,exchange)}
     ${divSecHTML(symbol,exchange)}
-    <div style="font-size:13px;color:var(--muted);max-width:68ch">${exchange==='ZSE'?'ZSE history starts at the ZiG launch on 5 April 2024; earlier prices were in the retired ZWL currency and cannot be compared. ':''}Closing prices from your imported history, your own price logs and Admin prices. Gaps mean no price was recorded those days.</div>`;
+    <div style="font-size:13px;color:var(--muted);max-width:68ch">${exchange==='JSE'?'Daily closing prices in rand from Yahoo Finance, back to the earliest year it has. The latest price can be up to 30 minutes old during trading hours.':`${exchange==='ZSE'?'ZSE history starts at the ZiG launch on 5 April 2024; earlier prices were in the retired ZWL currency and cannot be compared. ':''}Closing prices from your imported history, your own price logs and Admin prices. Gaps mean no price was recorded those days.`}</div>`;
   const priceEl=document.getElementById('sec-price'), chgEl=document.getElementById('sec-change'), lblEl=document.getElementById('sec-label');
   const up=last[1]>=first[1];
   const rangeWord=r.k==='All'?'All time':'Past '+({'1M':'month','3M':'3 months','6M':'6 months','1Y':'year','3Y':'3 years'})[r.k];
@@ -3549,16 +3595,123 @@ function secSimulate(){
   if(sy&&ex){ sy.value=_sec.symbol; ex.value=_sec.exchange; simSymbolChanged(true); }
 }
 
-// ── Stock search ──────────────────────────────────────────────────────
+// ── JSE: listings, live quotes, history and the rand rate ─────────────
+// Served by /api/jse (Yahoo Finance, cached at the edge). Nothing JSE is stored in the database:
+// quotes load at startup, a stock's full history loads the first time it is needed.
+let jseListings=[], jseQuotes={}, jseMp={}, jseQuotesAt=0, jseFx=[], _jseVer=0;
+const _jseIdx=new Map(), _jseHist=new Map(), _jseHistRows=new Map();
+function jseListing(s){ return _jseIdx.get(baseSymbol(s))||null; }
+async function loadJseListings(){
+  if(jseListings.length) return;
+  try{ const r=await fetch('/jse-listings.json'); if(!r.ok) throw new Error('HTTP '+r.status); jseListings=await r.json(); jseListings.forEach(x=>_jseIdx.set(x.s,x)); }
+  catch(e){ console.warn('[Tsoro] JSE listings:',e.message); }
+}
+async function loadJseQuotes(force){
+  if(!force&&Date.now()-jseQuotesAt<10*60e3) return false;
+  try{
+    const r=await fetch('/api/jse?q=quotes'); if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); jseQuotes=j.quotes||{}; jseQuotesAt=Date.now();
+    jseMp={}; Object.entries(jseQuotes).forEach(([s,q])=>{ jseMp[s]={symbol:s,exchange:'JSE',price:q.p,price_raw:q.p,currency:'ZAR',price_date:q.d}; });
+    _jseVer++; return true;
+  }catch(e){ console.warn('[Tsoro] JSE quotes:',e.message); return false; }
+}
+// Full daily history for one JSE listing; resolves true once it is in priceTimeline
+function loadJseHistory(sym){
+  const s=baseSymbol(sym);
+  if(_jseHist.has(s)) return _jseHist.get(s);
+  const p=fetch('/api/jse?s='+encodeURIComponent(s)).then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status))).then(j=>{
+    _jseHistRows.set(s,(j.h||[]).map(([d,v])=>({symbol:s,exchange:'JSE',currency:'ZAR',price:v,recorded_date:d}))); _jseVer++; return true;
+  }).catch(e=>{ _jseHist.delete(s); console.warn('[Tsoro] JSE history '+s+':',e.message); return false; });
+  _jseHist.set(s,p); return p;
+}
+async function loadJseFx(){
+  try{ const r=await fetch('/api/jse?fx=ZAR'); if(!r.ok) throw new Error('HTTP '+r.status); const j=await r.json(); jseFx=(j.h||[]).filter(x=>x[1]>0); _jseVer++; }
+  catch(e){ console.warn('[Tsoro] rand rate:',e.message); }
+}
+// JSE symbols this account uses: holdings, journal trades, watchlist
+function jseSymbolsInUse(){
+  const s=new Set();
+  zseHoldings.forEach(h=>{ if(exKey(h.exchange)==='JSE') s.add(baseSymbol(h.symbol)); });
+  trades.forEach(t=>{ if(exKey(t.exchange)==='JSE') s.add(baseSymbol(t.symbol)); });
+  (typeof watchlist!=='undefined'&&Array.isArray(watchlist)?watchlist:[]).forEach(w=>{ if(exKey(w.exchange)==='JSE') s.add(baseSymbol(w.symbol)); });
+  return [...s];
+}
+// Listings, quotes and the rand rate, then history for anything the account uses; repaint when it lands
+async function loadJseData(){
+  await Promise.all([loadJseListings(),loadJseQuotes(true),loadJseFx()]);
+  const used=jseSymbolsInUse();
+  if(used.length) await Promise.all(used.map(loadJseHistory));
+  const pg=document.body.dataset.page||'dashboard';
+  const typing=document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
+  if(!typing&&(used.length||pg==='markets'||pg==='security')) renderPage(pg);
+}
+
+// ── Every listed security: ZSE and VFEX from prices and the exchange's issuer list, JSE from its listings ──
+// ZSE/VFEX ETFs and REITs are few and named here; JSE types come with its listing file
+const ZW_TYPES={'ZSE:MCMS':'ETF','ZSE:MIZ':'ETF','ZSE:DMCS':'ETF','ZSE:CSAG':'ETF','VFSE:FMWG':'ETF','ZSE:TIG':'REIT','ZSE:REV':'REIT','VFSE:EAGLE':'REIT','VFSE:PFUMA':'REIT'};
+// No longer listed, per the exchange's issuer records; shown only to people who hold them
+const ZW_DELISTED=new Set(['ZSE:ECO','ZSE:OKZ','ZSE:FMP','ZSE:TANG','ZSE:TSL','ZSE:OMU','ZSE:FCA','ZSE:KHCL','ZSE:BFCA','ZSE:T','VFSE:ASUN','VFSE:NTFD']);
+function secType(symbol,exchange){
+  const ex=exKey(exchange), b=baseSymbol(symbol);
+  if(ex==='JSE'){ const j=jseListing(b); return j?j.t:'Stock'; }
+  const nm=COMPANY[ex+':'+b]||'';
+  return ZW_TYPES[ex+':'+b]||(/\bETF\b/i.test(nm)?'ETF':/\bREIT\b/i.test(nm)?'REIT':'Stock');
+}
 function allSecurities(){
   const keys=new Set();
   Object.values(marketPrices).forEach(m=>{ if(m.exchange==='ZSE'||m.exchange==='VFSE') keys.add(baseSymbol(m.symbol)+'|'+m.exchange); });
   priceHistory.forEach(r=>{ if(r.exchange==='ZSE'||r.exchange==='VFSE') keys.add(baseSymbol(r.symbol)+'|'+r.exchange); });
-  zseHoldings.forEach(h=>keys.add(baseSymbol(h.symbol)+'|'+h.exchange));
-  const held=new Set(zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+h.exchange));
-  return [...keys].map(k=>{ const [symbol,exchange]=k.split('|'); const tl=priceTimeline(symbol,exchange); const l=tl[tl.length-1], p=tl[tl.length-2]; return {symbol,exchange,held:held.has(k),last:l?l[1]:null,pct:l&&p&&p[1]?(l[1]-p[1])/p[1]*100:null}; })
-    .sort((a,b)=>(b.held-a.held)||a.symbol.localeCompare(b.symbol));
+  Object.keys(COMPANY).forEach(k=>{ const i=k.indexOf(':'); keys.add(k.slice(i+1)+'|'+k.slice(0,i)); });
+  jseListings.forEach(x=>keys.add(x.s+'|JSE'));
+  zseHoldings.forEach(h=>keys.add(baseSymbol(h.symbol)+'|'+exKey(h.exchange)));
+  const held=new Set(zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+exKey(h.exchange)));
+  return [...keys].filter(k=>{ const [s,e]=k.split('|'); return held.has(k)||!ZW_DELISTED.has(e+':'+s); }).map(k=>{
+    const [symbol,exchange]=k.split('|'), base={symbol,exchange,held:held.has(k),name:companyName(symbol,exchange),type:secType(symbol,exchange)};
+    if(exchange==='JSE'&&!_jseHistRows.has(symbol)){ const q=jseQuotes[symbol]; return {...base,last:q?q.p:null,date:q?q.d:null,pct:q&&q.pp?(q.p-q.pp)/q.pp*100:null}; }
+    const tl=priceTimeline(symbol,exchange); const l=tl[tl.length-1], p=tl[tl.length-2];
+    return {...base,last:l?l[1]:null,date:l?l[0]:null,pct:l&&p&&p[1]?(l[1]-p[1])/p[1]*100:null};
+  }).sort((a,b)=>(b.held-a.held)||a.symbol.localeCompare(b.symbol));
 }
+// ── Markets: browse every listing on an exchange, then open its chart ──
+let _mkEx='ZSE', _mkType='all', _mkQ='', _mkSort='az';
+const MK_TYPES=[['all','All'],['Stock','Stocks'],['ETF','ETFs'],['REIT','REITs']];
+function setMk(k,v){ if(k==='ex'){ _mkEx=v; _mkType='all'; } if(k==='type') _mkType=v; if(k==='sort') _mkSort=v; renderMarkets(); }
+function renderMarketsKeepFocus(){ const i0=document.getElementById('mk-q'), pos=i0?i0.selectionStart:null; renderMarkets(); const i=document.getElementById('mk-q'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(e){} } }
+function renderMarkets(){
+  const el=document.getElementById('markets-body'); if(!el) return;
+  if(!jseListings.length&&!renderMarkets._asked){ renderMarkets._asked=true; loadJseListings().then(()=>{ if(document.body.dataset.page==='markets') renderMarkets(); }); }
+  if(_mkEx==='JSE'&&jseListings.length&&!jseQuotesAt&&!renderMarkets._quoting){ renderMarkets._quoting=true; loadJseQuotes(true).then(()=>{ renderMarkets._quoting=false; if(document.body.dataset.page==='markets') renderMarkets(); }); }
+  const all=allSecurities();
+  const count=ex=>all.filter(s=>s.exchange===ex).length;
+  const inEx=all.filter(s=>s.exchange===_mkEx);
+  const types=MK_TYPES.filter(([k])=>k==='all'||inEx.some(s=>s.type===k));
+  if(!types.some(([k])=>k===_mkType)) _mkType='all';
+  const q=_mkQ.trim().toUpperCase();
+  let rows=inEx.filter(s=>(_mkType==='all'||s.type===_mkType)&&(!q||s.symbol.includes(q)||(s.name||'').toUpperCase().includes(q)));
+  const latest=rows.reduce((m,s)=>s.date&&s.date>m?s.date:m,'');
+  if(_mkSort==='up'||_mkSort==='down'){ const dir=_mkSort==='up'?-1:1; rows.sort((a,b)=>(a.pct==null)-(b.pct==null)||dir*((a.pct||0)-(b.pct||0))); }
+  else rows.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+  const ccy=exCcy(_mkEx);
+  const seg=`<div class="seg mk-seg" role="tablist" aria-label="Exchange">${LISTED_KEYS.map(k=>`<button class="seg-btn${_mkEx===k?' active':''}" role="tab" aria-selected="${_mkEx===k}" onclick="setMk('ex','${k}')">${exLabel(k)}<span class="mk-count">${count(k)||''}</span></button>`).join('')}</div>`;
+  const filters=`<div class="mk-tools">
+    <div class="range-tabs" role="tablist" aria-label="Type" style="margin:0">${types.map(([k,l])=>`<button class="range-tab${_mkType===k?' active':''}" role="tab" aria-selected="${_mkType===k}" onclick="setMk('type','${k}')">${l}${k==='all'?'':` <span class="mk-count">${inEx.filter(s=>s.type===k).length}</span>`}</button>`).join('')}</div>
+    <div class="mk-tools-right"><input class="form-input" id="mk-q" type="search" placeholder="Search ${exLabel(_mkEx)}" aria-label="Search ${exLabel(_mkEx)} listings" value="${escapeHtml(_mkQ)}" oninput="_mkQ=this.value;renderMarketsKeepFocus()">
+    <select class="form-select" aria-label="Sort" onchange="setMk('sort',this.value)">${[['az','A to Z'],['up','Biggest gains'],['down','Biggest falls']].map(([k,l])=>`<option value="${k}"${_mkSort===k?' selected':''}>${l}</option>`).join('')}</select></div></div>`;
+  let body;
+  if(_mkEx==='JSE'&&!jseListings.length) body='<div class="dv-note">Loading JSE listings…</div>';
+  else if(!rows.length) body=`<div class="dv-note">${q?'Nothing on the '+exLabel(_mkEx)+' matches “'+escapeHtml(_mkQ)+'”.':'No listings to show.'}</div>`;
+  else body=`<div class="mk-list" role="list">${rows.map(s=>{
+    const c=s.pct==null||Math.abs(s.pct)<0.005?'var(--muted)':s.pct>0?'var(--green)':'var(--red)';
+    const stale=s.date&&latest&&daysBetween(s.date,latest)>5;
+    return `<div class="mk-row" role="listitem"><button class="mk-btn" onclick="openSecurity('${escapeHtml(s.symbol)}','${s.exchange}')" aria-label="${escapeHtml(s.symbol)}, ${escapeHtml(s.name||'')}: see price history">
+      <span class="mk-id">${stockLogo(s.symbol,36)}<span class="mk-txt"><span class="mk-sym">${escapeHtml(s.symbol)}${s.type!=='Stock'?` <span class="dv-pill">${s.type}</span>`:''}${s.held?' <span class="dv-pill dv-soon">You hold</span>':''}</span><span class="mk-name">${escapeHtml(s.name&&s.name!==exLabel(s.exchange)?s.name:'')}</span></span></span>
+      <span class="mk-px">${s.last!=null?secFmt(s.last,ccy):'<span class="pa-muted">No price yet</span>'}<span class="mk-chg" style="color:${c}">${s.pct==null||stale?(stale?'':'&nbsp;'):(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}${stale?`<span class="mk-date">${fmtHeroDate(s.date)}</span>`:''}</span></span>
+    </button></div>`; }).join('')}</div>`;
+  const src={ZSE:'ZSE prices are in ZiG, from Tsoro’s daily market prices. Change is against the previous recorded price.',VFSE:'VFEX prices are in US dollars, from Tsoro’s daily market prices. Change is against the previous recorded price.',JSE:'JSE prices are in rand, from Yahoo Finance, and can be up to 30 minutes old during trading hours. Change is against the previous close.'}[_mkEx];
+  el.innerHTML=seg+filters+`<div class="mk-sum">${rows.length} ${rows.length===1?'listing':'listings'}${latest?' · prices as of '+fmtHeroDate(latest):''}</div>`+body+`<div class="dv-note">${src} A date under the change means the stock has not traded since then. Not investment advice.</div>`;
+}
+
+// ── Stock search ──────────────────────────────────────────────────────
 function openSearch(){
   const ov=document.getElementById('search-overlay'); if(!ov) return;
   ov.classList.add('open');
@@ -3567,14 +3720,14 @@ function openSearch(){
 function closeSearch(){ const ov=document.getElementById('search-overlay'); if(ov) ov.classList.remove('open'); }
 function renderSearch(){
   const q=(document.getElementById('search-input').value||'').trim().toUpperCase();
-  const list=allSecurities().filter(s=>!q||s.symbol.includes(q)||(q==='VFEX'&&s.exchange==='VFSE')||(q==='ZSE'&&s.exchange==='ZSE'));
+  const list=allSecurities().filter(s=>!q||s.symbol.includes(q)||(exLabel(s.exchange)===q)||s.name&&s.name.toUpperCase().includes(q));
   const box=document.getElementById('search-results');
   box.innerHTML=list.length?list.slice(0,60).map((s,i)=>{
-    const ccy=s.exchange==='VFSE'?'USD':'ZiG';
+    const ccy=exCcy(s.exchange);
     const c=s.pct==null||Math.abs(s.pct)<0.005?'var(--muted)':s.pct>0?'var(--green)':'var(--red)';
     return `<button class="search-row${i===0?' hl':''}" onclick="openSecurity('${escapeHtml(s.symbol)}','${s.exchange}')">
       ${stockLogo(s.symbol,32)}
-      <span class="sr-sym">${escapeHtml(s.symbol)}${s.held?'<span class="sr-held">Held</span>':''}<span class="sr-ex">${s.exchange==='VFSE'?'VFEX':'ZSE'}</span></span>
+      <span class="sr-sym">${escapeHtml(s.symbol)}${s.held?'<span class="sr-held">Held</span>':''}<span class="sr-ex">${exLabel(s.exchange)}</span></span>
       <span class="sr-px">${s.last!=null?secFmt(s.last,ccy):'—'}<span style="color:${c}">${s.pct==null?'':(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}</span></span>
     </button>`;
   }).join(''):'<div class="ph-empty" style="padding:20px 12px">No stock matches that.</div>';
@@ -3633,9 +3786,20 @@ function sharedZigRate(){
 // Units of a currency per US$1 on a date. Before the first recorded ZiG rate, the first rate is used.
 function rateOn(ccy,d){
   if(!ccy||ccy==='USD') return 1;
+  if(ccy==='ZAR'){ const a=zarSeries(); if(a.length){ const i=timelineIndexAt(a,d); return a[i>=0?i:0][1]; } }
   if(ccy!=='ZiG'){ const r=getLatestRate(ccy); return r?Number(r.units_per_usd):null; }
   const a=fxSeries(); if(!a.length) return null;
   const i=timelineIndexAt(a,d); return a[i>=0?i:0][1];
+}
+
+// Rand per US$1 by date: the market series behind JSE prices, with the account's own ZAR rates on their dates
+let _zarCache={key:'',arr:[]};
+function zarSeries(){
+  const own=rates.filter(r=>r.currency==='ZAR'&&Number(r.units_per_usd)>0);
+  const key=jseFx.length+':'+(jseFx.length?jseFx[jseFx.length-1][0]:'')+'|'+own.length+':'+own.reduce((s,r)=>s+Number(r.units_per_usd),0);
+  if(_zarCache.key===key) return _zarCache.arr;
+  const m=new Map(jseFx.map(x=>[x[0],x[1]])); own.forEach(r=>m.set(String(r.effective_date).slice(0,10),Number(r.units_per_usd)));
+  _zarCache={key,arr:[...m.entries()].sort((a,b)=>a[0].localeCompare(b[0]))}; return _zarCache.arr;
 }
 
 // ── Sectors for ZSE / VFEX listings (unknown tickers show as Unclassified) ──
@@ -3657,7 +3821,7 @@ function sectorOf(symbol,exchange){ return SECTORS[exKey(exchange)+':'+baseSymbo
 // A price 30x away from the entry means the units differ (ZiG cents vs whole ZiG), so it is not used.
 function listedTradeKey(t){
   const ex=exKey(t.exchange), ccy=t.currency||'USD';
-  return (ex==='ZSE'&&ccy==='ZiG')||(ex==='VFSE'&&ccy==='USD')?ex:null;
+  return isListedEx(ex)&&ccy===exCcy(ex)?ex:null;
 }
 function openTradePx(t){
   if(t._synthetic) return t.exit??t.entry;
@@ -3676,7 +3840,7 @@ function invLots(){
   zseHoldingsNotInTrades().forEach(h=>{
     const ex=h.exchange, sym=baseSymbol(h.symbol), sh=Number(h.shares), bp=Number(h.buyPrice);
     if(!(sh>0)||!(bp>0)) return;
-    lots.push({key:sym+'|'+ex,symbol:sym,exchange:ex,ccy:ex==='VFSE'?'USD':'ZiG',shares:sh,buyDate:h.buyDate||h.priceDate||today,undated:!h.buyDate,
+    lots.push({key:sym+'|'+ex,symbol:sym,exchange:ex,ccy:exCcy(ex),shares:sh,buyDate:h.buyDate||h.priceDate||today,undated:!h.buyDate,
       cost:sh*bp,buyPx:bp,sellDate:null,proceeds:null,tl:priceTimeline(h.symbol,ex),nowPx:holdingPrice(h),listed:true});
   });
   trades.filter(t=>t.market!=='Forex'&&t.direction!=='Short').forEach(t=>{
@@ -3813,7 +3977,7 @@ function benchIndex(exchange){
   if(_benchCache.key!==key) _benchCache={key,val:{}};
   if(_benchCache.val[exchange]) return _benchCache.val[exchange];
   const syms=[...new Set(priceHistory.filter(r=>r.exchange===exchange).map(r=>baseSymbol(r.symbol)))];
-  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const ccy=exCcy(exchange);
   const tls=syms.map(s=>priceTimeline(s,exchange)).filter(t=>t.length>=20);
   // ZSE needs a recorded ZiG rate to be in dollars; it starts at the first rate on record (never before the ZiG launch)
   const fx0=fxSeries()[0];
@@ -3834,7 +3998,7 @@ function benchIndex(exchange){
 // ── Risk and trading activity for one stock ───────────────────────
 function stockRisk(symbol,exchange){
   const tl=priceTimeline(symbol,exchange); if(tl.length<2) return null;
-  const ccy=exchange==='VFSE'?'USD':'ZiG', today=qToday();
+  const ccy=exCcy(exchange), today=qToday();
   const last=tl[tl.length-1], yearAgo=addDays(last[0],-365);
   const yr=tl.filter(p=>p[0]>=yearAgo);
   // Volatility: weekly log returns over the past year, annualised (×√52)
@@ -3866,7 +4030,7 @@ function currentBook(){
   const groups={};
   open.forEach(t=>{
     const ex=t._synthetic?t.exchange:(listedTradeKey(t)||exKey(t.exchange)||'Other');
-    const listed=ex==='ZSE'||ex==='VFSE';
+    const listed=isListedEx(ex);
     const k=listed?baseSymbol(t.symbol)+'|'+ex:'T|'+t.symbol+'|'+(t.currency||'USD');
     const px=openTradePx(t), v=toUSD(px*t.qty,t.currency);
     if(v==null) return;
@@ -3879,11 +4043,11 @@ function currentBook(){
   const cash=wallets.map(w=>({ccy:w.currency||'USD',value:walletToUSD(w)||0})).filter(c=>c.value>0);
   return {items,invested,cash,cashTotal:cash.reduce((s,c)=>s+c.value,0)};
 }
-function sellCostPct(){ const c=zseCharges||{}; return (Number(c.cgt)||0)+(Number(c.admin)||0)+(Number(c.broker)||0); }
+function sellCostPct(ex){ const c=chargesFor(ex)||{}; return (Number(c.cgt)||0)+(Number(c.admin)||0)+(Number(c.broker)||0); }
 // Price at which selling returns what you paid, after the sell-side charges (CGT, admin, brokerage & levies)
 function breakEven(g){
   if(!g.shares) return null;
-  const avg=(g.costLocal+g.feeLocal)/g.shares, sp=sellCostPct()/100, wd=(Number((zseCharges||{}).withdraw)||0)/100;
+  const avg=(g.costLocal+g.feeLocal)/g.shares, sp=sellCostPct(g.exchange)/100, wd=(Number((chargesFor(g.exchange)||{}).withdraw)||0)/100;
   return {avg,be:avg/(1-sp),beCash:avg/((1-sp)*(1-wd)),vs:g.px/(avg/(1-sp))-1};
 }
 
@@ -3925,7 +4089,7 @@ function renderPortfolioAnalytics(){
   const r=PA_RANGES.find(x=>x.k===_paRange)||PA_RANGES[PA_RANGES.length-1];
   const W=E?engWindow(E,paStart(r)):null;
   let html='';
-  if(E&&E.mismatch.length) html+=`<div class="pa-check" role="note"><b>Check ${E.mismatch.length===1?'this purchase':'these purchases'}.</b> ${E.mismatch.map(m=>`${escapeHtml(m.symbol)}: you paid ${secFmt(m.paid,m.ccy)} on ${fmtHeroDate(m.buyDate)}, but the market price that day was ${secFmt(m.mkt,m.ccy)}.`).join(' ')} A wrong buy date or price makes your return and worst drop below inaccurate. Fix it on <button class="link-btn" style="display:inline;text-decoration:underline;text-underline-offset:3px" onclick="navigate('zse')">ZSE / VFEX</button>.</div>`;
+  if(E&&E.mismatch.length) html+=`<div class="pa-check" role="note"><b>Check ${E.mismatch.length===1?'this purchase':'these purchases'}.</b> ${E.mismatch.map(m=>`${escapeHtml(m.symbol)}: you paid ${secFmt(m.paid,m.ccy)} on ${fmtHeroDate(m.buyDate)}, but the market price that day was ${secFmt(m.mkt,m.ccy)}.`).join(' ')} A wrong buy date or price makes your return and worst drop below inaccurate. Fix it on <button class="link-btn" style="display:inline;text-decoration:underline;text-underline-offset:3px" onclick="navigate('zse')">Shares</button>.</div>`;
 
   // 1 · Return headline + benchmark chart
   if(W){
@@ -4033,8 +4197,8 @@ function renderPortfolioAnalytics(){
     const top=book.items[0], top3=ws.slice(0,3).reduce((s,w)=>s+w,0);
     const concentrated=top.w>0.25||(book.items.length>3&&top3>0.6);
     const netWorth=book.invested+book.cashTotal;
-    const byCcy={}; book.items.forEach(g=>{ const c=g.exchange==='ZSE'?'ZiG':g.ccy; byCcy[c]=(byCcy[c]||0)+g.value; }); book.cash.forEach(c=>{ byCcy[c.ccy]=(byCcy[c.ccy]||0)+c.value; });
-    const byEx={}; book.items.forEach(g=>{ const k=g.exchange==='VFSE'?'VFEX':g.exchange==='ZSE'?'ZSE':'Other'; byEx[k]=(byEx[k]||0)+g.value; });
+    const byCcy={}; book.items.forEach(g=>{ const c=isListedEx(g.exchange)?exCcy(g.exchange):g.ccy; byCcy[c]=(byCcy[c]||0)+g.value; }); book.cash.forEach(c=>{ byCcy[c.ccy]=(byCcy[c.ccy]||0)+c.value; });
+    const byEx={}; book.items.forEach(g=>{ const k=isListedEx(g.exchange)?exLabel(g.exchange):'Other'; byEx[k]=(byEx[k]||0)+g.value; });
     const bySec={}; book.items.forEach(g=>{ const k=g.listed?sectorOf(g.symbol,g.exchange):'Other investments'; bySec[k]=(bySec[k]||0)+g.value; });
     const splitRows=(obj,total)=>Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="pa-bar-row"><span>${escapeHtml(k)}</span><div class="pa-track"><i style="width:${(v/total*100).toFixed(1)}%"></i></div><b>${(v/total*100).toFixed(1)}%</b></div>`).join('');
     html+=`<h2 class="section-title">Concentration and exposure</h2>
@@ -4053,9 +4217,9 @@ function renderPortfolioAnalytics(){
     // 6 · Holdings risk
     const listed=book.items.filter(g=>g.listed);
     if(listed.length){
-      html+=`<h2 class="section-title">Holdings risk</h2><div class="section-sub" style="margin:-10px 0 18px">From each stock's price history in its own currency. Break-even includes the selling charges in ZSE / VFEX → Charges (${sellCostPct().toFixed(2)}%).</div>
+      html+=`<h2 class="section-title">Holdings risk</h2><div class="section-sub" style="margin:-10px 0 18px">From each stock's price history in its own currency. Break-even includes the selling charges in Shares → Charges (${sellCostPct().toFixed(2)}%).</div>
       <div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Weight</th><th style="text-align:right">Volatility</th><th style="text-align:right">Worst drop</th><th style="text-align:right">From high</th><th>Trading</th><th style="text-align:right">Break-even</th><th style="text-align:right">Price vs break-even</th></tr></thead><tbody>
-      ${listed.map(g=>{ const rk=stockRisk(g.symbol,g.exchange), be=breakEven(g), ccy=g.exchange==='VFSE'?'USD':'ZiG';
+      ${listed.map(g=>{ const rk=stockRisk(g.symbol,g.exchange), be=breakEven(g), ccy=exCcy(g.exchange);
         return `<tr style="cursor:pointer" onclick="openSecurity('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')"><td><div class="pa-name">${stockLogo(g.symbol,28)}<span>${escapeHtml(g.symbol)}</span></div></td>
         <td class="num">${(g.w*100).toFixed(1)}%</td>
         <td class="num">${rk&&rk.vol!=null?fPct(rk.vol,0,false):'—'}</td>
@@ -4070,7 +4234,7 @@ function renderPortfolioAnalytics(){
       const corrSet=listed.slice(0,10);
       if(corrSet.length>=2){
         const weeks=weekList(addDays(qToday(),-365),qToday());
-        const ser=corrSet.map(g=>{ const tl=priceTimeline(g.symbol,g.exchange); const w=weeklyUsd(tl,g.exchange==='VFSE'?'USD':'ZiG',weeks); const r=[]; for(let i=1;i<w.length;i++) r.push(w[i]!=null&&w[i-1]>0&&Math.abs(Math.log(w[i]/w[i-1]))<=MAX_WEEKLY?Math.log(w[i]/w[i-1]):null); return r; });
+        const ser=corrSet.map(g=>{ const tl=priceTimeline(g.symbol,g.exchange); const w=weeklyUsd(tl,exCcy(g.exchange),weeks); const r=[]; for(let i=1;i<w.length;i++) r.push(w[i]!=null&&w[i-1]>0&&Math.abs(Math.log(w[i]/w[i-1]))<=MAX_WEEKLY?Math.log(w[i]/w[i-1]):null); return r; });
         const M=corrSet.map((_,i)=>corrSet.map((_,j)=>{ if(i===j) return 1; const x=[],y=[]; ser[i].forEach((v,t)=>{ if(v!=null&&ser[j][t]!=null){ x.push(v); y.push(ser[j][t]); } }); return x.length>=12?pearson(x,y):null; }));
         const off=[]; M.forEach((row,i)=>row.forEach((v,j)=>{ if(j>i&&v!=null) off.push(v); }));
         const avg=off.length?mean(off):null;
@@ -4096,7 +4260,7 @@ function renderPortfolioAnalytics(){
   // Method notes
   const notes=[];
   if(E&&E.skipped.length) notes.push(`Left out because there is no exchange rate for their currency: ${E.skipped.map(escapeHtml).join(', ')}.`);
-  if(E&&E.undated) notes.push(`${E.undated} holding${E.undated===1?' has':'s have'} no buy date, so ${E.undated===1?'it counts':'they count'} from the date of ${E.undated===1?'its':'their'} last price update. Add buy dates on ZSE / VFEX for accurate returns.`);
+  if(E&&E.undated) notes.push(`${E.undated} holding${E.undated===1?' has':'s have'} no buy date, so ${E.undated===1?'it counts':'they count'} from the date of ${E.undated===1?'its':'their'} last price update. Add buy dates on the Shares page for accurate returns.`);
   html+=`${notes.length?`<div class="pa-note">${notes.join(' ')}</div>`:''}
   <details class="pa-method"><summary>How these numbers are calculated</summary><div>
     <p><b>Your return</b> is time-weighted: each day's change is (value + money out) ÷ (yesterday's value + money in) − 1, linked together. Purchases count at the start of the day; sales and dividends at the end. Deposits and new purchases never show up as gains.</p>
@@ -4193,7 +4357,7 @@ function drawPaIncome(rows){
 // market-dividends.json holds payouts read from the exchanges' published notices; Admin adds new ones (market_dividends table).
 // Amounts are per share in whole units (US dollars, ZiG, ZWL). One payout can mix currencies (part USD, part ZiG).
 let marketDivs=[];
-const DIV_WHT={ZSE:10,VFSE:5};
+const DIV_WHT={ZSE:10,VFSE:5,JSE:20};
 let _divYear=null, _divQ='', _divEx='all', _divOpen=null;
 function divNorm(d){
   return {sym:String(d.s||d.symbol||'').toUpperCase().replace(/\.(VX|ZW)$/i,''),ex:exKey(d.x||d.exchange),type:d.t||d.div_type||'',
@@ -4218,7 +4382,7 @@ function divCumDate(d){
 }
 function divToUsd(amt,ccy,date){ if(ccy==='USD') return amt; if(ccy==='ZWL') return null; const R=rateOn(ccy,date); return R?amt/R:null; }
 function divPartsUsd(parts,date){ let s=0; for(const p of parts){ const u=divToUsd(p.amt,p.ccy,date); if(u==null) return null; s+=u; } return s; }
-function divWhtPct(ex,wht){ return wht!=null?wht:(ex==='ZSE'?(zseCharges.divtax??DIV_WHT.ZSE):DIV_WHT.VFSE); }
+function divWhtPct(ex,wht){ return wht!=null?wht:(ex==='ZSE'?(zseCharges.divtax??DIV_WHT.ZSE):exKey(ex)==='JSE'?(jseCharges().divtax??DIV_WHT.JSE):(DIV_WHT[exKey(ex)]??DIV_WHT.VFSE)); }
 function divPerShare(parts){ return parts.map(p=>p.ccy==='USD'?'$'+fmtDps(p.amt):p.ccy+' '+fmtDps(p.amt)).join(' + '); }
 function fmtDps(v){ return Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:v<1?4:2}); }
 function fmtLocal(v,ccy){ return ccy==='USD'?'$'+fmtMoney(v):ccy+' '+fmtMoney(v); }
@@ -4226,7 +4390,7 @@ function fmtLocal(v,ccy){ return ccy==='USD'?'$'+fmtMoney(v):ccy+' '+fmtMoney(v)
 function divLots(){
   const L=[];
   zseHoldingsNotInTrades().forEach(h=>{ if(h.buyDate) L.push({sym:baseSymbol(h.symbol),shares:+h.shares,from:h.buyDate,to:null}); });
-  trades.forEach(t=>{ if(t.market==='Forex'||t.direction==='Short') return; const ex=exKey(t.exchange); if(ex!=='ZSE'&&ex!=='VFSE') return;
+  trades.forEach(t=>{ if(t.market==='Forex'||t.direction==='Short') return; const ex=exKey(t.exchange); if(!isListedEx(ex)) return;
     L.push({sym:baseSymbol(t.symbol),shares:+t.qty,from:String(t.entryDate||'').slice(0,10),to:t.status==='closed'?closeDate(t):null}); });
   return L.filter(l=>l.shares>0&&l.from);
 }
@@ -4259,12 +4423,12 @@ function divPrevTtm(sym,ex){
   let usd=0, n=0; marketDivs.filter(d=>d.sym===sym&&d.ex===ex&&divDate(d)>a&&divDate(d)<=b).forEach(d=>{ const u=divPartsUsd(d.parts,today); if(u!=null){ usd+=u; n++; } });
   return {usd,n};
 }
-function divPriceUsd(sym,ex){ const mp=getMarketPrice(sym,ex); if(!mp) return null; return toUSD(Number(mp.price),ex==='ZSE'?'ZiG':'USD'); }
+function divPriceUsd(sym,ex){ const mp=getMarketPrice(sym,ex); if(!mp) return null; return toUSD(Number(mp.price),exCcy(ex)); }
 // Shares you hold now, with today's value and what you paid, in dollars
 function divHoldingsNow(){
   const m={};
   const add=(sym,ex,sh,val,cost)=>{ const g=m[sym]=m[sym]||{sym,ex,shares:0,value:0,cost:0}; g.shares+=sh; g.value+=val||0; g.cost+=cost||0; };
-  zseHoldingsNotInTrades().forEach(h=>{ const ccy=h.exchange==='VFSE'?'USD':'ZiG', px=holdingPrice(h)||0, R=rateOn(ccy,h.buyDate||qToday())||1;
+  zseHoldingsNotInTrades().forEach(h=>{ const ccy=exCcy(h.exchange), px=holdingPrice(h)||0, R=rateOn(ccy,h.buyDate||qToday())||1;
     add(baseSymbol(h.symbol),exKey(h.exchange),+h.shares,toUSD(px*h.shares,ccy)||0,(+h.buyPrice*h.shares)/R); });
   trades.filter(t=>t.status==='open'&&listedTradeKey(t)).forEach(t=>{ const R=rateOn(t.currency,String(t.entryDate||'').slice(0,10))||1;
     add(baseSymbol(t.symbol),listedTradeKey(t),+t.qty,toUSD(openTradePx(t)*t.qty,t.currency)||0,(t.entry*t.qty)/R); });
@@ -4318,7 +4482,7 @@ function renderDividends(){
   h+=`<div class="dv-head" style="margin-top:56px"><div><h2 class="section-title" style="margin:0">Coming up</h2><div class="section-sub" style="margin:4px 0 0">Dividends declared and not yet paid, across ZSE and VFEX. To qualify you must own the shares before the ex-dividend date.</div></div></div>`;
   h+=coming.length?`<div class="pa-list">${coming.map(d=>{ const mine=upcomingMine.find(e=>e.d===d), p=divPriceUsd(d.sym,d.ex), u=divPartsUsd(d.parts,today);
     return `<div class="pa-row dv-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(d.sym)}','${d.ex}')">
-      <div class="pa-name">${stockLogo(d.sym,28)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${d.ex==='VFSE'?'VFEX':'ZSE'} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
+      <div class="pa-name">${stockLogo(d.sym,28)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${exLabel(d.ex)} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
       <div class="pa-sub dv-dates">${d.exDate?'Ex '+fmtHeroDate(d.exDate)+' · ':''}Pays ${fmtHeroDate(divDate(d))}</div>
       <div class="pa-num">${divPerShare(d.parts)}<div class="pa-sub">${u!=null&&p?fPct(u/p,2,false)+' of price':''}</div></div>
       <div class="pa-num">${mine?'<b>'+(mine.netUsd!=null?'$'+fmtMoney(mine.netUsd):mine.parts.map(x=>fmtLocal(x.net,x.ccy)).join(' + '))+'</b><div class="pa-sub">to you</div>':''}</div>
@@ -4336,7 +4500,7 @@ function renderDividends(){
     <div class="range-tabs" role="tablist" aria-label="Exchange" style="margin:0">${[['all','All'],['ZSE','ZSE'],['VFSE','VFEX']].map(([k,l])=>`<button class="range-tab${_divEx===k?' active':''}" role="tab" aria-selected="${_divEx===k}" onclick="_divEx='${k}';renderDividends()">${l}</button>`).join('')}</div></div></div>
   <div class="table-wrap" style="margin-bottom:56px"><table class="dv-table"><thead><tr><th>Stock</th><th>Last payout</th><th style="text-align:right">Past 12 months</th><th style="text-align:right">Yield</th><th style="text-align:right">vs year before ${paHelp('Past 12 months against the 12 months before, per share. Shown only when both years have the same number of payouts, so a dividend not yet announced does not look like a cut.')}</th><th style="text-align:right">Payouts</th></tr></thead><tbody>
   ${shown.map(r=>{ const k=r.sym+'|'+r.ex, open=_divOpen===k;
-    return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${r.ex==='VFSE'?'VFEX':'ZSE'}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
+    return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${exLabel(r.ex)}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
       <td>${fmtHeroDate(divDate(r.last))}<div class="pa-sub">${divPerShare(r.last.parts)}</div></td>
       <td class="num">${r.ttm>0?'$'+fmtDps(r.ttm):'—'}<div class="pa-sub">per share</div></td>
       <td class="num">${r.yield!=null?fPct(r.yield,2,false):'—'}</td>
@@ -4512,7 +4676,7 @@ function openWatchModal(symbol,exchange){
   document.getElementById('wl-direction').value=w?w.direction:'above';
   document.getElementById('wl-note').value=w?w.note:'';
   document.getElementById('wl-err').style.display='none';
-  const dl=document.getElementById('wl-sym-list'); if(dl) dl.innerHTML=allSecurities().map(x=>`<option value="${escapeHtml(x.symbol)}">${x.exchange==='VFSE'?'VFEX':'ZSE'}</option>`).join('');
+  const dl=document.getElementById('wl-sym-list'); if(dl) dl.innerHTML=allSecurities().map(x=>`<option value="${escapeHtml(x.symbol)}">${exLabel(x.exchange)}</option>`).join('');
   document.getElementById('wl-title').textContent=w?'Edit watch':'Watch a stock';
   wlHint();
   document.getElementById('watch-modal').classList.add('open');
@@ -4524,7 +4688,7 @@ function wlHint(){
   const opts=allSecurities().filter(x=>x.symbol===sym);
   if(opts.length===1) exEl.value=opts[0].exchange;
   const ex=exEl.value, last=sym?wlLast({symbol:sym,exchange:ex}):null;
-  document.getElementById('wl-hint').textContent=last?`Last price ${secFmt(last[1],ex==='VFSE'?'USD':'ZiG')} on ${fmtHeroDate(last[0])}. Targets use the same units${ex==='ZSE'?' (whole ZiG, not cents)':''}.`:(sym?'No price on record for this stock yet.':'');
+  document.getElementById('wl-hint').textContent=last?`Last price ${secFmt(last[1],exCcy(ex))} on ${fmtHeroDate(last[0])}. Targets use the same units${ex==='ZSE'?' (whole ZiG, not cents)':''}.`:(sym?'No price on record for this stock yet.':'');
 }
 async function saveWatch(){
   const err=document.getElementById('wl-err'); err.style.display='none';
@@ -4547,9 +4711,9 @@ function renderWatchlist(){
       <div><div class="section-title" style="margin:0">Watchlist</div><div class="section-sub">Stocks you're watching, with an optional target price${_wlRemote?'':'. For now it is saved on this device only'}.</div></div>
       <button class="btn btn-ghost btn-sm" onclick="openWatchModal()">Watch a stock</button>
     </div>
-    ${rows.length?`<div class="pa-list">${rows.map(w=>{ const ccy=w.exchange==='VFSE'?'USD':'ZiG'; const dist=w.target&&w.last?w.target/w.last[1]-1:null;
+    ${rows.length?`<div class="pa-list">${rows.map(w=>{ const ccy=exCcy(w.exchange); const dist=w.target&&w.last?w.target/w.last[1]-1:null;
       return `<div class="pa-row wl-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')">
-        <div class="pa-name">${stockLogo(w.symbol,32)}<div><div>${escapeHtml(w.symbol)}</div><div class="pa-sub">${w.exchange==='VFSE'?'VFEX':'ZSE'}${w.note?' · '+escapeHtml(w.note):''}</div></div></div>
+        <div class="pa-name">${stockLogo(w.symbol,32)}<div><div>${escapeHtml(w.symbol)}</div><div class="pa-sub">${exLabel(w.exchange)}${w.note?' · '+escapeHtml(w.note):''}</div></div></div>
         <div class="pa-num">${w.last?secFmt(w.last[1],ccy):'—'}<div class="pa-sub" style="${tone(w.chg)}">${w.chg!=null?fPct(w.chg):''}</div></div>
         <div class="pa-num">${w.target!=null?`${w.direction==='below'?'At or below':'At or above'} ${secFmt(w.target,ccy)}<div class="pa-sub">${w.hit?'<span class="sr-held">Target reached</span>':dist!=null?fPct(dist,1)+' away':''}</div>`:'<span class="pa-sub">No target</span>'}</div>
         <div class="wl-actions"><button class="icon-btn" title="Edit" aria-label="Edit ${escapeHtml(w.symbol)} watch" onclick="event.stopPropagation();openWatchModal('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button class="icon-btn" title="Remove" aria-label="Remove ${escapeHtml(w.symbol)} from watchlist" onclick="event.stopPropagation();wlRemove('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
@@ -4564,7 +4728,7 @@ function checkWatchAlerts(){
     let seen=null; try{ seen=localStorage.getItem(k); }catch(e){}
     if(seen===l[0]) return;
     try{ localStorage.setItem(k,l[0]); }catch(e){}
-    const ccy=w.exchange==='VFSE'?'USD':'ZiG';
+    const ccy=exCcy(w.exchange);
     showToast(`${w.symbol} is at ${secFmt(l[1],ccy)}, ${w.direction==='below'?'at or below':'at or above'} your ${secFmt(w.target,ccy)} target`,'info');
   });
 }
@@ -4608,8 +4772,8 @@ async function saveAdminFx(){
 // sel lists desktop then mobile targets; the first visible one is used. No target = a centred card.
 const TOURS={
   welcome:{title:'Getting around',desc:'Where everything is, in about a minute.',steps:[
-    {page:'dashboard',title:'Welcome to Tsoro',body:'Tsoro tracks your ZSE and VFEX shares, cash and trades in one place, all in US dollars. Here is a quick look around. You can skip at any time.'},
-    {sel:['.topnav-links','.mobile-nav'],title:'Your main pages',body:'<b>Home</b> shows your total. <b>Trades</b> is your journal. <b>Portfolio</b> holds your cash wallets. <b>ZSE / VFEX</b> holds your shares. <b>Analytics</b> shows your real return and risk. <b>News</b> has market updates.'},
+    {page:'dashboard',title:'Welcome to Tsoro',body:'Tsoro tracks your ZSE, VFEX and JSE shares, cash and trades in one place, all in US dollars. Here is a quick look around. You can skip at any time.'},
+    {sel:['.topnav-links','.mobile-nav'],title:'Your main pages',body:'<b>Home</b> shows your total. <b>Trades</b> is your journal. <b>Portfolio</b> holds your cash wallets. <b>Markets</b> lists every stock on the ZSE, VFEX and JSE. <b>Shares</b> holds your shares. <b>Analytics</b> shows your real return and risk. <b>News</b> has market updates.'},
     {sel:['#nav-more-btn','#mnav-more'],title:'More',body:'Dividends, Goals and the Simulator (what if I had bought earlier?) live here. Giving and tithe tracking is optional: turn it on from your account menu.'},
     {sel:['#ticker-bar'],opt:true,title:'Live prices',body:'Every ZSE and VFEX stock, with yours first. Tap one to open its full price history.'},
     {sel:['.topbar-right .icon-btn[aria-label="Search stocks"]'],title:'Search',body:'Find any listed stock. On a computer, press <b>/</b> from anywhere.'},
@@ -4622,7 +4786,7 @@ const TOURS={
     {page:'wallet',sel:['#wallet-quickstart .btn-primary','[onclick="openWalletModal()"]'],title:'Add a wallet',body:'Give it a name, pick the currency and enter today\'s balance. Use Deposit, Withdraw and Transfer afterwards to keep it current.'},
     {page:'wallet',title:'How it adds up',body:'ZiG balances convert to dollars at the latest ZiG rate, so your Home total is always in USD.'}
   ]},
-  holdings:{title:'Add the shares you own',desc:'Your ZSE and VFEX holdings, valued at market prices.',steps:[
+  holdings:{title:'Add the shares you own',desc:'Your ZSE, VFEX and JSE holdings, valued at market prices.',steps:[
     {page:'zse',sel:['[onclick="openZseHoldingModal()"]'],title:'Add a holding',body:'Enter the stock, number of shares, what you paid per share and the buy date. ZSE prices are in whole ZiG (1.45, not 145 cents); VFEX prices are in US dollars.'},
     {page:'zse',sel:['#zse-holdings-table'],title:'Your holdings',body:'Each stock shows its value and gain at the latest market price. Bought more than once? Each purchase is a lot under the same stock.'},
     {page:'zse',sel:['#zse-watchlist'],title:'Watchlist',body:'Watch stocks you don\'t own yet and set a target price. Tsoro tells you when a new price reaches it.'},
@@ -5125,7 +5289,7 @@ function zseAnalyticsCard(){
   const holdings=zseHoldings;
   if(!holdings.length) return '';
   const zigRate=getZigUsdRate();
-  const mvToUSD=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+  const mvToUSD=(exchange,mv)=>exCcy(exchange)==='ZiG'?(zigRate?mv/zigRate:null):toUSD(mv,exCcy(exchange));
   const today=new Date().toISOString().slice(0,10);
 
   // Group by symbol+exchange
@@ -5164,8 +5328,8 @@ function zseAnalyticsCard(){
   const best=sorted[0], worst=sorted[sorted.length-1];
   const concentrated=totalMvUSD>0?positions.filter(p=>p.mvUSD!=null&&p.mvUSD/totalMvUSD>0.4):[];
   const stale=positions.filter(p=>p.staleDays==null||p.staleDays>7);
-  const zigMV=positions.filter(p=>p.exchange!=='VFSE').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
-  const usdMV=positions.filter(p=>p.exchange==='VFSE').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
+  const zigMV=positions.filter(p=>exCcy(p.exchange)==='ZiG').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
+  const usdMV=positions.filter(p=>exCcy(p.exchange)!=='ZiG').reduce((s,p)=>p.mvUSD!=null?s+p.mvUSD:s,0);
 
   function insightBox(level,title,text){
     const border={danger:'var(--red)',warn:'var(--yellow)',good:'var(--green)',info:'var(--accent2)'};
@@ -5197,9 +5361,7 @@ function zseAnalyticsCard(){
     const wt=totalMvUSD>0&&p.mvUSD!=null?(p.mvUSD/totalMvUSD*100).toFixed(1)+'%':'—';
     const held=p.holdDays!=null?(p.holdDays>=365?(p.holdDays/365).toFixed(1)+'y':p.holdDays+'d'):'—';
     const staleTag=p.staleDays!=null&&p.staleDays>7?`<span style="color:var(--yellow);font-size:10px;margin-left:3px">⚠${p.staleDays}d</span>`:'';
-    const xBadge=p.exchange==='VFSE'
-      ?'<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(16,185,129,.18);color:var(--green)">VFEX</span>'
-      :'<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent)">ZSE</span>';
+    const xBadge=`<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent)">${exLabel(p.exchange)}</span>`;
     const lotsTag=p.lots>1?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${p.lots} lots</span>`:'';
     return `<div style="display:grid;grid-template-columns:${colTpl};gap:8px;padding:10px 0;align-items:center;font-size:12px">
       <div style="display:flex;align-items:center;gap:9px">${stockLogo(p.symbol,32)}<div><div style="font-weight:700;font-size:13px">${escapeHtml(p.symbol)}</div><div style="margin-top:3px">${xBadge}${lotsTag}</div></div></div>
@@ -5606,7 +5768,7 @@ function renderTradingAnalytics(){
     const holdings=zseHoldings;
     if(!holdings.length) return;
     const zigRate=getZigUsdRate();
-    const mvToUSD2=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+    const mvToUSD2=(exchange,mv)=>exCcy(exchange)==='ZiG'?(zigRate?mv/zigRate:null):toUSD(mv,exCcy(exchange));
     const groupMap2={};
     holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!groupMap2[k]) groupMap2[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; groupMap2[k].lots.push(h); });
     const grps=Object.values(groupMap2);
@@ -5645,7 +5807,7 @@ function renderTradingAnalytics(){
 
 
 // ── Render ─────────────────────────────────────────────────────────
-function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='dividends')renderDividends(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse'){renderPulse();renderNewsRail();} else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
+function renderPage(page){ populateFilters(); if(page==='security'){ renderSecurity(); return; } if(page==='markets'){ renderMarkets(); return; } if(page==='dashboard')renderDashboard(); else if(page==='journal'){const list=filtered(document.getElementById('j-type').value,document.getElementById('j-search').value,document.getElementById('j-market').value,document.getElementById('j-exchange').value,document.getElementById('j-dir').value,document.getElementById('j-status').value);document.getElementById('j-count').textContent=list.length+' trade'+(list.length!==1?'s':'');renderTable('journal-table',list);} else if(page==='analytics')renderAnalytics(); else if(page==='wallet')renderWallet(); else if(page==='zse'){renderZse();renderWatchlist();} else if(page==='dividends')renderDividends(); else if(page==='goals-giving'){renderGoals();renderTithe();renderGiving();} else if(page==='pulse'){renderPulse();renderNewsRail();} else if(page==='simulator')renderSimulator(); else if(page==='admin')renderAdmin(); setTimeout(()=>applyMotionInteractions(),60);}
 // ═══════════════════════════════════════════════════════════════════
 // WALLET
 // ═══════════════════════════════════════════════════════════════════
@@ -6337,7 +6499,7 @@ function renderZsePerformanceCard(){
   if(!holdings.length){ card.style.display='none'; return; }
   card.style.display='';
   const zigRate=getZigUsdRate();
-  const mvToUSD=(exchange,mv)=>exchange==='VFSE'?mv:(zigRate?mv/zigRate:null);
+  const mvToUSD=(exchange,mv)=>exCcy(exchange)==='ZiG'?(zigRate?mv/zigRate:null):toUSD(mv,exCcy(exchange));
 
   // Group by symbol+exchange
   const groupMap={};
@@ -6594,7 +6756,7 @@ function _renderWallet(){
       const bizHoldings=zseHoldings.filter(h=>h.business_group===name);
       const holdingsUSD=bizHoldings.reduce((s,h)=>{
         const price=holdingPrice(h); if(!price||!h.shares) return s;
-        const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
+        const v=toUSD(price*h.shares, exCcy(h.exchange)); return v==null?s:s+v;
       },0);
       const totalUSD=cashUSD+holdingsUSD;
       const subRows=gWallets.map(w=>{
@@ -6621,10 +6783,10 @@ function _renderWallet(){
       }).join('');
       // Business ZSE/VFEX holdings sub-rows
       const holdingRows=bizHoldings.length?'<div style="padding:9px 18px 4px;background:var(--surface2);">'
-        +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">ZSE / VFEX Holdings</div>'
+        +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px">Listed shares</div>'
         +bizHoldings.map(h=>{
           const price=holdingPrice(h); const val=(price||0)*h.shares;
-          const ccy=h.exchange==='VFSE'?'USD':'ZiG'; const usdVal=toUSD(val,ccy);
+          const ccy=exCcy(h.exchange); const usdVal=toUSD(val,ccy);
           const gain=price&&h.buyPrice?((price-h.buyPrice)/h.buyPrice*100):null;
           return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;">'
             +'<div style="display:flex;align-items:center;gap:9px">'+stockLogo(h.symbol,30)+'<div>'
@@ -7429,6 +7591,8 @@ function getLatestRate(currency){
   let best=r[0]||null;
   // Accounts without their own ZiG rate (or with an older one) use the shared rate Admin records
   if(currency==='ZiG'&&typeof sharedZigRate==='function'){ const sh=sharedZigRate(); if(sh&&(!best||sh.effective_date>String(best.effective_date).slice(0,10))) best=sh; }
+  // Rand: the daily market rate Tsoro loads for JSE, unless the account recorded a newer one
+  if(currency==='ZAR'&&typeof jseFx!=='undefined'&&jseFx.length){ const l=jseFx[jseFx.length-1]; if(!best||l[0]>String(best.effective_date).slice(0,10)) best={units_per_usd:l[1],effective_date:l[0],inflation_rate:0,shared:true}; }
   return best;
 }
 
@@ -7545,7 +7709,7 @@ function renderTicker(){
   const held=new Set(zseHoldings.map(h=>base(h.symbol)+'|'+h.exchange));
   // Whole market from Admin prices, plus any held stock the Admin list does not cover yet
   const quotes=new Map();
-  Object.values(marketPrices).forEach(mp=>{ if(mp.exchange==='ZSE'||mp.exchange==='VFSE') quotes.set(base(mp.symbol)+'|'+mp.exchange,{price:Number(mp.price),date:mp.price_date}); });
+  Object.values(marketPrices).forEach(mp=>{ if(isListedEx(mp.exchange)) quotes.set(base(mp.symbol)+'|'+mp.exchange,{price:Number(mp.price),date:mp.price_date}); });
   held.forEach(k=>{
     if(quotes.has(k)) return;
     const a=series[k], lot=zseHoldings.find(h=>base(h.symbol)+'|'+h.exchange===k);
@@ -7565,9 +7729,9 @@ function renderTicker(){
   const html=items.map(t=>{
     const cls=t.pct==null||Math.abs(t.pct)<0.005?'flat':t.pct>0?'up':'down';
     const chg=t.pct==null?'—':(t.pct>0?'+':t.pct<0?'−':'')+Math.abs(t.pct).toFixed(2)+'%';
-    return `<div class="ticker-item${t.held?' held':''}" data-sym="${escapeHtml(t.sym)}" data-ex="${t.ex}" title="${t.ex==='VFSE'?'VFEX':'ZSE'}${t.held?' · you hold this':''} · view history">
+    return `<div class="ticker-item${t.held?' held':''}" data-sym="${escapeHtml(t.sym)}" data-ex="${t.ex}" title="${exLabel(t.ex)}${t.held?' · you hold this':''} · view history">
       <span class="ticker-sym">${escapeHtml(t.sym)}</span>
-      <span class="ticker-price">${t.ex==='VFSE'?'$':'ZiG '}${fmt(t.price)}</span>
+      <span class="ticker-price">${ccyPrefix(exCcy(t.ex))}${fmt(t.price)}</span>
       <span class="ticker-chg ${cls}">${chg}</span>
     </div>`;
   }).join('');
@@ -7808,7 +7972,7 @@ function fmtHoldTime(hrs){
 // ZSE / VFSE TRACKER
 // ═══════════════════════════════════════════════════════════════════
 
-const PAGE_TITLES_ZSE = {'zse':'ZSE / VFEX'};
+const PAGE_TITLES_ZSE = {'zse':'Shares'};
 Object.assign(PAGE_TITLES, PAGE_TITLES_ZSE);
 
 function zseKey(suffix){ return 'tj_zse_'+(currentUser?.id||'guest')+'_'+suffix; }
@@ -7817,6 +7981,11 @@ function zseKey(suffix){ return 'tj_zse_'+(currentUser?.id||'guest')+'_'+suffix;
 // Sell: CGT 1.00% + platform admin 1.00% + brokerage & levies 0.92% = 2.92%
 // Withdraw to bank: 1.00% of cash moved · Dividend WHT: 10%
 const ZSE_DEFAULT_CHARGES={cgt:1.00, admin:1.00, broker:0.92, withdraw:1.00, divtax:10.00};
+// JSE: South Africa withholds no capital gains tax on a sale (it is declared on your tax return); dividend tax is 20%.
+// Broker fees are typical online-broker values until the account saves its own (kept on the account, not in a table).
+const JSE_DEFAULT_CHARGES={cgt:0, admin:0.10, broker:0.25, withdraw:0, divtax:20};
+function jseCharges(){ const m=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.jseCharges)||{}; return {...JSE_DEFAULT_CHARGES,...m}; }
+function chargesFor(ex){ return exKey(ex)==='JSE'?jseCharges():zseCharges; }
 
 // In-memory caches — populated by loadZseHoldings() / loadZseCharges() at startup
 let zseHoldings=[], zseCharges={...ZSE_DEFAULT_CHARGES};
@@ -7955,8 +8124,9 @@ async function saveZseHolding(){
   if(!sbOk) zseSaveLocal();
 
   closeZseHoldingModal();
+  if(exKey(exchange)==='JSE') loadJseHistory(symbol).then(ok=>{ if(ok&&document.body.dataset.page==='zse') renderZse(); });
   // Record buy price as first history point (if new holding with buyDate)
-  const ccy = exchange==='VFSE'?'USD':'ZiG';
+  const ccy = exCcy(exchange);
   if(buyDate && !isNaN(buyPrice) && buyPrice>0){
     recordZsePrice(symbol,exchange,buyPrice,ccy,buyDate,'Buy price');
   }
@@ -7996,15 +8166,20 @@ async function openZsePriceUpdate(symbol, exchange){
     const{error}=await sb.from('zse_holdings').upsert(rows);
     if(error) throw error;
   }catch(e){ if(zseTableMissing(e)){zseSaveLocal();}else{showToast('Price save failed: '+e.message,'error');} }
-  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const ccy=exCcy(exchange);
   recordZsePrice(symbol,exchange,p,ccy,today,'Price update').then(()=>{renderZsePriceCharts();renderTicker();});
   renderZse(); renderTicker();
   showToast(symbol+' price updated to '+p,'success');
 }
 
 // ── Charges modal ──────────────────────────────────────────────────
-function openZseChargesModal(){
-  const c=zseCharges;
+let _zcSet='zw';
+function setZcSet(k){ _zcSet=k; openZseChargesModal(k); }
+function openZseChargesModal(set){
+  _zcSet=set||_zcSet||'zw';
+  const c=_zcSet==='jse'?jseCharges():zseCharges;
+  document.getElementById('zc-tab-zw').classList.toggle('active',_zcSet==='zw'); document.getElementById('zc-tab-jse').classList.toggle('active',_zcSet==='jse');
+  document.getElementById('zc-intro').textContent=_zcSet==='jse'?'Your South African broker\'s fees, as a % of each sale. The starting values are typical for an online JSE broker; change them to match yours. Dividend tax in South Africa is 20%.':'Edit the fee percentages if the structure changes. They drive the Sell & Withdraw calculator below.';
   document.getElementById('zc-cgt').value      = c.cgt;
   document.getElementById('zc-admin').value    = c.admin;
   document.getElementById('zc-broker').value   = c.broker;
@@ -8080,12 +8255,17 @@ const COMPANY={
   'ZSE:ZBFH':'ZB Financial Holdings','ZSE:ZECO':'Zeco Holdings','ZSE:ZIMP':'Zimpapers','ZSE:ZIMR':'Zimre Holdings','ZSE:ZSEH':'ZSE Holdings','ZSE:TIG':'Tigere REIT','ZSE:REV':'Revitus REIT',
   'ZSE:MCMS':'Morgan & Co Multi-Sector ETF','ZSE:MIZ':'Morgan & Co Made in Zim ETF','ZSE:DMCS':'Datvest Consumer Staples ETF',
   'VFSE:AXIA':'Axia Corporation','VFSE:CMCL':'Caledonia Mining','VFSE:INN':'Innscor Africa','VFSE:PHL':'Padenga Holdings','VFSE:SIM':'Simbisa Brands','VFSE:SCIL':'Seed Co International',
-  'VFSE:FCA':'First Capital Bank','VFSE:NED':'Nedbank Group','VFSE:WPHL':'West Property Holdings','VFSE:KAV':'Kavango Resources'
+  'VFSE:FCA':'First Capital Bank','VFSE:NED':'Nedbank Group','VFSE:WPHL':'West Property Holdings','VFSE:KAV':'Kavango Resources',
+  // Names from the exchange's issuer list
+  'VFSE:EAGLE':'Eagle REIT','VFSE:FMWG':'First Mutual Wealth Gold ETF','VFSE:INFR':'Econet InfraCo','VFSE:INV':'Invictus Energy','VFSE:PFUMA':'Pfuma REIT',
+  'VFSE:ZIMW':'Zimplow Holdings','VFSE:AAU':'Ariana Resources','VFSE:BIND':'Bindura Nickel','VFSE:EDGR':'Edgars Stores','VFSE:KMH':'Karo Mining Holdings',
+  'VFSE:OMU':'Old Mutual','VFSE:TSL':'TSL Limited','VFSE:TANG':'Tanganda',
+  'ZSE:CSAG':'Cass Saddle Agriculture ETF','ZSE:TNCI':'TN CyberTech Investments','ZSE:HCCL':'Hwange Colliery','ZSE:COTT':'Cottco Holdings','ZSE:PPC':'PPC Limited'
 };
-function companyName(symbol,exchange){ return COMPANY[exKey(exchange)+':'+baseSymbol(symbol)]||(exKey(exchange)==='VFSE'?'VFEX':'ZSE'); }
+function companyName(symbol,exchange){ const ex=exKey(exchange), b=baseSymbol(symbol); if(ex==='JSE'){ const j=jseListing(b); if(j) return j.n; } return COMPANY[ex+':'+b]||exLabel(ex); }
 // Latest move for every listed stock that has a fresh price (within 5 days of the newest price on record)
 function marketMovers(){
-  const rows=allSecurities().map(x=>{ const tl=priceTimeline(x.symbol,x.exchange), l=tl[tl.length-1], p=tl[tl.length-2];
+  const rows=allSecurities().filter(x=>x.exchange!=="JSE").map(x=>{ const tl=priceTimeline(x.symbol,x.exchange), l=tl[tl.length-1], p=tl[tl.length-2];
     if(!l||!p||!(p[1]>0)) return null; const chg=l[1]/p[1]-1; if(Math.abs(Math.log(1+chg))>MAX_WEEKLY) return null;
     return {...x,tl,last:l,prev:p,chg}; }).filter(Boolean);
   const latest=rows.reduce((m,r)=>r.last[0]>m?r.last[0]:m,'');
@@ -8109,7 +8289,7 @@ function newsChip(x){
   return `<button class="news-chip" onclick="openSecurity('${escapeHtml(x.symbol)}','${x.exchange}')" title="${escapeHtml(companyName(x.symbol,x.exchange))}">${escapeHtml(x.symbol)}${chg!=null?` <b style="${tone(chg)}">${fPct(chg)}</b>`:''}</button>`;
 }
 function newsRow(r,sub){
-  const up=r.chg>=0, ccy=r.exchange==='VFSE'?'USD':'ZiG';
+  const up=r.chg>=0, ccy=exCcy(r.exchange);
   return `<div class="rail-row news-row" data-k="${escapeHtml(r.symbol)}|${r.exchange}" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(r.symbol)}','${r.exchange}')" title="${escapeHtml(companyName(r.symbol,r.exchange))}">
     <div style="min-width:0"><div class="rail-sym">${escapeHtml(r.symbol)}</div><div class="rail-meta">${escapeHtml(sub||companyName(r.symbol,r.exchange))}</div></div>
     <div>${railSpark(r.tl.slice(-20).map(p=>p[1]),up)}</div>
@@ -8326,6 +8506,7 @@ async function loadMarketPrices(){
 }
 
 function getMarketPrice(symbol,exchange){
+  if(exchange==='JSE') return jseMp[baseSymbol(symbol)]||null;
   if(marketPrices[symbol+'|'+exchange]) return marketPrices[symbol+'|'+exchange];
   // Also try without exchange suffix (e.g. INFR.VX → INFR, MCMS.ZW → MCMS)
   const stripped=symbol.replace(/\.(VX|ZW)$/i,'');
@@ -8416,7 +8597,7 @@ async function saveAdminPrice(){
   const rawPrice=parseFloat(document.getElementById('ap-price').value);
   const date=document.getElementById('ap-date').value;
   if(!symbol||isNaN(rawPrice)||rawPrice<=0||!date){ showToast('Fill in all fields with a valid price.','warn'); return; }
-  const currency=exchange==='VFSE'?'USD':'ZiG';
+  const currency=exCcy(exchange);
   // DB tables market_prices/price_history keep ZSE in ZiG cents (as quoted); memory + zse_price_history use whole ZiG
   const price=exchange==='ZSE'?rawPrice/100:rawPrice;
   try{
@@ -8488,7 +8669,7 @@ async function importAdminPrices(){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ skipped++; continue; }
     if(isNaN(price)||price<=0){ skipped++; continue; }
     if(exchange==='VFEX') exchange='VFSE';
-    const currency=exchange==='VFSE'?'USD':'ZiG';
+    const currency=exCcy(exchange);
     records.push({symbol,exchange,price,currency,recorded_date:dateStr,recorded_by:currentUser.id});
   }
 
@@ -8552,7 +8733,7 @@ async function loadPriceHistory(){
       const price=(ex==='ZSE'||r.exchange==='VFEX')?r.price/100:r.price;
       return {...r,exchange:ex,currency:ccy,price};
     });
-    const zph=(results[1]?.data||[]).filter(r=>!isStrayZseRow(r)).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(r.exchange==='VFSE'?'USD':'ZiG'),recorded_date:r.recorded_date}));
+    const zph=(results[1]?.data||[]).filter(r=>!isStrayZseRow(r)).map(r=>({symbol:r.symbol,exchange:r.exchange,price:r.price,currency:r.currency||(exCcy(r.exchange)),recorded_date:r.recorded_date}));
     // Merge: user's personal history wins over bulk import on same day
     const seen=new Map();
     ph.forEach(r=>seen.set(r.symbol+'|'+r.exchange+'|'+r.recorded_date,r));
@@ -8566,14 +8747,15 @@ let _ptCache={key:'',map:new Map()};
 // Every known price for a stock, oldest first, in whole ZiG / USD: bulk history, the user's own logs and the Admin price.
 // "INN" and "INN.VX" are the same stock.
 function priceTimeline(symbol,exchange){
-  const ver=priceHistory.length+'|'+zsePriceHistory.length+'|'+Object.keys(marketPrices).length;
+  const ver=priceHistory.length+'|'+zsePriceHistory.length+'|'+Object.keys(marketPrices).length+'|'+_jseVer;
   if(_ptCache.key!==ver) _ptCache={key:ver,map:new Map()};
   const k=baseSymbol(symbol)+'|'+exchange;
   if(_ptCache.map.has(k)) return _ptCache.map.get(k);
   const b=baseSymbol(symbol), m=new Map(), mine=new Map();
   // Market rows (imported history + Admin) use the bare symbol; the user's own logs use INN.VX-style symbols
   const add=r=>{ if(r.exchange!==exchange||baseSymbol(r.symbol)!==b||!(Number(r.price)>0)) return; (r.symbol.toUpperCase()===b?m:mine).set(r.recorded_date,Number(r.price)); };
-  priceHistory.forEach(add); zsePriceHistory.forEach(add);
+  if(exchange==='JSE') (_jseHistRows.get(b)||[]).forEach(add); else priceHistory.forEach(add);
+  zsePriceHistory.forEach(add);
   // Where real market history exists it wins; personal logs only fill in after it ends (or stand alone when there is none)
   const lastMarket=m.size>=10?[...m.keys()].sort().pop():null;
   mine.forEach((v,d)=>{ if(!m.has(d)&&(!lastMarket||d>lastMarket)) m.set(d,v); });
@@ -8637,8 +8819,8 @@ function renderSimulator(){
   const kept={}; SIM_FIELDS.forEach(id=>{ const f=document.getElementById(id); if(f) kept[id]=f.value; });
   const act=document.activeElement, focusId=act&&SIM_FIELDS.includes(act.id)?act.id:null;
   let selStart=null, selEnd=null; try{ if(focusId){ selStart=act.selectionStart; selEnd=act.selectionEnd; } }catch(e){}
-  const keys=[...new Set([...zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+h.exchange),...Object.values(marketPrices).filter(m=>m.exchange==='ZSE'||m.exchange==='VFSE').map(m=>baseSymbol(m.symbol)+'|'+m.exchange),...symbolsWithHistory()])].sort();
-  const symbols=[...new Set(keys.map(k=>k.split('|')[0]))];
+  const keys=[...new Set([...zseHoldings.map(h=>baseSymbol(h.symbol)+'|'+h.exchange),...Object.values(marketPrices).filter(m=>isListedEx(m.exchange)).map(m=>baseSymbol(m.symbol)+'|'+m.exchange),...symbolsWithHistory()])].sort();
+  const symbols=[...new Set([...keys.map(k=>k.split('|')[0]),...jseListings.map(x=>x.s)])];
   const groups=simHoldingGroups();
   el.innerHTML=`
     <div class="sim-card">
@@ -8654,6 +8836,7 @@ function renderSimulator(){
           <select class="form-select" id="sim-exchange" onchange="simSymbolChanged(true)">
             <option value="ZSE">ZSE (prices in ZiG)</option>
             <option value="VFSE">VFEX (prices in USD)</option>
+            <option value="JSE">JSE (prices in rand)</option>
           </select>
         </div>
       </div>
@@ -8686,10 +8869,10 @@ function renderSimulator(){
         const cost=g.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0);
         const first=g.lots.map(h=>h.buyDate).filter(Boolean).sort()[0]||'';
         const n=priceTimeline(g.symbol,g.exchange).length;
-        const ccy=g.exchange==='VFSE'?'USD':'ZiG';
+        const ccy=exCcy(g.exchange);
         return `<div class="bk-row" role="button" tabindex="0" onclick="simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')" onkeydown="if(event.key==='Enter')simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')">
           ${stockLogo(g.symbol,32)}
-          <div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(g.symbol)}</div><div style="font-size:13px;color:var(--muted)">${g.exchange==='VFSE'?'VFEX':'ZSE'} · ${fmtNum(shares)} shares · avg ${simFmtPx(shares?cost/shares:0,ccy)}${first?' · since '+first:''}</div></div>
+          <div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(g.symbol)}</div><div style="font-size:13px;color:var(--muted)">${exLabel(g.exchange)} · ${fmtNum(shares)} shares · avg ${simFmtPx(shares?cost/shares:0,ccy)}${first?' · since '+first:''}</div></div>
           <div style="font-size:13px;color:${n?'var(--muted)':'var(--red)'};text-align:right">${n?n.toLocaleString('en-US')+' prices':'no prices'}</div>
         </div>`;
       }).join('')}
@@ -8706,11 +8889,13 @@ function simSymbolChanged(exchangeChosen){
   const exSel=document.getElementById('sim-exchange');
   // pick the exchange that actually has this stock, unless the user just chose one
   if(symbol&&!exchangeChosen){
-    const hasZ=priceTimeline(symbol,'ZSE').length, hasV=priceTimeline(symbol,'VFSE').length;
-    if(hasV&&!hasZ) exSel.value='VFSE'; else if(hasZ&&!hasV) exSel.value='ZSE';
+    const hasZ=priceTimeline(symbol,'ZSE').length, hasV=priceTimeline(symbol,'VFSE').length, hasJ=!!jseListing(symbol);
+    if(hasV&&!hasZ) exSel.value='VFSE'; else if(hasZ&&!hasV) exSel.value='ZSE'; else if(hasJ&&!hasZ&&!hasV) exSel.value='JSE';
   }
   const exchange=exSel.value;
-  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  // JSE history loads on first use, then the simulator reruns
+  if(symbol&&exchange==='JSE'&&jseListing(symbol)&&!_jseHistRows.has(symbol)){ const cv=document.getElementById('sim-coverage'); if(cv) cv.textContent='Loading JSE prices…'; loadJseHistory(symbol).then(ok=>{ if(ok&&document.getElementById('sim-symbol')&&baseSymbol(document.getElementById('sim-symbol').value.trim())===symbol) simSymbolChanged(true); }); }
+  const ccy=exCcy(exchange);
   document.getElementById('sim-currency').value=ccy;
   document.getElementById('sim-ccy-label').textContent='('+ccy+')';
   const covEl=document.getElementById('sim-coverage');
@@ -8718,7 +8903,7 @@ function simSymbolChanged(exchangeChosen){
     const arr=symbol?priceTimeline(symbol,exchange):[];
     covEl.innerHTML=!symbol?'':arr.length
       ?`${arr.length.toLocaleString('en-US')} prices · ${arr[0][0]} to ${arr[arr.length-1][0]}`
-      :`<span style="color:var(--red)">No prices for ${escapeHtml(symbol)} on ${exchange==='VFSE'?'VFEX':'ZSE'}</span>`;
+      :`<span style="color:var(--red)">No prices for ${escapeHtml(symbol)} on ${exLabel(exchange)}</span>`;
   }
   calcSimulator();
 }
@@ -8749,13 +8934,13 @@ function calcSimulator(){
   const dateThen=document.getElementById('sim-date-then').value;
   const dateTo=document.getElementById('sim-date-to').value||today;
   const amount=parseFloat(document.getElementById('sim-amount').value);
-  const ccy=exchange==='VFSE'?'USD':'ZiG';
+  const ccy=exCcy(exchange);
   const sym=ccy==='USD'?'$':'ZiG ';
   if(!symbol||!dateThen||!amount||amount<=0){ resultEl.innerHTML=''; return; }
   const msg=(t,b)=>{ resultEl.innerHTML=`<div class="sim-card"><div style="font-size:17px;font-weight:600;margin-bottom:4px">${t}</div><div style="font-size:14px;color:var(--muted)">${b}</div></div>`; };
   if(dateTo<=dateThen){ msg('Pick an end date after the investment date',`${dateThen} to ${dateTo} is not a holding period.`); return; }
   const arr=priceTimeline(symbol,exchange);
-  if(!arr.length){ msg(`No prices for ${escapeHtml(symbol)} on ${exchange==='VFSE'?'VFEX':'ZSE'}`,'Check the exchange, or add prices in Admin.'); return; }
+  if(!arr.length){ msg(`No prices for ${escapeHtml(symbol)} on ${exLabel(exchange)}`,'Check the exchange, or add prices in Admin.'); return; }
   const recThen=findHistoricalPrice(symbol,exchange,dateThen);
   const recTo=findHistoricalPrice(symbol,exchange,dateTo);
   if(!recThen){ msg(`No ${escapeHtml(symbol)} price on or before ${dateThen}`,`Prices start on ${arr[0][0]}${exchange==='ZSE'?' (ZSE history begins with ZiG in April 2024)':''}. Pick a later date.`); return; }
@@ -8778,7 +8963,7 @@ function calcSimulator(){
   const shiftNote=recThen.recorded_date!==dateThen?` (nearest price before ${dateThen})`:'';
   resultEl.innerHTML=`
     <div class="sim-result-box" style="margin-bottom:48px">
-      <div class="sim-label">${escapeHtml(symbol)} · ${exchange==='VFSE'?'VFEX':'ZSE'} · your investment would be worth</div>
+      <div class="sim-label">${escapeHtml(symbol)} · ${exLabel(exchange)} · your investment would be worth</div>
       <div class="sim-big ${up?'sim-gain':'sim-loss'}">${sym}${fmtMoney(value)}</div>
       <div style="font-size:16px;font-weight:600;margin-top:6px;color:${up?'var(--green)':'var(--red)'}">${signed(gain,v=>sym+fmtMoney(v))} (${signed(pct,v=>v.toFixed(2))}%)</div>
       ${usdLine}
@@ -8803,7 +8988,7 @@ function zseHoldingsValueUSD(excludeTracked){
   return (excludeTracked?zseHoldingsNotInTrades():zseHoldings).reduce((s,h)=>{
     const price=holdingPrice(h);
     if(!price||!h.shares) return s;
-    const ccy=h.exchange==='VFSE'?'USD':'ZiG';
+    const ccy=exCcy(h.exchange);
     const v=toUSD(price*h.shares, ccy);
     return v==null?s:s+v;
   },0);
@@ -9069,7 +9254,7 @@ function renderBizCFO(){
   const bizZseHoldings=zseHoldings.filter(h=>h.business_group&&bizGroupNames.has(h.business_group));
   const bizZseUSD=bizZseHoldings.reduce((s,h)=>{
     const price=holdingPrice(h); if(!price||!h.shares) return s;
-    const v=toUSD(price*h.shares, h.exchange==='VFSE'?'USD':'ZiG'); return v==null?s:s+v;
+    const v=toUSD(price*h.shares, exCcy(h.exchange)); return v==null?s:s+v;
   },0);
   const bizWalletBalance=bizCashBalance+bizZseUSD;
 
@@ -9116,7 +9301,7 @@ function renderBizCFO(){
     {lbl:'Net Cash Flow',val:(netCash>=0?'+':'-')+'$'+fmtMoney(Math.abs(netCash)),sub:netCash>=0?'Positive':'Negative',col:netCash>=0?'#00E676':'#FF5000'},
     {lbl:'Avg Monthly Burn',val:avgMonthlyBurn>0?'$'+fmtMoney(avgMonthlyBurn):'—',sub:'Last 3 months avg',col:'#60A5FA'},
     {lbl:'Cash Runway',val:runway!=null?(runway>36?'> 3 yrs':runway.toFixed(1)+' mo'):'—',sub:avgMonthlyBurn>0?'Months of cash':'No burn data',col:runway!=null&&runway<3?'#FF5000':runway!=null&&runway<6?'#60A5FA':'#00C853'},
-    {lbl:'ZSE / VFEX Holdings',val:bizZseUSD>0?'$'+fmtMoney(bizZseUSD):'—',sub:bizZseHoldings.length>0?bizZseHoldings.length+' stock'+(bizZseHoldings.length!==1?'s':'')+' held':'No business stocks yet',col:'#00C853',show:true},
+    {lbl:'Listed shares',val:bizZseUSD>0?'$'+fmtMoney(bizZseUSD):'—',sub:bizZseHoldings.length>0?bizZseHoldings.length+' stock'+(bizZseHoldings.length!==1?'s':'')+' held':'No business stocks yet',col:'#00C853',show:true},
     {lbl:'Total Assets',val:'$'+fmtMoney(totalAssets),sub:assets.length+' asset'+(assets.length!==1?'s':'')+' tracked',col:'#00C853'},
   ];
 
@@ -9824,7 +10009,11 @@ async function saveZseChargesForm(){
     withdraw: parseFloat(document.getElementById('zc-withdraw').value)||0,
     divtax:   parseFloat(document.getElementById('zc-divtax').value)||0,
   };
-  await saveZseCharges(c);
+  if(_zcSet==='jse'){
+    const{data,error}=await sb.auth.updateUser({data:{jseCharges:c}});
+    if(error){ showToast('Save failed: '+error.message,'error'); return; }
+    if(data&&data.user) currentUser=data.user;
+  } else await saveZseCharges(c);
   closeZseChargesModal();
   renderZse();
   showToast('Charges saved','success');
@@ -9848,7 +10037,7 @@ function holdingToUSD(h){
   const mpMoreRecent=mp&&mp.price_date&&(!h.priceDate||mp.price_date>=h.priceDate);
   const price=mpMoreRecent?Number(mp.price):h.currentPrice!=null?h.currentPrice:h.buyPrice;
   const mv = h.shares * price;
-  if(h.exchange==='VFSE') return mv; // already USD
+  if(exCcy(h.exchange)!=='ZiG') return toUSD(mv,exCcy(h.exchange)); // USD as is; rand at the latest rate
   const rate = getZigUsdRate();
   return rate ? mv / rate : null;
 }
@@ -9904,7 +10093,7 @@ function renderZsePriceCharts(){
     <div class="ph-grid">
       ${stocks.map(s=>{
         const id=slug(s.symbol);
-        const ccy=s.exchange==='VFSE'?'$':'ZiG ';
+        const ccy=ccyPrefix(exCcy(s.exchange));
         const totShares=s.lots.reduce((a,h)=>a+h.shares,0);
         const avg=totShares?s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0)/totShares:0;
         const dbPts=zsePriceHistory.filter(r=>r.symbol===s.symbol&&r.exchange===s.exchange).sort((a,b)=>b.recorded_date.localeCompare(a.recorded_date));
@@ -9936,7 +10125,7 @@ function renderZsePriceCharts(){
     stocks.forEach(s=>{
       const id=slug(s.symbol);
       const box=document.getElementById('zph-'+id); if(!box) return;
-      const ccy=s.exchange==='VFSE'?'$':'ZiG ';
+      const ccy=ccyPrefix(exCcy(s.exchange));
       const totShares=s.lots.reduce((a,h)=>a+h.shares,0);
       const avg=totShares?s.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0)/totShares:0;
       const all=(bySymbol[s.symbol]||[]).filter(p=>p.price>0);
@@ -10238,7 +10427,7 @@ function renderZse(){
     const usd=holdingToUSD(h);
     if(usd==null) hasAllPrices=false;
     else totalUSD+=usd;
-    const costUSD = h.exchange==='VFSE' ? h.shares*h.buyPrice : (zigRate ? h.shares*h.buyPrice/zigRate : null);
+    const costUSD = exCcy(h.exchange)!=='ZiG' ? toUSD(h.shares*h.buyPrice,exCcy(h.exchange)) : (zigRate ? h.shares*h.buyPrice/zigRate : null);
     if(costUSD!=null) totalCostUSD+=costUSD;
   });
   const pnlUSD = totalUSD - totalCostUSD;
@@ -10249,7 +10438,7 @@ function renderZse(){
 
   const zseStockCount=Object.keys(holdings.reduce((m,h)=>{m[h.symbol+'|'+h.exchange]=1;return m;},{})).length;
   const zseRet=totalCostUSD&&totalUSD?(pnlUSD/totalCostUSD)*100:null;
-  const zseNet=totalUSD?calcNetProceeds(totalUSD,charges).afterWithdraw:null;
+  const zseNet=totalUSD?holdings.reduce((s,h)=>{ const u=holdingToUSD(h); return u==null?s:s+calcNetProceeds(u,chargesFor(h.exchange)).afterWithdraw; },0):null;
   document.getElementById('zse-summary').innerHTML = zigWarning + `
     <div class="hero" style="margin-bottom:32px">
       <div class="hero-label">Holdings value</div>
@@ -10265,7 +10454,7 @@ function renderZse(){
   // ── Holdings table — grouped by symbol ──
   const el = document.getElementById('zse-holdings-table');
   if(!holdings.length){
-    el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No holdings yet</h3><p>Click <strong>Add Holding</strong> to track your ZSE or VFEX shares.</p></div>';
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">'+IC.inbox+'</div><h3>No holdings yet</h3><p>Click <strong>Add Holding</strong> to track your ZSE, VFEX or JSE shares.</p></div>';
   } else {
     // Build groups: one entry per unique symbol+exchange
     const groupMap={};
@@ -10294,7 +10483,7 @@ function renderZse(){
       // Synthetic holding for USD conversion
       const synthH={...g.lots[0],shares:totalShares,buyPrice:wavg,currentPrice,priceDate};
       const usd=holdingToUSD(synthH);
-      const np=usd!=null?calcNetProceeds(usd,charges):null;
+      const np=usd!=null?calcNetProceeds(usd,chargesFor(g.exchange)):null;
       const priceStale=priceDate&&priceDate<new Date().toISOString().slice(0,10);
       const hasCurrentPrice=latestLot.currentPrice!=null;
       const earliestDate=g.lots.reduce((min,h)=>h.buyDate&&(!min||h.buyDate<min)?h.buyDate:min,null);
@@ -10394,6 +10583,7 @@ function renderZse(){
     holdings.forEach(h=>{ const k=h.symbol+'|'+h.exchange; if(!calcGroupMap[k]) calcGroupMap[k]={symbol:h.symbol,exchange:h.exchange,lots:[]}; calcGroupMap[k].lots.push(h); });
     const calcGroups=Object.values(calcGroupMap);
 
+    const calcTot={gross:0,afterSell:0,afterWithdraw:0};
     const holdingRows = calcGroups.map(g=>{
       const totalShares=g.lots.reduce((s,h)=>s+h.shares,0);
       const totalCostG=g.lots.reduce((s,h)=>s+h.shares*h.buyPrice,0);
@@ -10404,7 +10594,9 @@ function renderZse(){
       const usd = holdingToUSD(synthHG);
       if(usd==null) return '';
       const gross = usd;
-      const np    = calcNetProceeds(gross, charges);
+      const gc    = chargesFor(g.exchange), gPct=(gc.cgt||0)+(gc.admin||0)+(gc.broker||0);
+      const np    = calcNetProceeds(gross, gc);
+      calcTot.gross+=gross; calcTot.afterSell+=np.afterSell; calcTot.afterWithdraw+=np.afterWithdraw;
       const sellChargeAmt = gross - np.afterSell;
       const withdrawAmt   = np.afterSell - np.afterWithdraw;
       const h=synthHG;
@@ -10412,7 +10604,7 @@ function renderZse(){
         <td style="padding:10px 12px">
           <div style="display:flex;align-items:center;gap:9px">${stockLogo(g.symbol,32)}<div>
             <div style="font-weight:600">${escapeHtml(g.symbol)} <span style="font-size:11px;font-weight:500;color:var(--muted)">${escapeHtml(g.exchange)}</span></div>
-            <div style="font-size:11px;color:var(--muted)">${fmtNum(totalShares)} shares @ ${g.exchange==='ZSE'?'ZiG ':'$'}${fmtNum(curPriceG)}${g.lots.length>1?' ('+g.lots.length+' lots)':''}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtNum(totalShares)} shares @ ${ccyPrefix(exCcy(g.exchange))}${fmtNum(curPriceG)}${g.lots.length>1?' ('+g.lots.length+' lots)':''}</div>
           </div></div>
         </td>
         <td style="padding:10px 12px;text-align:right">
@@ -10421,7 +10613,7 @@ function renderZse(){
         </td>
         <td style="padding:10px 12px;text-align:right;color:var(--red)">
           <div style="font-weight:600">-$${fmtMoney(sellChargeAmt)}</div>
-          <div style="font-size:11px;color:var(--muted)">${totalChargePct.toFixed(2)}% sell charges</div>
+          <div style="font-size:11px;color:var(--muted)">${gPct.toFixed(2)}% sell charges</div>
         </td>
         <td style="padding:10px 12px;text-align:right">
           <div style="font-weight:600;font-size:14px;color:var(--accent2)">$${fmtMoney(np.afterSell)}</div>
@@ -10429,7 +10621,7 @@ function renderZse(){
         </td>
         <td style="padding:10px 12px;text-align:right;color:var(--yellow)">
           <div style="font-weight:600">-$${fmtMoney(withdrawAmt)}</div>
-          <div style="font-size:11px;color:var(--muted)">${(charges.withdraw||0).toFixed(2)}% bank fee</div>
+          <div style="font-size:11px;color:var(--muted)">${(gc.withdraw||0).toFixed(2)}% bank fee</div>
         </td>
         <td style="padding:10px 12px;text-align:right">
           <div style="font-weight:600;font-size:15px;color:var(--green)">$${fmtMoney(np.afterWithdraw)}</div>
@@ -10439,8 +10631,8 @@ function renderZse(){
     }).filter(Boolean).join('');
 
     // Total row
-    const totalGross = calcGroups.reduce((s,g)=>{ const tot=g.lots.reduce((a,h)=>a+h.shares,0); const cost=g.lots.reduce((a,h)=>a+h.shares*h.buyPrice,0); const lLot=g.lots.reduce((b,h)=>(!b.priceDate||h.priceDate>b.priceDate)?h:b,g.lots[0]); const cp=lLot.currentPrice??(cost/tot); const u=holdingToUSD({...g.lots[0],shares:tot,buyPrice:cost/tot,currentPrice:cp,priceDate:lLot.priceDate}); return u?s+u:s; },0);
-    const totalNP    = calcNetProceeds(totalGross, charges);
+    const totalGross = calcTot.gross;
+    const totalNP    = {afterSell:calcTot.afterSell,afterWithdraw:calcTot.afterWithdraw};
 
     calc.innerHTML = `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
@@ -10621,15 +10813,17 @@ async function refreshLivePrices(){
   if(_liveBusy||!currentUser||document.hidden) return;
   _liveBusy=true;
   try{
+    // JSE quotes refresh every 10 minutes at most (they are cached for 15 at the edge)
+    loadJseQuotes().then(ch=>{ if(ch&&['markets','security','zse','dashboard','wallet'].includes(document.body.dataset.page)&&!(document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))) renderPage(document.body.dataset.page); });
     const{data,error}=await sb.from('market_prices').select('symbol,exchange,price,currency,price_date');
     if(error||!data) return;
     const moved=[];
     data.forEach(r=>{
       const k=r.symbol+'|'+r.exchange, raw=Number(r.price), px=r.exchange==='ZSE'?raw/100:raw, old=marketPrices[k];
       if(!old||Number(old.price_raw??old.price)!==raw||old.price_date!==r.price_date){
-        if(old&&(r.exchange==='ZSE'||r.exchange==='VFSE')&&Number(old.price)>0&&px!==Number(old.price)) moved.push({k:baseSymbol(r.symbol)+'|'+r.exchange,up:px>Number(old.price)});
+        if(old&&isListedEx(r.exchange)&&Number(old.price)>0&&px!==Number(old.price)) moved.push({k:baseSymbol(r.symbol)+'|'+r.exchange,up:px>Number(old.price)});
         marketPrices[k]={...(old||{}),...r,price_raw:raw,price:px};
-        if(r.exchange!==FX_EXCHANGE){ priceHistory=priceHistory.filter(h=>!(h.symbol===r.symbol&&h.exchange===r.exchange&&h.recorded_date===r.price_date)); priceHistory.push({symbol:r.symbol,exchange:r.exchange,price:px,currency:r.exchange==='VFSE'?'USD':'ZiG',recorded_date:r.price_date}); }
+        if(r.exchange!==FX_EXCHANGE){ priceHistory=priceHistory.filter(h=>!(h.symbol===r.symbol&&h.exchange===r.exchange&&h.recorded_date===r.price_date)); priceHistory.push({symbol:r.symbol,exchange:r.exchange,price:px,currency:exCcy(r.exchange),recorded_date:r.price_date}); }
       }
     });
     _liveAt=Date.now();

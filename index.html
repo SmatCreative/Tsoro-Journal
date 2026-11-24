@@ -3018,7 +3018,7 @@ function renderTable(containerId,list){
     const pnl=calcPnL(t); const c=getColor(t.symbol);
     const rr=t.sl&&t.tp&&t.entry?((Math.abs(t.tp-t.entry)/Math.abs(t.entry-t.sl)).toFixed(1)+'R'):'—';
     return `<tr>
-      <td><div class="symbol-cell">${stockLogo(t.symbol,30)}<div><div style="font-weight:600">${escapeHtml(t.symbol)}</div><div style="font-size:11px;color:var(--muted)">${escapeHtml(t.strategy||'')}</div></div></div></td>
+      <td><div class="symbol-cell">${stockLogo(t.symbol,30,t.exchange)}<div><div style="font-weight:600">${escapeHtml(t.symbol)}</div><div style="font-size:11px;color:var(--muted)">${escapeHtml(t.strategy||'')}</div></div></div></td>
       <td><span class="badge ${t.market==='ETF'?'badge-etf':t.market==='REIT'?'badge-reit':'badge-market'}">${escapeHtml(t.market)}</span></td>
       <td>${t.exchange?`<span class="badge badge-market" style="font-weight:600;color:var(--accent2)">${escapeHtml(t.exchange)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
       <td><span class="badge ${t.type==='day'?'badge-day':'badge-long-term'}">${t.type==='day'?IC.zap+' Day':IC.arrowUpRight+' Long'}</span></td>
@@ -3206,7 +3206,7 @@ function renderDashboard(){
   const maxAbs=Math.max(...entries.map(([,v])=>Math.abs(v)),1);
   document.getElementById('asset-bars').innerHTML=entries.length?entries.map(([sym,pnl])=>`<div class="bar-row"><div class="bar-label">${sym}</div><div class="bar-track"><div class="bar-fill ${pnl>=0?'pos':'neg'}" style="width:${(Math.abs(pnl)/maxAbs*100).toFixed(1)}%">${Math.abs(pnl)>maxAbs*.18?pnlStr(pnl):''}</div></div><div class="bar-val ${pnlClass(pnl)}">${pnlStr(pnl)}</div></div>`).join(''):'<div style="color:var(--muted);text-align:center;padding:28px;font-size:13px">No closed trades yet</div>';
   const recent=allTrades().slice(0,6);
-  document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;">${stockLogo(t.symbol,34)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:600">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
+  document.getElementById('recent-list').innerHTML=recent.length?recent.map(t=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;">${stockLogo(t.symbol,34,t.exchange)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${t.symbol} <span style="font-size:11px;color:var(--muted);font-weight:400">${t.market}</span></div><div style="font-size:11px;color:var(--muted)">${fmtDateShort(t.entryDate)} · ${t.direction}${t.currency&&t.currency!=='USD'?' · <span style="color:var(--accent2)">'+t.currency+'</span>':''}</div></div><div style="text-align:right"><div class="${pnlClass(pnl)}" style="font-size:13px;font-weight:600">${fmtPnL(pnl,t.currency)}</div><span class="badge ${t.status==='open'?'badge-open':'badge-closed'}" style="font-size:10px">${t.status}</span></div></div>`;}).join(''):'<div style="color:var(--muted);text-align:center;padding:32px;font-size:13px">No trades yet — click <strong>New Trade</strong> to start</div>';
   drawPortfolioDonut();
 }
 
@@ -3290,7 +3290,7 @@ function zseMoversCard(){
     const ccy=ccyPrefix(exCcy(m.exchange));
     const xBadge=`<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent);font-weight:600">${exLabel(m.exchange)}</span>`;
     return `<div style="display:grid;grid-template-columns:auto 1fr 88px auto;align-items:center;gap:10px;padding:11px 18px;transition:background .15s" onmouseover="this.style.background='var(--hover-bg)'" onmouseout="this.style.background=''">
-      ${stockLogo(m.symbol,34)}
+      ${stockLogo(m.symbol,34,m.exchange)}
       <div>
         <div style="font-size:14px;font-weight:800;color:var(--accent);letter-spacing:.01em">${escapeHtml(m.symbol)}</div>
         <div style="display:flex;gap:4px;align-items:center;margin-top:3px">${xBadge}${m.usingCost?'<span style="font-size:9px;color:var(--muted)">vs cost</span>':''}</div>
@@ -3507,7 +3507,7 @@ function renderSecurity(){
   const all=priceTimeline(symbol,exchange);
   const back=`<button class="btn btn-ghost btn-sm" onclick="secBack()" style="margin-bottom:20px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg> Back</button>`;
   const watched=isWatched(symbol,exchange);
-  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">${stockLogo(symbol,48)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${escapeHtml(companyName(symbol,exchange)!==exName?companyName(symbol,exchange)+' · ':'')}${exName} · prices in ${ccy}${secType(symbol,exchange)!=='Stock'?' · '+secType(symbol,exchange):sectorOf(symbol,exchange)!=='Unclassified'?' · '+escapeHtml(sectorOf(symbol,exchange)):''}</div></div><div class="sec-head-actions"><button class="btn ${watched?'btn-ghost':'btn-primary'} btn-sm" onclick="openWatchModal('${escapeHtml(symbol)}','${exchange}')">${watched?'Watching · Edit':'Watch'}</button></div></div>`;
+  const head=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">${stockLogo(symbol,48,exchange)}<div><h1 style="font-size:30px;font-weight:700;letter-spacing:-.04em;line-height:1.1">${escapeHtml(symbol)}</h1><div style="font-size:14px;color:var(--muted)">${escapeHtml(companyName(symbol,exchange)!==exName?companyName(symbol,exchange)+' · ':'')}${exName} · prices in ${ccy}${secType(symbol,exchange)!=='Stock'?' · '+secType(symbol,exchange):sectorOf(symbol,exchange)!=='Unclassified'?' · '+escapeHtml(sectorOf(symbol,exchange)):''}</div></div><div class="sec-head-actions"><button class="btn ${watched?'btn-ghost':'btn-primary'} btn-sm" onclick="openWatchModal('${escapeHtml(symbol)}','${exchange}')">${watched?'Watching · Edit':'Watch'}</button></div></div>`;
   if(all.length<2){ el.innerHTML=back+head+`<div class="empty-state"><h3>Not enough price history</h3>${all.length?'Only one price is recorded so far.':'No prices are recorded for this stock yet.'}</div>`; return; }
   const r=SEC_RANGES.find(x=>x.k===_sec.range)||SEC_RANGES[SEC_RANGES.length-1];
   const lastDate=all[all.length-1][0];
@@ -3704,7 +3704,7 @@ function renderMarkets(){
     const c=s.pct==null||Math.abs(s.pct)<0.005?'var(--muted)':s.pct>0?'var(--green)':'var(--red)';
     const stale=s.date&&latest&&daysBetween(s.date,latest)>5;
     return `<div class="mk-row" role="listitem"><button class="mk-btn" onclick="openSecurity('${escapeHtml(s.symbol)}','${s.exchange}')" aria-label="${escapeHtml(s.symbol)}, ${escapeHtml(s.name||'')}: see price history">
-      <span class="mk-id">${stockLogo(s.symbol,36)}<span class="mk-txt"><span class="mk-sym">${escapeHtml(s.symbol)}${s.type!=='Stock'?` <span class="dv-pill">${s.type}</span>`:''}${s.held?' <span class="dv-pill dv-soon">You hold</span>':''}</span><span class="mk-name">${escapeHtml(s.name&&s.name!==exLabel(s.exchange)?s.name:'')}</span></span></span>
+      <span class="mk-id">${stockLogo(s.symbol,36,s.exchange)}<span class="mk-txt"><span class="mk-sym">${escapeHtml(s.symbol)}${s.type!=='Stock'?` <span class="dv-pill">${s.type}</span>`:''}${s.held?' <span class="dv-pill dv-soon">You hold</span>':''}</span><span class="mk-name">${escapeHtml(s.name&&s.name!==exLabel(s.exchange)?s.name:'')}</span></span></span>
       <span class="mk-px">${s.last!=null?secFmt(s.last,ccy):'<span class="pa-muted">No price yet</span>'}<span class="mk-chg" style="color:${c}">${s.pct==null||stale?(stale?'':'&nbsp;'):(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}${stale?`<span class="mk-date">${fmtHeroDate(s.date)}</span>`:''}</span></span>
     </button></div>`; }).join('')}</div>`;
   const src={ZSE:'ZSE prices are in ZiG, from Tsoro’s daily market prices. Change is against the previous recorded price.',VFSE:'VFEX prices are in US dollars, from Tsoro’s daily market prices. Change is against the previous recorded price.',JSE:'JSE prices are in rand, from Yahoo Finance, and can be up to 30 minutes old during trading hours. Change is against the previous close.'}[_mkEx];
@@ -3726,7 +3726,7 @@ function renderSearch(){
     const ccy=exCcy(s.exchange);
     const c=s.pct==null||Math.abs(s.pct)<0.005?'var(--muted)':s.pct>0?'var(--green)':'var(--red)';
     return `<button class="search-row${i===0?' hl':''}" onclick="openSecurity('${escapeHtml(s.symbol)}','${s.exchange}')">
-      ${stockLogo(s.symbol,32)}
+      ${stockLogo(s.symbol,32,s.exchange)}
       <span class="sr-sym">${escapeHtml(s.symbol)}${s.held?'<span class="sr-held">Held</span>':''}<span class="sr-ex">${exLabel(s.exchange)}</span></span>
       <span class="sr-px">${s.last!=null?secFmt(s.last,ccy):'—'}<span style="color:${c}">${s.pct==null?'':(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}</span></span>
     </button>`;
@@ -4149,7 +4149,7 @@ function renderPortfolioAnalytics(){
       <div class="pa-list">${per.map(p=>{
         const w=Math.abs(p.gain)/mx*50;
         return `<div class="pa-row" ${p.listed?`role="link" tabindex="0" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}>
-          <div class="pa-name">${p.listed?stockLogo(p.symbol,28):''}<span>${escapeHtml(p.symbol)}</span></div>
+          <div class="pa-name">${p.listed?stockLogo(p.symbol,28,p.exchange):''}<span>${escapeHtml(p.symbol)}</span></div>
           <div class="pa-div" aria-hidden="true"><span class="${p.gain>=0?'pos':'neg'}" style="width:${w.toFixed(1)}%"></span></div>
           <div class="pa-num" style="${tone(p.gain)}">${fUsd(p.gain)}</div>
           <div class="pa-num pa-muted">${p.contrib>=0?'+':MINUS}${Math.abs(p.contrib*100).toFixed(2)} pts</div>
@@ -4185,7 +4185,7 @@ function renderPortfolioAnalytics(){
   </div>
   ${divRows.length?'<div id="pa-income" style="height:180px;margin:-24px 0 40px"></div>':`<div class="pa-note" style="margin-top:-32px">Record dividends on the Dividends page (More → Dividends) to track your income.</div>`}
   ${perAll.length?`<div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Invested</th><th style="text-align:right">Value now</th><th style="text-align:right">Price gain</th><th style="text-align:right">Dividends</th><th style="text-align:right">Total return</th></tr></thead><tbody>
-    ${perAll.map(p=>{ const pg=p.gain-p.div; return `<tr${p.listed?` style="cursor:pointer" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}><td><div class="pa-name">${p.listed?stockLogo(p.symbol,28):''}<span>${escapeHtml(p.symbol)}</span></div></td>
+    ${perAll.map(p=>{ const pg=p.gain-p.div; return `<tr${p.listed?` style="cursor:pointer" onclick="openSecurity('${escapeHtml(p.symbol)}','${escapeHtml(p.exchange)}')"`:''}><td><div class="pa-name">${p.listed?stockLogo(p.symbol,28,p.exchange):''}<span>${escapeHtml(p.symbol)}</span></div></td>
       <td class="num">$${fmtMoney(p.invested)}</td><td class="num">${p.value>0?'$'+fmtMoney(p.value):'Sold'}</td>
       <td class="num" style="${tone(pg)}">${fUsd(pg)}</td><td class="num">${p.div>0?'$'+fmtMoney(p.div):'—'}</td>
       <td class="num" style="${tone(p.gain)}">${fUsd(p.gain)}<div class="pa-sub">${fPct(p.gain/p.invested)}</div></td></tr>`; }).join('')}
@@ -4220,7 +4220,7 @@ function renderPortfolioAnalytics(){
       html+=`<h2 class="section-title">Holdings risk</h2><div class="section-sub" style="margin:-10px 0 18px">From each stock's price history in its own currency. Break-even includes the selling charges in Shares → Charges (${sellCostPct().toFixed(2)}%).</div>
       <div class="table-wrap" style="margin-bottom:56px"><table><thead><tr><th>Stock</th><th style="text-align:right">Weight</th><th style="text-align:right">Volatility</th><th style="text-align:right">Worst drop</th><th style="text-align:right">From high</th><th>Trading</th><th style="text-align:right">Break-even</th><th style="text-align:right">Price vs break-even</th></tr></thead><tbody>
       ${listed.map(g=>{ const rk=stockRisk(g.symbol,g.exchange), be=breakEven(g), ccy=exCcy(g.exchange);
-        return `<tr style="cursor:pointer" onclick="openSecurity('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')"><td><div class="pa-name">${stockLogo(g.symbol,28)}<span>${escapeHtml(g.symbol)}</span></div></td>
+        return `<tr style="cursor:pointer" onclick="openSecurity('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')"><td><div class="pa-name">${stockLogo(g.symbol,28,g.exchange)}<span>${escapeHtml(g.symbol)}</span></div></td>
         <td class="num">${(g.w*100).toFixed(1)}%</td>
         <td class="num">${rk&&rk.vol!=null?fPct(rk.vol,0,false):'—'}</td>
         <td class="num">${rk?fPct(rk.mddAll,0):'—'}</td>
@@ -4482,7 +4482,7 @@ function renderDividends(){
   h+=`<div class="dv-head" style="margin-top:56px"><div><h2 class="section-title" style="margin:0">Coming up</h2><div class="section-sub" style="margin:4px 0 0">Dividends declared and not yet paid, across ZSE and VFEX. To qualify you must own the shares before the ex-dividend date.</div></div></div>`;
   h+=coming.length?`<div class="pa-list">${coming.map(d=>{ const mine=upcomingMine.find(e=>e.d===d), p=divPriceUsd(d.sym,d.ex), u=divPartsUsd(d.parts,today);
     return `<div class="pa-row dv-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(d.sym)}','${d.ex}')">
-      <div class="pa-name">${stockLogo(d.sym,28)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${exLabel(d.ex)} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
+      <div class="pa-name">${stockLogo(d.sym,28,d.ex)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${exLabel(d.ex)} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
       <div class="pa-sub dv-dates">${d.exDate?'Ex '+fmtHeroDate(d.exDate)+' · ':''}Pays ${fmtHeroDate(divDate(d))}</div>
       <div class="pa-num">${divPerShare(d.parts)}<div class="pa-sub">${u!=null&&p?fPct(u/p,2,false)+' of price':''}</div></div>
       <div class="pa-num">${mine?'<b>'+(mine.netUsd!=null?'$'+fmtMoney(mine.netUsd):mine.parts.map(x=>fmtLocal(x.net,x.ccy)).join(' + '))+'</b><div class="pa-sub">to you</div>':''}</div>
@@ -4500,7 +4500,7 @@ function renderDividends(){
     <div class="range-tabs" role="tablist" aria-label="Exchange" style="margin:0">${[['all','All'],['ZSE','ZSE'],['VFSE','VFEX']].map(([k,l])=>`<button class="range-tab${_divEx===k?' active':''}" role="tab" aria-selected="${_divEx===k}" onclick="_divEx='${k}';renderDividends()">${l}</button>`).join('')}</div></div></div>
   <div class="table-wrap" style="margin-bottom:56px"><table class="dv-table"><thead><tr><th>Stock</th><th>Last payout</th><th style="text-align:right">Past 12 months</th><th style="text-align:right">Yield</th><th style="text-align:right">vs year before ${paHelp('Past 12 months against the 12 months before, per share. Shown only when both years have the same number of payouts, so a dividend not yet announced does not look like a cut.')}</th><th style="text-align:right">Payouts</th></tr></thead><tbody>
   ${shown.map(r=>{ const k=r.sym+'|'+r.ex, open=_divOpen===k;
-    return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${exLabel(r.ex)}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
+    return `<tr class="dv-click" onclick="_divOpen=${open?'null':`'${k}'`};renderDividends()"><td><div class="pa-name">${stockLogo(r.sym,28,r.ex)}<span>${escapeHtml(r.sym)}${r.held?' <span class="dv-pill">You hold</span>':''}<div class="pa-sub">${exLabel(r.ex)}${COMPANY[r.sym]?' · '+escapeHtml(COMPANY[r.sym]):''}</div></span></div></td>
       <td>${fmtHeroDate(divDate(r.last))}<div class="pa-sub">${divPerShare(r.last.parts)}</div></td>
       <td class="num">${r.ttm>0?'$'+fmtDps(r.ttm):'—'}<div class="pa-sub">per share</div></td>
       <td class="num">${r.yield!=null?fPct(r.yield,2,false):'—'}</td>
@@ -4713,7 +4713,7 @@ function renderWatchlist(){
     </div>
     ${rows.length?`<div class="pa-list">${rows.map(w=>{ const ccy=exCcy(w.exchange); const dist=w.target&&w.last?w.target/w.last[1]-1:null;
       return `<div class="pa-row wl-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')" onkeydown="if(event.key==='Enter')openSecurity('${escapeHtml(w.symbol)}','${w.exchange}')">
-        <div class="pa-name">${stockLogo(w.symbol,32)}<div><div>${escapeHtml(w.symbol)}</div><div class="pa-sub">${exLabel(w.exchange)}${w.note?' · '+escapeHtml(w.note):''}</div></div></div>
+        <div class="pa-name">${stockLogo(w.symbol,32,w.exchange)}<div><div>${escapeHtml(w.symbol)}</div><div class="pa-sub">${exLabel(w.exchange)}${w.note?' · '+escapeHtml(w.note):''}</div></div></div>
         <div class="pa-num">${w.last?secFmt(w.last[1],ccy):'—'}<div class="pa-sub" style="${tone(w.chg)}">${w.chg!=null?fPct(w.chg):''}</div></div>
         <div class="pa-num">${w.target!=null?`${w.direction==='below'?'At or below':'At or above'} ${secFmt(w.target,ccy)}<div class="pa-sub">${w.hit?'<span class="sr-held">Target reached</span>':dist!=null?fPct(dist,1)+' away':''}</div>`:'<span class="pa-sub">No target</span>'}</div>
         <div class="wl-actions"><button class="icon-btn" title="Edit" aria-label="Edit ${escapeHtml(w.symbol)} watch" onclick="event.stopPropagation();openWatchModal('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button class="icon-btn" title="Remove" aria-label="Remove ${escapeHtml(w.symbol)} from watchlist" onclick="event.stopPropagation();wlRemove('${escapeHtml(w.symbol)}','${w.exchange}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
@@ -5249,7 +5249,7 @@ async function drawPortfolioDonut(){
     const openForSym=allTrades().filter(t=>t.status==='open'&&t.symbol===s.symbol);
     const pnlOpen=openForSym.reduce((a,t)=>a+(calcPnL(t)||0),0);
     const hData=zseHoldings.filter(h=>h.symbol===s.symbol);
-    const logoHtml=stockLogo(s.symbol,40);
+    const logoHtml=stockLogo(s.symbol,40,s.exchange);
     const barW=Math.min(Math.abs(s.pct)*100*3,100);
     det.style.display='block';
     det.innerHTML=`<div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
@@ -5364,7 +5364,7 @@ function zseAnalyticsCard(){
     const xBadge=`<span style="font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;background:rgba(0,200,83,.15);color:var(--accent)">${exLabel(p.exchange)}</span>`;
     const lotsTag=p.lots>1?`<span style="font-size:10px;color:var(--muted);margin-left:4px">${p.lots} lots</span>`:'';
     return `<div style="display:grid;grid-template-columns:${colTpl};gap:8px;padding:10px 0;align-items:center;font-size:12px">
-      <div style="display:flex;align-items:center;gap:9px">${stockLogo(p.symbol,32)}<div><div style="font-weight:700;font-size:13px">${escapeHtml(p.symbol)}</div><div style="margin-top:3px">${xBadge}${lotsTag}</div></div></div>
+      <div style="display:flex;align-items:center;gap:9px">${stockLogo(p.symbol,32,p.exchange)}<div><div style="font-weight:700;font-size:13px">${escapeHtml(p.symbol)}</div><div style="margin-top:3px">${xBadge}${lotsTag}</div></div></div>
       <div>${fmtNum(p.totalShares)}</div>
       <div>${fmtNum(p.avgBuy)}</div>
       <div>${fmtNum(p.currentPrice)}${staleTag}</div>
@@ -5614,7 +5614,7 @@ function renderTradingAnalytics(){
     const pnlPct=(t.sl&&t.entry&&Number(t.sl)>0)?((Math.abs(p)/(Number(t.entry)*Number(t.qty)))*100).toFixed(1)+'%':'';
     return '<div style="padding:14px 0;">'
       +'<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">'
-        +'<div style="display:flex;align-items:center;gap:9px;min-width:130px">'+stockLogo(t.symbol,34)+'<div><div style="font-weight:700;font-size:13px">'+t.symbol+'</div>'
+        +'<div style="display:flex;align-items:center;gap:9px;min-width:130px">'+stockLogo(t.symbol,34,t.exchange)+'<div><div style="font-weight:700;font-size:13px">'+t.symbol+'</div>'
         +'<div style="font-size:11px;color:var(--muted);margin-top:1px">'+(t.market||'')+' · '+(t.entryDate||'').slice(0,10)+'</div></div></div>'
         +'<span class="badge '+(t.direction==='Long'?'badge-long':'badge-short')+'" style="font-size:11px">'+t.direction+'</span>'
         +'<div style="flex:1;min-width:110px"><div style="font-size:11px;color:var(--muted)">Entry → Exit</div>'
@@ -6789,7 +6789,7 @@ function _renderWallet(){
           const ccy=exCcy(h.exchange); const usdVal=toUSD(val,ccy);
           const gain=price&&h.buyPrice?((price-h.buyPrice)/h.buyPrice*100):null;
           return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;">'
-            +'<div style="display:flex;align-items:center;gap:9px">'+stockLogo(h.symbol,30)+'<div>'
+            +'<div style="display:flex;align-items:center;gap:9px">'+stockLogo(h.symbol,30,h.exchange)+'<div>'
               +'<div style="font-size:12px;font-weight:700">'+escapeHtml(h.symbol)+'</div>'
               +'<div style="font-size:10px;color:var(--muted)">'+h.exchange+' · '+fmtNum(h.shares)+' shares</div>'
             +'</div></div>'
@@ -8541,7 +8541,7 @@ async function renderAdmin(){
       <div class="table-wrap"><table class="data-table" style="width:100%">
         <thead><tr><th>Symbol</th><th>Exchange</th><th style="text-align:right">Price</th><th>Currency</th><th>Date</th><th></th></tr></thead>
         <tbody>${prices.map(r=>`<tr>
-          <td><div style="display:flex;align-items:center;gap:8px">${stockLogo(r.symbol,28)}<span style="font-weight:700">${escapeHtml(r.symbol)}</span></div></td>
+          <td><div style="display:flex;align-items:center;gap:8px">${stockLogo(r.symbol,28,r.exchange)}<span style="font-weight:700">${escapeHtml(r.symbol)}</span></div></td>
           <td><span class="badge" style="background:rgba(0,200,83,.12);color:var(--accent)">${escapeHtml(r.exchange)}</span></td>
           <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600">${fmtNum(r.price_raw??r.price)}${r.exchange==='ZSE'?` <span style="font-size:10px;color:var(--muted);font-weight:500">¢ = ZiG ${fmtNum(r.price)}</span>`:''}</td>
           <td style="color:var(--muted);font-size:12px">${escapeHtml(r.currency||'ZiG')}</td>
@@ -8871,7 +8871,7 @@ function renderSimulator(){
         const n=priceTimeline(g.symbol,g.exchange).length;
         const ccy=exCcy(g.exchange);
         return `<div class="bk-row" role="button" tabindex="0" onclick="simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')" onkeydown="if(event.key==='Enter')simLoadHolding('${escapeHtml(g.symbol)}','${escapeHtml(g.exchange)}')">
-          ${stockLogo(g.symbol,32)}
+          ${stockLogo(g.symbol,32,g.exchange)}
           <div style="flex:1;min-width:0"><div style="font-weight:600">${escapeHtml(g.symbol)}</div><div style="font-size:13px;color:var(--muted)">${exLabel(g.exchange)} · ${fmtNum(shares)} shares · avg ${simFmtPx(shares?cost/shares:0,ccy)}${first?' · since '+first:''}</div></div>
           <div style="font-size:13px;color:${n?'var(--muted)':'var(--red)'};text-align:right">${n?n.toLocaleString('en-US')+' prices':'no prices'}</div>
         </div>`;
@@ -10106,7 +10106,7 @@ function renderZsePriceCharts(){
         const count=dbPts.length+(mpRow?1:0);
         return `<div class="ph-block">
           <div class="ph-top">
-            ${stockLogo(s.symbol,36)}
+            ${stockLogo(s.symbol,36,s.exchange)}
             <div class="ph-id"><button class="ph-sym link-btn" onclick="openSecurity('${escapeHtml(s.symbol)}','${escapeHtml(s.exchange)}')" title="See full price history">${escapeHtml(s.symbol)}</button><div class="ph-meta">${s.exchange==='VFSE'?'VFEX':escapeHtml(s.exchange)}${s.buyDate?' · Held '+heldFor(s.buyDate):''} · Avg ${fmtPx(avg,ccy)}</div></div>
             <div class="ph-quote"><div class="ph-price" id="ph-price-${id}"></div><div class="ph-chg" id="ph-chg-${id}"></div></div>
           </div>
@@ -10400,9 +10400,11 @@ async function saveGivingGoal(){
   showToast('Giving goal saved','success');
 }
 
-function stockLogo(symbol, size){
+function stockLogo(symbol, size, exchange){
   size=size||36;
-  const src=LOGOS[symbol]||LOGOS[symbol.replace(/\.[A-Z]+$/,'')]||null;
+  // JSE codes can match ZSE/VFEX ones (BAT is Brait on the JSE), so JSE logos are looked up by exchange
+  const jse=exchange&&exKey(exchange)==='JSE'?jseListing(symbol):null;
+  const src=exchange&&exKey(exchange)==='JSE'?(jse&&jse.l?'/logos/jse/'+baseSymbol(symbol)+'.png':null):(LOGOS[symbol]||LOGOS[symbol.replace(/\.[A-Z]+$/,'')]||null);
   const initials=symbol.replace(/\.[A-Z]+$/,'').slice(0,3);
   let hash=0; for(let i=0;i<symbol.length;i++) hash=((hash<<5)-hash)+symbol.charCodeAt(i);
   const palette=['#00C853','#2196F3','#D946EF','#9C27B0','#8B5CF6','#00BCD4','#E91E63','#607D8B'];
@@ -10602,7 +10604,7 @@ function renderZse(){
       const h=synthHG;
       return `<tr style="">
         <td style="padding:10px 12px">
-          <div style="display:flex;align-items:center;gap:9px">${stockLogo(g.symbol,32)}<div>
+          <div style="display:flex;align-items:center;gap:9px">${stockLogo(g.symbol,32,g.exchange)}<div>
             <div style="font-weight:600">${escapeHtml(g.symbol)} <span style="font-size:11px;font-weight:500;color:var(--muted)">${escapeHtml(g.exchange)}</span></div>
             <div style="font-size:11px;color:var(--muted)">${fmtNum(totalShares)} shares @ ${ccyPrefix(exCcy(g.exchange))}${fmtNum(curPriceG)}${g.lots.length>1?' ('+g.lots.length+' lots)':''}</div>
           </div></div>

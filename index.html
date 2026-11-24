@@ -90,6 +90,7 @@ html:not([data-theme="light"]) .auth-tab.active{background:var(--surface3)}
 .auth-msg{font-size:13px;text-align:center;padding:10px;border-radius:var(--r-sm);display:none}
 .auth-msg.error{display:block;background:var(--red-bg);color:var(--red)}
 .auth-msg.success{display:block;background:var(--green-bg);color:var(--green)}
+.auth-link{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;font-weight:600}
 .auth-footer{margin-top:24px;text-align:center;font-size:13px;color:var(--muted)}
 
 /* ═══ Shell ═══ */
@@ -2442,19 +2443,39 @@ async function handleAuth(){
     const displayName=document.getElementById('auth-display-name').value.trim();
     const result=authMode==='login'
       ?await sb.auth.signInWithPassword({email,password})
-      :await sb.auth.signUp({email,password,options:{data:{display_name:displayName||email.split('@')[0]}}});
+      // The confirmation link returns to the address the person signed up on, not Supabase's default Site URL
+      :await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/',data:{display_name:displayName||email.split('@')[0]}}});
     if(result.error) throw result.error;
     if(authMode==='signup'&&result.data?.user&&!result.data.session){
-      showAuthMsg('Check your email to confirm your account, then sign in.','success');
-      switchAuthTab('login');
+      // Supabase returns a user with no identities when the email is already registered
+      if(Array.isArray(result.data.user.identities)&&!result.data.user.identities.length){ showAuthMsg('An account with this email already exists. Sign in instead.','error'); switchAuthTab('login'); }
+      else { showAuthMsg(`We sent a confirmation link to ${email}. Open it on this device, then sign in. Check spam if it hasn't arrived in a few minutes.`,'success'); switchAuthTab('login'); _authLastEmail=email; }
     }
     // Save or clear remembered email
     if(remember && authMode==='login') localStorage.setItem('tj_remember_email',email);
     else localStorage.removeItem('tj_remember_email');
-  } catch(err){ showAuthMsg(err.message||'Something went wrong.','error'); }
+  } catch(err){ _authLastEmail=email; showAuthError(err); }
   finally { btn.disabled=false; btn.textContent=authMode==='login'?'Sign In':'Create Account'; }
 }
-function showAuthMsg(text,type){ const el=document.getElementById('auth-msg'); el.textContent=text; el.className='auth-msg '+type; }
+let _authLastEmail='';
+// Plain-language versions of Supabase auth errors, with the next step where there is one
+function showAuthError(err){
+  const m=String(err&&err.message||''), s=err&&err.status;
+  if(/email not confirmed/i.test(m)) return showAuthMsg('Your email isn\'t confirmed yet. Open the link we emailed you, or <button type="button" class="auth-link" onclick="resendConfirmation()">send it again</button>.','error',true);
+  if(/invalid login credentials/i.test(m)) return showAuthMsg(authMode==='login'?'Wrong email or password. New to Tsoro? <button type="button" class="auth-link" onclick="switchAuthTab(\'signup\')">Create an account</button>.':m,'error',true);
+  if(/sending confirmation|not authorized|smtp|email.*(send|deliver)/i.test(m)||s===500) return showAuthMsg('We couldn\'t send your confirmation email just now. Please try again later, or contact the Tsoro team to activate your account.','error');
+  if(/rate limit|too many|security purposes/i.test(m)||s===429) return showAuthMsg('Too many attempts. Wait a few minutes and try again.','error');
+  if(/password should be at least/i.test(m)) return showAuthMsg('Use a password of at least 6 characters.','error');
+  if(/failed to fetch|network/i.test(m)) return showAuthMsg('Can\'t reach Tsoro. Check your internet connection and try again.','error');
+  showAuthMsg(m||'Something went wrong. Please try again.','error');
+}
+async function resendConfirmation(){
+  const email=document.getElementById('auth-email').value.trim()||_authLastEmail;
+  if(!email) return showAuthMsg('Enter your email address first.','error');
+  const{error}=await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:location.origin+'/'}});
+  if(error) showAuthError(error); else showAuthMsg(`Sent. Check ${email} for the confirmation link.`,'success');
+}
+function showAuthMsg(text,type,html){ const el=document.getElementById('auth-msg'); if(html) el.innerHTML=text; else el.textContent=text; el.className='auth-msg '+type; }
 document.getElementById('auth-password').addEventListener('keydown',e=>{if(e.key==='Enter')handleAuth();});
 document.getElementById('auth-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('auth-password').focus();});
 document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);

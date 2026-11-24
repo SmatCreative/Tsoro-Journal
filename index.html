@@ -365,6 +365,7 @@ html[data-theme="light"]{--s1:#008A3E;--s2:#0B63CE;--s3:#B86E00}
 .dv-hero .hero-value{font-variant-numeric:tabular-nums}
 .pa-legend i.dv-hatch{background:var(--s1);opacity:.38}
 .dv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:0 0 18px}
+.dv-note{font-size:13px;color:var(--muted);max-width:72ch;line-height:1.55;margin:0 0 48px}
 .dv-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .dv-pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface2);color:var(--text2);white-space:nowrap;vertical-align:middle}
 .dv-pill.dv-soon{background:rgba(0,200,83,.12);color:var(--accent)}
@@ -4227,6 +4228,7 @@ function renderDividends(){
   const el=document.getElementById('dividends-body'); if(!el) return;
   if(!marketDivs.length){ el.innerHTML='<div class="empty-state"><h3>No dividend history yet</h3>The dividend list could not be loaded. Check your connection and reopen this page.</div>'; return; }
   const today=qToday(), ent=divEntitlements();
+  document.documentElement.setAttribute('data-trend','up');
   const paid=ent.filter(e=>e.paid), upcomingMine=ent.filter(e=>!e.paid);
   const received=paid.reduce((s,e)=>s+(e.netUsd||0),0);
   const last12=paid.filter(e=>e.pay>addDays(today,-365)).reduce((s,e)=>s+(e.netUsd||0),0);
@@ -4252,9 +4254,9 @@ function renderDividends(){
   </div>`;
 
   // Payouts you qualified for
-  h+=`<div class="dv-head"><div><h2 class="section-title" style="margin:0">Your payouts</h2><div class="section-sub" style="margin:4px 0 0">Net of withholding tax (ZSE ${divWhtPct('ZSE')}%, VFEX ${DIV_WHT.VFSE}%). Record a payout to count it in your returns and giving.</div></div>
+  h+=`<div class="dv-head" style="margin-top:48px"><div><h2 class="section-title" style="margin:0">Your payouts</h2><div class="section-sub" style="margin:4px 0 0">Net of withholding tax (ZSE ${divWhtPct('ZSE')}%, VFEX ${DIV_WHT.VFSE}%). Record a payout to count it in your returns and giving.</div></div>
     ${unrec.length?`<button class="btn btn-primary btn-sm" onclick="recordAllDividends()">Record ${unrec.length} payout${unrec.length===1?'':'s'}</button>`:''}</div>`;
-  if(!ent.length) h+=`<div class="pa-note">None of the shares you have owned paid a dividend in this history yet. Payouts appear here automatically for stocks you hold.</div>`;
+  if(!ent.length) h+=`<div class="dv-note">None of the shares you have owned paid a dividend in this history yet. Payouts appear here automatically for stocks you hold.</div>`;
   else h+=`<div class="table-wrap"><table class="dv-table"><thead><tr><th>Stock</th><th>Paid</th><th style="text-align:right">Shares</th><th style="text-align:right">Per share</th><th style="text-align:right">You got</th><th style="text-align:right">In dollars</th><th></th></tr></thead><tbody>
     ${ent.map((e,i)=>`<tr><td><div class="pa-name" role="link" tabindex="0" style="cursor:pointer" onclick="openSecurity('${escapeHtml(e.d.sym)}','${e.d.ex}')">${stockLogo(e.d.sym,28)}<span>${escapeHtml(e.d.sym)}<div class="pa-sub">${escapeHtml(e.d.type||'Dividend')}</div></span></div></td>
       <td>${fmtHeroDate(e.pay)}${e.d.exDate?`<div class="pa-sub">ex ${fmtHeroDate(e.d.exDate)}</div>`:''}</td>
@@ -4266,14 +4268,14 @@ function renderDividends(){
 
   // Announced across the market
   const coming=marketDivs.filter(d=>divDate(d)>=today).sort((a,b)=>divDate(a).localeCompare(divDate(b)));
-  h+=`<h2 class="section-title">Coming up</h2><div class="section-sub" style="margin:-10px 0 18px">Dividends declared and not yet paid, across ZSE and VFEX. To qualify you must own the shares before the ex-dividend date.</div>`;
+  h+=`<div class="dv-head" style="margin-top:56px"><div><h2 class="section-title" style="margin:0">Coming up</h2><div class="section-sub" style="margin:4px 0 0">Dividends declared and not yet paid, across ZSE and VFEX. To qualify you must own the shares before the ex-dividend date.</div></div></div>`;
   h+=coming.length?`<div class="pa-list">${coming.map(d=>{ const mine=upcomingMine.find(e=>e.d===d), p=divPriceUsd(d.sym,d.ex), u=divPartsUsd(d.parts,today);
     return `<div class="pa-row dv-row" role="link" tabindex="0" onclick="openSecurity('${escapeHtml(d.sym)}','${d.ex}')">
       <div class="pa-name">${stockLogo(d.sym,28)}<span>${escapeHtml(d.sym)}<div class="pa-sub">${d.ex==='VFSE'?'VFEX':'ZSE'} · ${escapeHtml(d.type||'Dividend')}</div></span></div>
       <div class="pa-sub dv-dates">${d.exDate?'Ex '+fmtHeroDate(d.exDate)+' · ':''}Pays ${fmtHeroDate(divDate(d))}</div>
       <div class="pa-num">${divPerShare(d.parts)}<div class="pa-sub">${u!=null&&p?fPct(u/p,2,false)+' of price':''}</div></div>
       <div class="pa-num">${mine?'<b>'+(mine.netUsd!=null?'$'+fmtMoney(mine.netUsd):mine.parts.map(x=>fmtLocal(x.net,x.ccy)).join(' + '))+'</b><div class="pa-sub">to you</div>':''}</div>
-    </div>`; }).join('')}</div>`:`<div class="pa-note">No dividends are waiting to be paid right now.</div>`;
+    </div>`; }).join('')}</div>`:`<div class="dv-note">No dividends are waiting to be paid right now.</div>`;
 
   // Market history
   const groups={}; marketDivs.forEach(d=>{ const k=d.sym+'|'+d.ex; (groups[k]=groups[k]||{sym:d.sym,ex:d.ex,list:[]}).list.push(d); });
@@ -4295,7 +4297,7 @@ function renderDividends(){
       <td class="num">${r.list.length}</td></tr>
       ${open?`<tr class="dv-detail"><td colspan="6"><div class="dv-hist">${r.list.map(d=>`<div><span>${fmtHeroDate(divDate(d))}</span><span>${escapeHtml(d.type||'Dividend')}</span><span>${d.exDate?'ex '+fmtHeroDate(d.exDate):d.recDate?'record '+fmtHeroDate(d.recDate):''}</span><span class="num">${divPerShare(d.parts)}</span>${d.src?`<a href="${escapeHtml(d.src)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Notice</a>`:'<span></span>'}</div>`).join('')}</div></td></tr>`:''}`; }).join('')}
   </tbody></table></div>
-  <div class="pa-note" style="margin-top:-40px;margin-bottom:56px">Amounts come from the dividend notices and results each company published on the ZSE and VFEX. Dollar values use the ZiG rate on record; payouts in the old ZWL currency have no dollar value. Not investment advice.</div>`;
+  <div class="dv-note" style="margin-top:-32px">Amounts come from the dividend notices and results each company published on the ZSE and VFEX. Dollar values use the ZiG rate on record; payouts in the old ZWL currency have no dollar value. Not investment advice.</div>`;
 
   el.innerHTML=h;
   // Year tabs for the chart
@@ -4313,6 +4315,8 @@ function drawDivChart(){
   const sum=(m,paid)=>+ent.filter(e=>e.pay.slice(0,7)===m&&e.paid===paid).reduce((s,e)=>s+(e.netUsd||0),0).toFixed(2);
   const detail=m=>ent.filter(e=>e.pay.slice(0,7)===m&&e.netUsd).map(e=>`${escapeHtml(e.d.sym)} $${fmtMoney(e.netUsd)}${e.paid?'':' (announced)'}`).join('<br>');
   const muted=cssVar('--muted'), s1=cssVar('--s1');
+  if(!ent.some(e=>e.pay.slice(0,4)===_divYear)){ const c=echarts.getInstanceByDom(box); if(c) c.dispose(); box.style.height='auto'; box.innerHTML=`<div class="dv-note" style="margin:8px 0 24px">No payouts to you in ${_divYear}.</div>`; return; }
+  box.style.height='220px'; if(box.querySelector('.dv-note')) box.innerHTML='';
   let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
   chart.setOption({
     animationDuration:400,grid:{left:2,right:2,top:10,bottom:2,containLabel:true},

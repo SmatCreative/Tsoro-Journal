@@ -1,0 +1,45 @@
+# Tsoro daily market data, every weekday after the ZSE and VFEX publish their closes (~15:00 CAT).
+#  1. Official ZSE and VFEX closing prices -> Supabase (market_prices + price_history)
+#  2. Official ZSE and VFEX index closes  -> zse-indices.json (committed to the repo)
+# Two runs a day: 16:30 CAT, and 20:00 CAT to catch a late publication. Both are safe to repeat.
+# The evening run fails (and GitHub emails the owner) if a day's prices never appeared,
+# so missing prices can be entered by hand in Tsoro's Admin page.
+name: Daily market data
+on:
+  schedule:
+    - cron: '30 14 * * 1-5'   # 16:30 CAT
+    - cron: '0 18 * * 1-5'    # 20:00 CAT, last try
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: daily-market
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Save closing prices
+        id: prices
+        continue-on-error: true
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FINAL: ${{ github.event.schedule == '0 18 * * 1-5' && '1' || '0' }}
+        run: node scripts/record-zse-prices.mjs
+      - name: Record index closes
+        run: node scripts/record-zse-indices.mjs
+      - name: Commit index closes if anything changed
+        run: |
+          if git diff --quiet zse-indices.json; then echo "Nothing new"; exit 0; fi
+          git config user.name "tsoro-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add zse-indices.json
+          git commit -m "ZSE indexes: $(TZ=Africa/Harare date +%F)"
+          git push
+      - name: Report price problems
+        if: steps.prices.outcome == 'failure'
+        run: |
+          echo "::error::Closing prices were not saved. Add them by hand in Tsoro → Admin → Market Prices."
+          exit 1

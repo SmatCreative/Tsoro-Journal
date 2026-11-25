@@ -372,6 +372,17 @@ body:not(.no-giving) #giving-off-note{display:none}
 .dv-note{font-size:13px;color:var(--muted);max-width:72ch;line-height:1.55;margin:0 0 48px}
 .dv-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mk-seg{margin-bottom:20px}
+.ix-strip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px 4px;padding:2px}
+.ix-strip::-webkit-scrollbar{display:none}
+.ix-card{flex:0 0 auto;min-width:118px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;border:0;border-radius:14px;background:var(--surface2);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .12s,box-shadow .12s}
+.ix-card:hover{background:var(--surface3)}
+.ix-card.on{box-shadow:inset 0 0 0 1.5px var(--text)}
+.ix-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ix-name{font-size:12px;font-weight:600;color:var(--muted)}
+.ix-val{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.ix-chg{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.ix-panel{margin:14px 0 32px}
+.ix-head{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
 .mk-count{margin-left:6px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .mk-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .mk-tools-right{display:flex;gap:8px;align-items:center}
@@ -404,6 +415,7 @@ body:not(.no-giving) #giving-off-note{display:none}
 .pa-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted2);margin:-6px 0 14px}
 .pa-legend span{display:inline-flex;align-items:center;gap:6px}
 .pa-legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bm-seg{margin-bottom:12px}
 .bm-list{margin:0 -12px 8px}
 .bm-head,.bm-you,.bm-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(96px,auto) minmax(96px,auto);align-items:center;gap:16px;padding:10px 12px}
 .bm-head{font-size:12px;font-weight:600;color:var(--muted);padding-top:0;padding-bottom:4px}
@@ -3690,13 +3702,47 @@ function allSecurities(){
 }
 // ── Markets: browse every listing on an exchange, then open its chart ──
 let _mkEx='ZSE', _mkType='all', _mkQ='', _mkSort='az';
+const _mkIdxSel={};
+function setMkIdx(k){ _mkIdxSel[_mkEx]=k; renderMarkets(); }
+function fmtIdx(v){ return v==null?'—':Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+// The exchange's official indexes: latest close and day change, with the chosen one charted below
+function marketIndexesHtml(){
+  const ixs=INDEXES.filter(x=>x.ex===_mkEx); if(!ixs.length) return '';
+  if(!_idx.size&&!_idxFailed){ loadIndexes(); return '<div class="ix-strip"><div class="dv-note" style="margin:0">Loading indexes…</div></div>'; }
+  if(!_idx.size) return '';
+  const sel=ixs.some(x=>x.k===_mkIdxSel[_mkEx])?_mkIdxSel[_mkEx]:ixs[0].k, m=idxMeta(sel), L=idxLast(sel), x=_idx.get(sel);
+  const chg=p=>p==null?'<span class="ix-chg" style="color:var(--muted)">&nbsp;</span>':`<span class="ix-chg" style="color:${Math.abs(p)<5e-5?'var(--muted)':p>0?'var(--green)':'var(--red)'}">${p>0?'+':p<0?MINUS:''}${Math.abs(p*100).toFixed(2)}%</span>`;
+  const short=x&&x.h.length<2;
+  setTimeout(()=>drawIdxChart(sel),0);
+  return `<div class="ix-strip" role="tablist" aria-label="${exLabel(_mkEx)} indexes">${ixs.map(i=>{ const l=idxLast(i.k);
+    return `<button class="ix-card${i.k===sel?' on':''}" role="tab" aria-selected="${i.k===sel}" onclick="setMkIdx('${i.k}')"><span class="ix-name">${i.name}</span><span class="ix-val">${l?fmtIdx(l.v):'—'}</span>${chg(l?l.pct:null)}</button>`; }).join('')}</div>
+  <div class="ix-panel">
+    <div class="ix-head"><b>${idxLabel(m)}</b><span class="pa-sub">${m.note}${L?' Last close '+fmtHeroDate(L.d)+'.':''}</span></div>
+    ${short?`<div class="dv-note" style="margin:8px 0 0">Tsoro started recording this index on ${fmtHeroDate(IDX_RECORD_START)}. The exchange publishes no free history for it, so its chart fills in after each trading day.</div>`:'<div id="ix-chart" style="height:220px"></div>'}
+  </div>`;
+}
+function drawIdxChart(k){
+  const box=document.getElementById('ix-chart'), x=_idx.get(k); if(!box||!x||x.h.length<2) return;
+  const h=x.h, up=h[h.length-1][1]>=h[0][1], col=cssVar(up?'--green':'--red'), muted=cssVar('--muted');
+  let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
+  chart.setOption({
+    animationDuration:400,grid:{left:2,right:8,top:10,bottom:4,containLabel:true},
+    xAxis:{type:'category',data:h.map(p=>p[0]),boundaryGap:false,axisLabel:{color:muted,fontSize:11,hideOverlap:true,formatter:d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'})},axisLine:{show:false},axisTick:{show:false}},
+    yAxis:{type:'value',scale:true,axisLabel:{color:muted,fontSize:11},splitLine:{lineStyle:{color:cssVar('--surface3'),type:[2,4]}},splitNumber:3},
+    tooltip:{trigger:'axis',backgroundColor:cssVar('--elev'),borderWidth:0,textStyle:{color:cssVar('--text'),fontSize:12},extraCssText:'box-shadow:var(--pop-shadow);border-radius:12px',axisPointer:{type:'line',lineStyle:{color:muted,width:1}},
+      formatter:ps=>`<div style="color:${muted};margin-bottom:2px">${fmtHeroDate(ps[0].name)}</div><b>${fmtIdx(ps[0].value)}</b> points`},
+    series:[{type:'line',data:h.map(p=>p[1]),showSymbol:false,lineStyle:{width:2,color:col},itemStyle:{color:col},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:col+'33'},{offset:1,color:col+'00'}]}}}]
+  },true);
+  chart.resize();
+}
 const MK_TYPES=[['all','All'],['Stock','Stocks'],['ETF','ETFs'],['REIT','REITs']];
 function setMk(k,v){ if(k==='ex'){ _mkEx=v; _mkType='all'; } if(k==='type') _mkType=v; if(k==='sort') _mkSort=v; renderMarkets(); }
 function renderMarketsKeepFocus(){ const i0=document.getElementById('mk-q'), pos=i0?i0.selectionStart:null; renderMarkets(); const i=document.getElementById('mk-q'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(e){} } }
 function renderMarkets(){
   const el=document.getElementById('markets-body'); if(!el) return;
   if(!jseListings.length&&!renderMarkets._asked){ renderMarkets._asked=true; loadJseListings().then(()=>{ if(document.body.dataset.page==='markets') renderMarkets(); }); }
-  if(_mkEx==='JSE'&&jseListings.length&&!jseQuotesAt&&!renderMarkets._quoting){ renderMarkets._quoting=true; loadJseQuotes(true).then(()=>{ renderMarkets._quoting=false; if(document.body.dataset.page==='markets') renderMarkets(); }); }
+  // One quote attempt a minute at most: a failed fetch must not loop back into another
+  if(_mkEx==='JSE'&&jseListings.length&&!jseQuotesAt&&!renderMarkets._quoting&&Date.now()-(renderMarkets._quotedAt||0)>60e3){ renderMarkets._quoting=true; renderMarkets._quotedAt=Date.now(); loadJseQuotes(true).then(ok=>{ renderMarkets._quoting=false; if(ok&&document.body.dataset.page==='markets') renderMarkets(); }); }
   const all=allSecurities();
   const count=ex=>all.filter(s=>s.exchange===ex).length;
   const inEx=all.filter(s=>s.exchange===_mkEx);
@@ -3724,7 +3770,7 @@ function renderMarkets(){
       <span class="mk-px">${s.last!=null?secFmt(s.last,ccy):'<span class="pa-muted">No price yet</span>'}<span class="mk-chg" style="color:${c}">${s.pct==null||stale?(stale?'':'&nbsp;'):(s.pct>0?'+':s.pct<0?'−':'')+Math.abs(s.pct).toFixed(2)+'%'}${stale?`<span class="mk-date">${fmtHeroDate(s.date)}</span>`:''}</span></span>
     </button></div>`; }).join('')}</div>`;
   const src={ZSE:'ZSE prices are in ZiG, from Tsoro’s daily market prices. Change is against the previous recorded price.',VFSE:'VFEX prices are in US dollars, from Tsoro’s daily market prices. Change is against the previous recorded price.',JSE:'JSE prices are in rand, from Yahoo Finance, and can be up to 30 minutes old during trading hours. Change is against the previous close.'}[_mkEx];
-  el.innerHTML=seg+filters+`<div class="mk-sum">${rows.length} ${rows.length===1?'listing':'listings'}${latest?' · prices as of '+fmtHeroDate(latest):''}</div>`+body+`<div class="dv-note">${src} A date under the change means the stock has not traded since then. Not investment advice.</div>`;
+  el.innerHTML=seg+marketIndexesHtml()+filters+`<div class="mk-sum">${rows.length} ${rows.length===1?'listing':'listings'}${latest?' · prices as of '+fmtHeroDate(latest):''}</div>`+body+`<div class="dv-note">${src} A date under the change means the stock has not traded since then. Not investment advice.</div>`;
 }
 
 // ── Stock search ──────────────────────────────────────────────────────
@@ -4011,49 +4057,61 @@ function benchIndex(exchange){
   _benchCache.val[exchange]=out; return out;
 }
 
-// ── Benchmarks: markets and safe alternatives to set your return against, all in US dollars ──
-// ZSE and VFEX are the equal-weighted stand-ins above (the official indexes have no free data feed).
-// The rest come from /api/jse?b=KEY (Yahoo Finance): JSE indexes are prices only; the US funds reinvest dividends.
-const BENCHES=[
-  {k:'ZSE',name:'ZSE market',grp:'Zimbabwe',local:true,note:'Equal-weighted average of ZSE shares with price history, in dollars. A stand-in for the All Share index, which has no free data feed.'},
-  {k:'VFSE',name:'VFEX market',grp:'Zimbabwe',local:true,note:'Equal-weighted average of VFEX shares, in US dollars. A stand-in for the VFEX All Share index.'},
-  {k:'J203',name:'JSE All Share',grp:'South Africa',note:'Every main JSE share, weighted by company size. Prices only: dividends of about 3% a year are not included.'},
-  {k:'J200',name:'JSE Top 40',grp:'South Africa',note:'The 40 biggest JSE companies. Prices only, without dividends.'},
-  {k:'SPY',name:'S&P 500',grp:'United States',note:'The 500 biggest US companies, through the SPY index fund, with dividends reinvested.'},
-  {k:'ACWI',name:'World shares',grp:'Global',note:'About 2,500 large companies in 47 countries (MSCI ACWI), through the ACWI fund, with dividends reinvested.'},
-  {k:'EEM',name:'Emerging markets',grp:'Global',note:'Large companies in China, India, Brazil, South Africa and other emerging markets (MSCI EM), through the EEM fund, with dividends.'},
-  {k:'GLD',name:'Gold',grp:'Global',note:'The gold price, through the GLD fund.'},
-  {k:'BIL',name:'US dollar cash',grp:'Safe',note:'1 to 3 month US Treasury bills, through the BIL fund: what keeping dollars somewhere safe earned.'},
+// ── Official market indexes: ZSE, VFEX and JSE, from /api/indices ──
+// ZSE and VFEX: the exchange's own index closes. The All Share has history from the ZiG relaunch (April 2024);
+// the others have no free history, so a daily job records them from 24 Nov 2026. JSE: Yahoo index levels, prices only.
+const IDX_RECORD_START='2026-11-24';
+const INDEXES=[
+  {k:'ZSE:ASI',ex:'ZSE',name:'All Share',note:'Every share on the ZSE main board, weighted by company size.'},
+  {k:'ZSE:T10',ex:'ZSE',name:'Top 10',note:'The 10 biggest, most traded ZSE companies.'},
+  {k:'ZSE:T15',ex:'ZSE',name:'Top 15',note:'The 15 biggest, most traded ZSE companies.'},
+  {k:'ZSE:T25',ex:'ZSE',name:'Top 25',note:'The 25 biggest, most traded ZSE companies.'},
+  {k:'ZSE:MID',ex:'ZSE',name:'Mid Cap',note:'Medium-sized ZSE companies.'},
+  {k:'ZSE:SML',ex:'ZSE',name:'Small Cap',note:'The smallest ZSE companies.'},
+  {k:'VFEX:ASI',ex:'VFSE',name:'All Share',note:'Every share on the VFEX, in US dollars.'},
+  {k:'JSE:J203',ex:'JSE',name:'All Share',note:'Every main JSE share, weighted by company size.'},
+  {k:'JSE:J200',ex:'JSE',name:'Top 40',note:'The 40 biggest JSE companies.'},
+  {k:'JSE:J205',ex:'JSE',name:'Large Cap',note:'The largest JSE companies.'},
+  {k:'JSE:J201',ex:'JSE',name:'Mid Cap',note:'The next 60 companies after the Top 40.'},
+  {k:'JSE:J258',ex:'JSE',name:'Resources',note:'Mining and energy companies.'},
+  {k:'JSE:J212',ex:'JSE',name:'Financial 15',note:'The 15 biggest banks, insurers and other financial companies.'},
+  {k:'JSE:J211',ex:'JSE',name:'Industrial 25',note:'The 25 biggest industrial and consumer companies.'},
+  {k:'JSE:J253',ex:'JSE',name:'Listed Property',note:'Property companies and REITs.'},
 ];
 const BENCH_SLOTS=['--s2','--s3','--s4'];
-const _benchRaw=new Map(), _benchReq=new Map(); let _benchVer=0;
-function loadBenchmark(k){
-  if(_benchReq.has(k)) return _benchReq.get(k);
-  const p=fetch('/api/jse?b='+encodeURIComponent(k)).then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status))).then(j=>{
-    _benchRaw.set(k,{ccy:j.ccy==='USD'?'USD':'ZAR',tl:(j.h||[]).filter(x=>x[1]>0)}); _benchVer++; return true;
-  }).catch(e=>{ console.warn('[Tsoro] benchmark '+k+':',e.message); return false; }); // a failure stays failed until the next visit
-  _benchReq.set(k,p); return p;
-}
-// Fetch every outside benchmark once, then repaint Analytics if it is still open
-function loadBenchmarks(){
-  const need=BENCHES.filter(b=>!b.local&&!_benchReq.has(b.k));
-  if(!need.length) return;
-  Promise.all([...need.map(b=>loadBenchmark(b.k)),jseFx.length?null:loadJseFx()]).then(()=>{
-    if(document.body.dataset.page==='analytics'&&_anTab==='portfolio') renderPortfolioAnalytics();
+const _idx=new Map(); let _idxReq=null, _idxVer=0, _idxFailed=false;
+function idxMeta(k){ return INDEXES.find(x=>x.k===k)||null; }
+function idxLabel(x){ return exLabel(x.ex)+' '+x.name; }
+// One request for every index; repaint whichever page shows them once it lands
+function loadIndexes(){
+  if(_idxReq) return _idxReq;
+  // JSE indexes need the rand rate to be shown in dollars
+  _idxReq=Promise.all([fetch('/api/indices').then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status))),jseFx.length?null:loadJseFx()]).then(([j])=>{
+    (j.list||[]).forEach(x=>_idx.set(x.k,{ccy:x.ccy,pct:x.pct,h:(x.h||[]).filter(p=>p[1]>0)})); _idxVer++; return true;
+  }).catch(e=>{ _idxFailed=true; console.warn('[Tsoro] indexes:',e.message); return false; });
+  _idxReq.then(()=>{
+    const pg=document.body.dataset.page, typing=document.activeElement&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if(typing) return;
+    if(pg==='analytics'&&_anTab==='portfolio') renderPortfolioAnalytics(); else if(pg==='markets') renderMarkets();
   });
+  return _idxReq;
 }
-function benchMeta(k){ return BENCHES.find(b=>b.k===k)||null; }
+// Latest close and the day's change: from the last two closes, or as the exchange reported it
+function idxLast(k){
+  const x=_idx.get(k); if(!x||!x.h.length) return null;
+  const l=x.h[x.h.length-1], p=x.h[x.h.length-2];
+  return {d:l[0],v:l[1],pct:p&&daysBetween(p[0],l[0])<=7?l[1]/p[1]-1:x.pct};
+}
 // Weekly level in US dollars, shaped like benchIndex: {weeks, level, n}
 let _benchExtCache={key:'',val:{}};
 function benchSeries(k){
-  const b=benchMeta(k); if(!b) return null;
-  if(b.local) return benchIndex(k);
-  const raw=_benchRaw.get(k); if(!raw||raw.tl.length<2) return null;
-  const key=_benchVer+'|'+zarSeries().length;
+  if(k==='ZSE'||k==='VFSE') return benchIndex(k); // equal-weighted stand-ins, used only where the official index is too short
+  const x=_idx.get(k); if(!x||!x.h.length) return null;
+  const key=_idxVer+'|'+zarSeries().length+'|'+fxSeries().length;
   if(_benchExtCache.key!==key) _benchExtCache={key,val:{}};
   if(_benchExtCache.val[k]) return _benchExtCache.val[k];
-  const weeks=weekList(raw.tl[0][0],qToday());
-  const out={weeks,level:weeklyUsd(raw.tl,raw.ccy,weeks),n:1,exchange:k};
+  const weeks=weekList(x.h[0][0],qToday());
+  const out={weeks,level:weeklyUsd(x.h,x.ccy,weeks),n:1,exchange:k,first:x.h[0][0]};
   _benchExtCache.val[k]=out; return out;
 }
 // Return between two week-ends, or null when the series does not reach back to the start
@@ -4063,22 +4121,23 @@ function benchRet(B,a,b){
   const x=i>=0?B.level[i]:null, y=j>=0?B.level[j]:null;
   return x&&y?y/x-1:null;
 }
-// Which benchmarks are on the chart: three fixed colour slots, so a line keeps its colour when another is switched off
-let _benchSel=(()=>{ try{ const v=JSON.parse(localStorage.getItem('tj_bench')||'null'); if(Array.isArray(v)&&v.length===3) return v.map(k=>benchMeta(k)?k:null); }catch(e){} return null; })();
+// Which indexes are on the chart: three fixed colour slots, so a line keeps its colour when another is switched off
+let _benchSel=(()=>{ try{ const v=JSON.parse(localStorage.getItem('tj_bench2')||'null'); if(Array.isArray(v)&&v.length===3&&v.some(Boolean)) return v.map(k=>idxMeta(k)?k:null); }catch(e){} return null; })();
+let _benchExW={}, _bmEx=null;
 function benchDefault(exW){
-  const out=[]; if(exW.ZSE) out.push('ZSE'); if(exW.VFSE) out.push('VFSE'); if(exW.JSE) out.push('J203');
-  ['BIL','ACWI'].forEach(k=>{ if(out.length<3) out.push(k); });
-  return out.slice(0,3);
+  const out=[]; if(exW.ZSE) out.push('ZSE:ASI'); if(exW.VFSE) out.push('VFEX:ASI'); if(exW.JSE) out.push('JSE:J203');
+  if(!out.length) out.push('ZSE:ASI');
+  while(out.length<3) out.push(null); return out.slice(0,3);
 }
-let _benchExW={};
 function benchSlots(){ return _benchSel||benchDefault(_benchExW); }
 function toggleBench(k){
   const sel=[...benchSlots()], i=sel.indexOf(k);
   if(i>=0) sel[i]=null;
   else{ const f=sel.indexOf(null); if(f<0){ showToast('The chart shows up to three. Switch one off first.','info'); return; } sel[f]=k; }
-  _benchSel=sel; try{ localStorage.setItem('tj_bench',JSON.stringify(sel)); }catch(e){}
+  _benchSel=sel; try{ localStorage.setItem('tj_bench2',JSON.stringify(sel)); }catch(e){}
   renderPortfolioAnalytics();
 }
+function setBmEx(ex){ _bmEx=ex; renderPortfolioAnalytics(); }
 
 // ── Risk and trading activity for one stock ───────────────────────
 function stockRisk(symbol,exchange){
@@ -4180,11 +4239,21 @@ function renderPortfolioAnalytics(){
   if(W){
     const weeks=weekList(W.a,qToday());
     const pw=portfolioWeekly(E,weeks);
-    loadBenchmarks();
+    loadIndexes();
     const exW=book.items.reduce((m,g)=>{ const k=exKey(g.exchange); m[k]=(m[k]||0)+g.w; return m; },{});
     _benchExW=exW;
-    // Your markets, mixed like your holdings today: ZSE and VFEX stand-ins, JSE All Share for JSE shares
-    const mix=[['ZSE','ZSE'],['VFSE','VFSE'],['JSE','J203']].map(([ex,k])=>({w:exW[ex]||0,B:benchSeries(k)})).filter(m=>m.w>0&&m.B&&m.B.n);
+    const firstW=weeks.findIndex((w,i)=>pw[i]!=null);
+    const wA=firstW>=0?weeks[firstW]:null, wB=weeks[weeks.length-1];
+    // Your markets, mixed like your holdings today: each exchange's All Share, or the equal-weighted
+    // stand-in where the official index does not reach back far enough yet (VFEX, until its history builds)
+    const official=k=>{ const B=benchSeries(k); return B&&wA&&B.weeks.length&&B.weeks[0]<=wA?B:null; };
+    const mixUsed=[];
+    const mix=[['ZSE','ZSE:ASI'],['VFSE','VFEX:ASI'],['JSE','JSE:J203']].map(([ex,k])=>{
+      const w=exW[ex]||0; if(!w) return null;
+      const B=official(k)||(ex==='JSE'?null:benchSeries(ex)); if(!B||!B.n) return null;
+      mixUsed.push(B.exchange===ex?exLabel(ex)+' average of all shares':idxLabel(idxMeta(k)));
+      return {w,B};
+    }).filter(Boolean);
     const bAt=(B,w)=>{ const i=idxAtOrBefore(B.weeks,w); return i>=0?B.level[i]:null; };
     // Weekly returns for beta and volatility, over weeks the portfolio held something
     const pr=[],mr=[];
@@ -4201,12 +4270,10 @@ function renderPortfolioAnalytics(){
     const logs=pr.filter(p=>p>-1).map(p=>Math.log(1+p));
     const vol=logs.length>=12?sampleSd(logs)*Math.sqrt(52):null;
     // Blended market return over the window, weighted like your holdings today
-    const firstW=weeks.findIndex((w,i)=>pw[i]!=null);
-    const wA=firstW>=0?weeks[firstW]:null, wB=weeks[weeks.length-1];
     let mktRet=null;
     if(wA){ const parts=mix.map(m=>[m.w,benchRet(m.B,wA,wB)]).filter(p=>p[1]!=null); const ws=parts.reduce((t,p)=>t+p[0],0); if(ws>0) mktRet=parts.reduce((t,p)=>t+p[0]*p[1],0)/ws; }
     const slots=benchSlots();
-    const lines=slots.map((k,i)=>k?{k,name:benchMeta(k).name,B:benchSeries(k),c:BENCH_SLOTS[i]}:null).filter(Boolean);
+    const lines=slots.map((k,i)=>k&&idxMeta(k)?{k,name:idxLabel(idxMeta(k)),B:benchSeries(k),c:BENCH_SLOTS[i]}:null).filter(Boolean);
     const up=W.twr>=0;
     document.documentElement.setAttribute('data-trend',up?'up':'down');
     html+=`<section class="hero pa-hero">
@@ -4219,38 +4286,40 @@ function renderPortfolioAnalytics(){
     </section>
     <div class="wallet-summary-grid">
       ${paStat('Money-weighted return '+paHelp('Your personal return, giving more weight to money that was invested for longer (Modified Dietz). It differs from the headline when you added or took out money at good or bad times.'),fPct(W.mwr),W.mwrAnn!=null?fPct(W.mwrAnn)+' a year':'',tone(W.mwr))}
-      ${paStat('Your markets '+paHelp('The markets you hold, mixed in the same split as your holdings today: the equal-weighted ZSE and VFEX stand-ins, and the JSE All Share for JSE shares. Compare against other indexes below.'),fPct(mktRet),mktRet!=null&&W.twr!=null?'You '+(W.twr-mktRet>=0?'beat it by ':'trailed it by ')+(Math.abs(W.twr-mktRet)*100).toFixed(1)+' points':'',tone(mktRet))}
+      ${paStat('Your markets '+paHelp('The markets you hold, mixed in the same split as your holdings today, using each exchange’s All Share index. Where an official index does not go back far enough yet, an average of all that exchange’s shares stands in.'+(mixUsed.length?' Used here: '+mixUsed.join(', ')+'.':'')),fPct(mktRet),mktRet!=null&&W.twr!=null?'You '+(W.twr-mktRet>=0?'beat it by ':'trailed it by ')+(Math.abs(W.twr-mktRet)*100).toFixed(1)+' points':'',tone(mktRet))}
       ${paStat('Beta '+paHelp('How much your portfolio moves when the market moves. 1.0 moves with the market; 0.5 moves half as much; above 1 swings harder. Needs 12+ weeks of history.'),beta!=null?beta.toFixed(2):'—',beta!=null?(corr!=null?'Correlation '+corr.toFixed(2):''):'Needs 12 weeks')}
       ${paStat('Volatility '+paHelp('How much your portfolio value typically swings in a year, from weekly returns. Higher means a bumpier ride.'),vol!=null?fPct(vol,1,false):'—',vol!=null?'a year':'Needs 12 weeks')}
       ${paStat('Worst drop '+paHelp('Largest fall from a high point to a low point in this period (maximum drawdown), measured on your time-weighted return.'),fPct(W.mdd,1),'from a peak',W.mdd<0?'color:var(--red)':'')}
     </div>`;
     setTimeout(()=>drawPaChart(weeks,pw,lines),0);
 
-    // 1b · Against markets and safe alternatives, same weeks, all in dollars
+    // 1b · Against the official indexes, same weeks, all in dollars
     if(wA){
-      const days=daysBetween(wA,wB), yrs=days/365.25;
-      const youRet=W.twr;
-      const rows=BENCHES.map(b=>{
-        const B=benchSeries(b.k), ret=benchRet(B,wA,wB), slot=slots.indexOf(b.k);
-        const pending=!b.local&&!_benchRaw.has(b.k);
-        const why=ret!=null?'':pending?'Loading':!B||!B.weeks.length?(b.local?'Not enough prices yet':'Unavailable right now'):'Data from '+fmtHeroDate(B.weeks[0]);
-        return {b,ret,slot,why,ann:ret!=null&&yrs>=1?Math.pow(1+ret,1/yrs)-1:null};
+      const yrs=daysBetween(wA,wB)/365.25, youRet=W.twr;
+      if(!_bmEx||!LISTED_EX[_bmEx]) _bmEx=['ZSE','VFSE','JSE'].sort((a,b)=>(exW[b]||0)-(exW[a]||0))[0];
+      const rows=INDEXES.filter(x=>x.ex===_bmEx).map(x=>{
+        const B=benchSeries(x.k), ret=benchRet(B,wA,wB), slot=slots.indexOf(x.k), L=idxLast(x.k);
+        const why=ret!=null?'':!_idx.size?(_idxFailed?'Unavailable right now':'Loading'):!B||B.first<=wA?'Unavailable right now':(x.k==='ZSE:ASI'||x.ex==='JSE'?'Data from ':'Recorded from ')+fmtHeroDate(B.first);
+        return {x,ret,slot,why,L,ann:ret!=null&&yrs>=1?Math.pow(1+ret,1/yrs)-1:null};
       });
+      const notes={ZSE:'Official ZSE indexes. The All Share goes back to the ZiG relaunch in April 2024. The ZSE does not publish free history for the others, so Tsoro records them after every trading day from '+fmtHeroDate(IDX_RECORD_START)+' and they join the comparison as their history grows.',
+        VFSE:'The official VFEX All Share, in US dollars. Tsoro records it after every trading day from '+fmtHeroDate(IDX_RECORD_START)+', so it joins the comparison as its history grows.',
+        JSE:'Official JSE indexes, converted from rand to dollars. They count share prices only, so they understate what an index fund paid by roughly 3% a year in dividends.'}[_bmEx];
       html+=`<h2 class="section-title">How you compare</h2>
-      <div class="section-sub" style="margin:-10px 0 18px">Your return against markets and safe places to keep money, over the same weeks and all in US dollars. Tap one to show it on the chart, up to three.</div>
-      <div class="bm-list" role="group" aria-label="Benchmarks on the chart">
-        <div class="bm-head" aria-hidden="true"><span>Benchmark</span><span>Its return</span><span>You vs it</span></div>
+      <div class="section-sub" style="margin:-10px 0 18px">Your return against the official market indexes, over the same weeks and all in US dollars. Tap an index to show it on the chart, up to three.</div>
+      <div class="seg bm-seg" role="tablist" aria-label="Exchange">${['ZSE','VFSE','JSE'].map(k=>`<button class="seg-btn${_bmEx===k?' active':''}" role="tab" aria-selected="${_bmEx===k}" onclick="setBmEx('${k}')">${exLabel(k)}</button>`).join('')}</div>
+      <div class="bm-list" role="group" aria-label="${exLabel(_bmEx)} indexes on the chart">
+        <div class="bm-head" aria-hidden="true"><span>Index</span><span>Its return</span><span>You vs it</span></div>
         <div class="bm-you"><div class="bm-name"><i class="bm-dot" style="background:var(--s1)"></i><div><b>You</b><div class="pa-sub">Time-weighted return</div></div></div><div class="pa-num" style="${tone(youRet)}">${fPct(youRet,1)}${yrs>=1&&youRet!=null?`<div class="pa-sub">${fPct(Math.pow(1+youRet,1/yrs)-1,1)} a year</div>`:''}</div><div></div></div>
         ${rows.map(r=>{ const d=r.ret!=null&&youRet!=null?youRet-r.ret:null, on=r.slot>=0;
-          return `<button type="button" class="bm-row${on?' on':''}" aria-pressed="${on}" onclick="toggleBench('${r.b.k}')">
-            <div class="bm-name"><i class="bm-dot" style="${on?`background:var(${BENCH_SLOTS[r.slot]})`:''}"></i><div><b>${r.b.name}</b> <span class="bm-grp">${r.b.grp}</span><div class="pa-sub bm-note">${r.b.note}</div></div></div>
+          return `<button type="button" class="bm-row${on?' on':''}" aria-pressed="${on}" onclick="toggleBench('${r.x.k}')">
+            <div class="bm-name"><i class="bm-dot" style="${on?`background:var(${BENCH_SLOTS[r.slot]})`:''}"></i><div><b>${idxLabel(r.x)}</b>${r.L?` <span class="bm-grp">${fmtNum(r.L.v)}</span>`:''}<div class="pa-sub bm-note">${r.x.note}</div></div></div>
             <div class="pa-num">${r.ret!=null?`<span style="${tone(r.ret)}">${fPct(r.ret,1)}</span>${r.ann!=null?`<div class="pa-sub">${fPct(r.ann,1)} a year</div>`:''}`:`<span class="pa-sub">${r.why}</span>`}</div>
             <div class="pa-num" style="${tone(d)}">${d!=null?`${d>=0?'+':MINUS}${Math.abs(d*100).toFixed(1)} pts<div class="pa-sub">${d>=0?'ahead':'behind'}</div>`:'<span class="pa-sub">—</span>'}</div>
           </button>`; }).join('')}
       </div>
-      <div class="pa-note">Since ${fmtHeroDate(wA)}. JSE indexes count share prices only, so they understate what a JSE index fund paid by roughly 3% a year in dividends. The US funds include dividends. Past returns don't predict future ones.</div>`;
+      <div class="pa-note">Since ${fmtHeroDate(wA)}. ${notes} Past returns don't predict future ones.</div>`;
     }
-
 
     // 2 · Attribution
     const per=W.per.filter(p=>p.contrib!=null).sort((a,b)=>b.gain-a.gain);
@@ -4424,10 +4493,10 @@ function drawPaChart(weeks,pw,lines){
   const series=[{name:'You',data:rebase(pw.slice(start)),c:'--s1',w:2.5}];
   const late=[];
   // A benchmark joins only if it has a price on your first week, so every line starts from the same point
-  lines.forEach(l=>{ if(!l.B||!l.B.n||!l.B.weeks.length) return; const d=at(l.B); if(l.B.weeks[0]<=ws[0]&&d[0]!=null) series.push({name:l.name,data:rebase(d),c:l.c,w:1.75}); else late.push(l.name+(l.B.weeks.length?' starts '+fmtHeroDate(l.B.weeks[0]):'')); });
+  lines.forEach(l=>{ if(!l.B||!l.B.n||!l.B.weeks.length) return; const d=at(l.B); if(l.B.weeks[0]<=ws[0]&&d[0]!=null) series.push({name:l.name,data:rebase(d),c:l.c,w:1.75}); else late.push(l.name+' (data from '+fmtHeroDate(l.B.first||l.B.weeks[0])+')'); });
   const lg=document.getElementById('pa-legend');
   if(lg) lg.innerHTML=series.map(s=>`<span><i style="background:var(${s.c})"></i>${s.name}</span>`).join('')+(series.length>1?'<span class="pa-sub">In US dollars</span>':'')
-    +(late.length?`<span class="pa-sub">Not drawn: ${late.join(', ')}, after this period begins. Pick a shorter period to include it.</span>`:'');
+    +(late.length?`<span class="pa-sub">Not drawn yet: ${late.join(', ')}. A line appears once its data covers the whole period shown.</span>`:'');
   const muted=cssVar('--muted'), text2=cssVar('--text2');
   let chart=echarts.getInstanceByDom(box); if(!chart) chart=echarts.init(box,null,{renderer:'canvas'});
   chart.setOption({
@@ -8624,6 +8693,31 @@ function getMarketPrice(symbol,exchange){
   return null;
 }
 
+// Status of the automatic daily prices (.github/workflows/daily-market.yml writes rows with updated_by = null).
+// The job runs 16:30 and 20:00 Harare time on weekdays; before 17:00 the latest expected day is the previous weekday.
+function adminExpectedPriceDate(){
+  const h=new Date(Date.now()+2*3600e3); // Harare is UTC+2 all year
+  const d=new Date(Date.UTC(h.getUTCFullYear(),h.getUTCMonth(),h.getUTCDate()));
+  const wd=d.getUTCDay(), ready=wd>=1&&wd<=5&&h.getUTCHours()>=17;
+  if(!ready){ do{ d.setUTCDate(d.getUTCDate()-1); }while(d.getUTCDay()===0||d.getUTCDay()===6); }
+  return d.toISOString().slice(0,10);
+}
+function adminAutoStatusHTML(){
+  const day=adminExpectedPriceDate();
+  const label=new Date(day+'T12:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
+  const rows=Object.values(marketPrices).filter(r=>(r.exchange==='ZSE'||r.exchange==='VFSE')&&r.price_date===day);
+  const n=ex=>rows.filter(r=>r.exchange===ex).length;
+  const auto=rows.filter(r=>!r.updated_by).length, hand=rows.length-auto;
+  const missing=['ZSE','VFSE'].filter(ex=>!n(ex)).map(ex=>ex==='VFSE'?'VFEX':ex);
+  const box=(c,t)=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:10px;background:color-mix(in srgb,${c} 10%,transparent);margin-bottom:16px;font-size:12.5px;line-height:1.55"><span style="width:8px;height:8px;border-radius:50%;background:${c};flex:none;margin-top:6px"></span><div>${t}</div></div>`;
+  if(!missing.length){
+    const how=hand&&auto?`${auto} loaded automatically, ${hand} entered by hand`:hand?'entered by hand':'loaded automatically';
+    return box('var(--accent)',`<b>Prices for ${label} are in.</b> ${n('ZSE')} ZSE and ${n('VFSE')} VFEX closes, ${how}.`);
+  }
+  const which=missing.length===2?'ZSE and VFEX':missing[0];
+  return box('var(--yellow)',`<b>${which} prices for ${label} haven't arrived.</b> The automatic update may have failed. Add the closes below from the links under the form. If ${label} was a public holiday, there's nothing to add.`);
+}
+
 // Keep the chosen exchange and date between saves, for entering a day's prices quickly
 const _apLast={exchange:'ZSE',date:null};
 async function renderAdmin(){
@@ -8635,7 +8729,8 @@ async function renderAdmin(){
   el.innerHTML=adminFxHTML()+adminDivHTML()+`
     <div class="card" style="padding:20px 24px;margin-bottom:20px">
       <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:16px">Market Prices</div>
-      <div style="font-size:12px;color:var(--muted2);margin-bottom:14px">Update ZSE, VFEX and ZEEX prices daily. These override each user's stored price when calculating portfolio value.</div>
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:12px;line-height:1.55">ZSE and VFEX closing prices load automatically every weekday at about 4:30pm. Use this form only if they don't arrive, or for ZEEX. These prices override each user's stored price when calculating portfolio value.</div>
+      ${adminAutoStatusHTML()}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:14px">
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Symbol</div><input class="form-input" id="ap-symbol" placeholder="AXIA" style="text-transform:uppercase"></div>
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Exchange</div>
@@ -8647,6 +8742,7 @@ async function renderAdmin(){
         <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">Date</div><input class="form-input" id="ap-date" type="date" value="${_apLast.date||new Date().toISOString().slice(0,10)}" onchange="_apLast.date=this.value"></div>
         <button class="btn btn-primary" onclick="saveAdminPrice()" style="height:40px;white-space:nowrap">+ Add / Update</button>
       </div>
+      <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 14px;line-height:1.55">Take the day's close from <a href="https://www.zse.co.zw/" target="_blank" rel="noopener" style="color:var(--accent)">zse.co.zw</a> or <a href="https://www.vfex.exchange/" target="_blank" rel="noopener" style="color:var(--accent)">vfex.exchange</a> after 3pm. The "Closing" column on ZSE Direct and VFEX Direct is the previous trading day's close, so save it under that earlier date.</div>
       ${prices.length?`
       <div class="table-wrap"><table class="data-table" style="width:100%">
         <thead><tr><th>Symbol</th><th>Exchange</th><th style="text-align:right">Price</th><th>Currency</th><th>Date</th><th></th></tr></thead>

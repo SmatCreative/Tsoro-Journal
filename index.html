@@ -8694,25 +8694,31 @@ function getMarketPrice(symbol,exchange){
 }
 
 // Status of the automatic daily prices (.github/workflows/daily-market.yml writes rows with updated_by = null).
-// The job runs 16:30 and 20:00 Harare time on weekdays; before 17:00 the latest expected day is the previous weekday.
-function adminExpectedPriceDate(){
+// The job tries hourly 16:00-22:00 Harare time on weekdays, but GitHub can start it hours late,
+// so a weekday only counts as missing once its 20:00 has passed.
+function adminPriceDay(back,cutoffHour){ // latest weekday whose cutoffHour (Harare) has passed
   const h=new Date(Date.now()+2*3600e3); // Harare is UTC+2 all year
   const d=new Date(Date.UTC(h.getUTCFullYear(),h.getUTCMonth(),h.getUTCDate()));
-  const wd=d.getUTCDay(), ready=wd>=1&&wd<=5&&h.getUTCHours()>=17;
-  if(!ready){ do{ d.setUTCDate(d.getUTCDate()-1); }while(d.getUTCDay()===0||d.getUTCDay()===6); }
+  const wd=d.getUTCDay();
+  if(!(wd>=1&&wd<=5&&h.getUTCHours()>=cutoffHour)){ do{ d.setUTCDate(d.getUTCDate()-1); }while(d.getUTCDay()===0||d.getUTCDay()===6); }
   return d.toISOString().slice(0,10);
 }
 function adminAutoStatusHTML(){
-  const day=adminExpectedPriceDate();
+  const rowsOn=day=>Object.values(marketPrices).filter(r=>(r.exchange==='ZSE'||r.exchange==='VFSE')&&r.price_date===day);
+  const has=day=>{ const r=rowsOn(day); return r.some(x=>x.exchange==='ZSE')&&r.some(x=>x.exchange==='VFSE'); };
+  const early=adminPriceDay(0,15), due=adminPriceDay(0,20);
+  // Show today's prices if they're already in; otherwise judge the last day that is overdue
+  const day=has(early)?early:due;
   const label=new Date(day+'T12:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
-  const rows=Object.values(marketPrices).filter(r=>(r.exchange==='ZSE'||r.exchange==='VFSE')&&r.price_date===day);
+  const rows=rowsOn(day);
   const n=ex=>rows.filter(r=>r.exchange===ex).length;
   const auto=rows.filter(r=>!r.updated_by).length, hand=rows.length-auto;
   const missing=['ZSE','VFSE'].filter(ex=>!n(ex)).map(ex=>ex==='VFSE'?'VFEX':ex);
   const box=(c,t)=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:10px;background:color-mix(in srgb,${c} 10%,transparent);margin-bottom:16px;font-size:12.5px;line-height:1.55"><span style="width:8px;height:8px;border-radius:50%;background:${c};flex:none;margin-top:6px"></span><div>${t}</div></div>`;
+  const pending=early!==day?` Prices for ${new Date(early+'T12:00:00Z').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'})} usually arrive between 4pm and 8pm.`:'';
   if(!missing.length){
     const how=hand&&auto?`${auto} loaded automatically, ${hand} entered by hand`:hand?'entered by hand':'loaded automatically';
-    return box('var(--accent)',`<b>Prices for ${label} are in.</b> ${n('ZSE')} ZSE and ${n('VFSE')} VFEX closes, ${how}.`);
+    return box('var(--accent)',`<b>Prices for ${label} are in.</b> ${n('ZSE')} ZSE and ${n('VFSE')} VFEX closes, ${how}.${pending}`);
   }
   const which=missing.length===2?'ZSE and VFEX':missing[0];
   return box('var(--yellow)',`<b>${which} prices for ${label} haven't arrived.</b> The automatic update may have failed. Add the closes below from the links under the form. If ${label} was a public holiday, there's nothing to add.`);

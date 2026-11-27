@@ -5,6 +5,12 @@
 // It is NOT the ZSE Direct / VFEX Direct "Market Data" page, whose "Closing" column is the
 // previous trading day's close.
 //
+// GitHub often starts scheduled runs hours late, so the job never assumes "today": it saves the
+// closes for whatever trading day the official sheet is for. The sheet keeps the last trading day's
+// closes until the next one is published (~15:00 CAT), so a run any time before then still gets them.
+// It fails (GitHub emails the owner) only when the sheet is older than the last weekday whose 20:00 CAT
+// has passed, i.e. a day's closes never appeared.
+//
 // Writes the same rows the Admin "Market Prices" form writes:
 //   market_prices  (latest price per listing)   and   price_history (one row per listing per day)
 // ZSE prices stay in ZWG cents as quoted; VFEX prices are US dollars under exchange 'VFSE'.
@@ -13,14 +19,12 @@
 // Env:
 //   SUPABASE_SERVICE_ROLE_KEY  required unless DRY_RUN=1 (a GitHub secret; never commit it)
 //   SUPABASE_URL               optional, defaults to Tsoro's project
-//   FINAL=1                    last run of the day: fail loudly if today's sheet never appeared
 //   DRY_RUN=1                  print what would be saved, write nothing
 import fs from 'fs';
 
 const URL_ = process.env.SUPABASE_URL || 'https://cdmieckdazpkunmmmcdy.supabase.co';
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const DRY = process.env.DRY_RUN === '1';
-const FINAL = process.env.FINAL === '1';
 const FEED = 'https://ds88jcmqc11je.cloudfront.net/api/fetch/';
 const MAP = JSON.parse(fs.readFileSync(new URL('./zse-vfex-tickers.json', import.meta.url), 'utf8'));
 const EXCHANGES = [
@@ -32,7 +36,17 @@ const norm = s => String(s || '').replace(/\s+/g, ' ').trim().toUpperCase();
 const iso = d => Array.isArray(d) ? d.map((x, i) => String(x).padStart(i ? 2 : 4, '0')).join('-')
   : typeof d === 'number' ? new Date(d > 1e12 ? d : d * 1000).toLocaleDateString('en-CA', { timeZone: 'Africa/Harare' })
   : String(d || '').slice(0, 10);
-const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Harare' });
+// Latest weekday whose 20:00 CAT has passed: by then that day's closes should be out.
+function dueDate() {
+  const h = new Date(Date.now() + 2 * 3600e3); // Harare is UTC+2 all year
+  const d = new Date(Date.UTC(h.getUTCFullYear(), h.getUTCMonth(), h.getUTCDate()));
+  const wd = d.getUTCDay();
+  if (!(wd >= 1 && wd <= 5 && h.getUTCHours() >= 20)) {
+    do d.setUTCDate(d.getUTCDate() - 1); while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+  }
+  return d.toISOString().slice(0, 10);
+}
+const due = dueDate();
 
 async function getJson(path) {
   const r = await fetch(FEED + path, { headers: { Accept: 'application/json' } });
@@ -42,10 +56,13 @@ async function getJson(path) {
   return j.data;
 }
 
+function headers() {
+  const h = { apikey: KEY, 'Content-Type': 'application/json' };
+  if (KEY.startsWith('eyJ')) h.Authorization = 'Bearer ' + KEY; // legacy service_role JWT
+  return h;
+}
 async function upsert(table, onConflict, rows) {
-  const headers = { apikey: KEY, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' };
-  if (KEY.startsWith('eyJ')) headers.Authorization = 'Bearer ' + KEY; // legacy service_role JWT
-  const r = await fetch(`${URL_}/rest/v1/${table}?on_conflict=${onConflict}`, { method: 'POST', headers, body: JSON.stringify(rows) });
+  const r = await fetch(`${URL_}/rest/v1/${table}?on_conflict=${onConflict}`, { method: 'POST', headers: { ...headers(), Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(rows) });
   if (!r.ok) throw new Error(`${table}: HTTP ${r.status} ${(await r.text()).slice(0, 300)}`);
 }
 
@@ -54,27 +71,31 @@ if (!DRY && !KEY) {
   process.exit(1);
 }
 
+// Latest price per listing already in market_prices, so an older sheet never replaces a newer price
+const newest = {};
+if (!DRY) {
+  const r = await fetch(`${URL_}/rest/v1/market_prices?select=symbol,exchange,price_date&exchange=in.(ZSE,VFSE)`, { headers: headers() });
+  if (!r.ok) { console.error(`::error::market_prices could not be read: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`); process.exit(1); }
+  for (const x of await r.json()) newest[x.symbol + '|' + x.exchange] = x.price_date;
+}
+
 const problems = [];
-let saved = 0, waiting = 0;
+const days = [];
+let saved = 0;
 for (const E of EXCHANGES) {
   let sheet;
   try { sheet = await getJson('price-sheet?exchange=' + E.feed); }
   catch (e) { problems.push(`${E.label} price sheet could not be read (${e.message})`); continue; }
 
-  const dates = [...new Set(sheet.map(r => iso(r.statsDate)))];
-  if (!dates.includes(today)) {
-    waiting++;
-    const msg = `${E.label} has not published ${today}'s closes yet (its sheet is for ${dates.join(', ') || 'no date'})`;
-    if (FINAL) problems.push(msg + '. If today is a public holiday, ignore this.');
-    else console.log(msg + '; the evening run will try again.');
-    continue;
-  }
+  const day = sheet.map(r => iso(r.statsDate)).filter(Boolean).sort().pop();
+  if (!day) { problems.push(`${E.label} price sheet has no date`); continue; }
+  if (day < due) problems.push(`${E.label} has not published closes for ${due} (its latest sheet is for ${day}). If ${due} was a public holiday, ignore this; otherwise add the prices by hand in Tsoro Admin.`);
 
   const known = MAP[E.feed] || {};
   let byName = null; // market-cap feed, only fetched if a name is new
   const rows = [];
   for (const r of sheet) {
-    if (iso(r.statsDate) !== today) continue;
+    if (iso(r.statsDate) !== day) continue;
     const name = norm(r.name || r.symbol);
     if ((MAP.skip || []).includes(name)) continue;
     const price = Number(r.closePrice);
@@ -95,16 +116,18 @@ for (const E of EXCHANGES) {
   if (!rows.length) { problems.push(`${E.label}: no prices to save`); continue; }
 
   const now = new Date().toISOString();
-  const hist = rows.map(x => ({ symbol: x.symbol, exchange: E.ex, price: x.price, currency: E.ccy, recorded_date: today, recorded_by: null }));
-  const latest = rows.map(x => ({ symbol: x.symbol, exchange: E.ex, price: x.price, currency: E.ccy, price_date: today, updated_by: null, updated_at: now }));
+  const hist = rows.map(x => ({ symbol: x.symbol, exchange: E.ex, price: x.price, currency: E.ccy, recorded_date: day, recorded_by: null }));
+  const latest = rows.filter(x => !(newest[x.symbol + '|' + E.ex] > day))
+    .map(x => ({ symbol: x.symbol, exchange: E.ex, price: x.price, currency: E.ccy, price_date: day, updated_by: null, updated_at: now }));
+  days.push(E.label + ' ' + day);
   if (DRY) {
-    console.log(`${E.label} ${today}: would save ${rows.length} closes`);
+    console.log(`${E.label} ${day}: would save ${rows.length} closes`);
     for (const x of rows) console.log(`  ${x.symbol.padEnd(6)} ${x.price}`);
   } else {
     try {
       await upsert('price_history', 'symbol,exchange,recorded_date', hist);
-      await upsert('market_prices', 'symbol,exchange', latest);
-      console.log(`${E.label} ${today}: saved ${rows.length} official closes`);
+      if (latest.length) await upsert('market_prices', 'symbol,exchange', latest);
+      console.log(`${E.label} ${day}: saved ${rows.length} official closes`);
     } catch (e) { problems.push(`${E.label}: saving failed (${e.message})`); continue; }
   }
   saved += rows.length;
@@ -112,4 +135,4 @@ for (const E of EXCHANGES) {
 
 for (const p of problems) console.log('::error::' + p);
 if (problems.length) process.exit(1);
-console.log(saved ? `Done: ${saved} prices for ${today}` : `Nothing saved yet for ${today}`);
+console.log(`Done: ${saved} prices (${days.join(', ')})`);

@@ -1,14 +1,16 @@
 # Tsoro daily market data, every weekday after the ZSE and VFEX publish their closes (~15:00 CAT).
 #  1. Official ZSE and VFEX closing prices -> Supabase (market_prices + price_history)
 #  2. Official ZSE and VFEX index closes  -> zse-indices.json (committed to the repo)
-# Two runs a day: 16:30 CAT, and 20:00 CAT to catch a late publication. Both are safe to repeat.
-# The evening run fails (and GitHub emails the owner) if a day's prices never appeared,
+# GitHub often starts scheduled runs hours late or skips them, so there are several tries:
+# hourly 16:00-22:00 CAT, plus 07:00 CAT the next morning. Every run saves the closes for the
+# trading day the official sheet is for, so a late run still saves the right day; repeats are harmless.
+# A run fails (and GitHub emails the owner) when a weekday's closes still aren't out after 20:00 CAT,
 # so missing prices can be entered by hand in Tsoro's Admin page.
 name: Daily market data
 on:
   schedule:
-    - cron: '30 14 * * 1-5'   # 16:30 CAT
-    - cron: '0 18 * * 1-5'    # 20:00 CAT, last try
+    - cron: '0 14-20 * * 1-5'   # hourly, 16:00-22:00 CAT
+    - cron: '0 5 * * 2-6'       # 07:00 CAT next morning, catch-up
   workflow_dispatch:
 permissions:
   contents: write
@@ -26,7 +28,6 @@ jobs:
         continue-on-error: true
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          FINAL: ${{ github.event.schedule == '0 18 * * 1-5' && '1' || '0' }}
         run: node scripts/record-zse-prices.mjs
       - name: Record index closes
         run: node scripts/record-zse-indices.mjs
